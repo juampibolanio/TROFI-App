@@ -1,32 +1,81 @@
-import { View, Text, SafeAreaView, StyleSheet, Image } from 'react-native'
-import React from 'react'
+import { View, Text, SafeAreaView, StyleSheet, Image, Switch, ImageBackground } from 'react-native'
+import React, { useState } from 'react'
 import imagePath from '@/constants/imagePath';
-import { moderateScale } from 'react-native-size-matters'
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters'
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
+import { TextInput } from 'react-native';
+import BottomComponent from '@/components/atoms/BottomComponent';
 
 const Auth = () => {
-    const [fontsLoaded] = useFonts({ 
+    const [fontsLoaded] = useFonts({
         Roboto_400Regular,
         Roboto_700Bold,
         Roboto_300Light
     });
 
+    const [isRemembered, setIsRemembered] = useState(false)
 
     return (
         <>
-        <SafeAreaView style={styles.container}> 
-            {/* HEADER */}
-            <View style={styles.header}>
-                <Image source={imagePath.icon} style={styles.iconStyle} resizeMode="contain" />
-            </View>
-            {/* BODY */}
-            <View style={styles.body}>
-                <Text style={styles.loginTitle}>¡Bienvenido!</Text>
-            </View>
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>¿No tienes una cuenta? Registrarse</Text>
-            </View>
-        </SafeAreaView>
+            <SafeAreaView style={styles.container}>
+                <ImageBackground 
+                    source={imagePath.backgroundLogin}
+                    resizeMode="cover"
+                    style={styles.overlay}
+                >
+                {/* HEADER */}
+                <View style={styles.header}>
+                    <Image source={imagePath.icon} style={styles.iconStyle} resizeMode="contain" />
+                </View>
+
+                {/* BODY */}
+                <View style={styles.body}>
+                    <Text style={styles.loginTitle}>¡Bienvenido!</Text>
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            placeholder="Ingrese su nombre / email"
+                            placeholderTextColor="#F5F0F0"
+                            style={styles.input}
+                        />
+
+                        <TextInput
+                            placeholder="Ingrese su contraseña"
+                            placeholderTextColor="#F5F0F0"
+                            style={styles.input}
+                        />
+                    </View>
+
+                    <View style={styles.rememberContainer}>
+                        <Text style={styles.rememberText}>Recuérdame</Text>
+                        <Text style={styles.forgotText} /*onPress={null}*/>
+                            ¿Olvidaste tu contraseña?
+                        </Text>
+                    </View>
+
+                    <View style={styles.bottomContainer}>
+                        <BottomComponent title="Iniciar sesión" onPress={() => {}} />
+                    </View>
+                </View>
+
+                <View style={styles.footer}>
+                    <View style={styles.footerIcons}>
+                        <Text style={styles.footerIconsTitle}>----------------- Inicia sesión con redes sociales -----------------</Text>
+                        <View style={styles.icons}>
+                            <Image source={imagePath.facebook} style={styles.icon}/>
+                            <Image source={imagePath.twitter} style={styles.icon}/>
+                            <Image source={imagePath.google} style={styles.icon}/>
+                        </View>
+                    </View>
+
+                    <Text style={styles.footerText}>
+                        ¿No tienes una cuenta?{'    '}
+                        <Text style={styles.boldText} /*onPress={null}*/>
+                            Registrarse
+                        </Text>
+                    </Text>
+                </View>
+                </ImageBackground>
+            </SafeAreaView>
         </>
     );
 };
@@ -35,18 +84,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#0E3549",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingVertical: moderateScale(21),
-        gap: moderateScale(30)
+    },
+    overlay: {
+        flex: 1, 
+        paddingHorizontal: moderateScale(20),
+        paddingVertical: moderateScale(20),
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: moderateScale(30),
+        flexDirection: 'column',
     },
     header: {
     },
     body: {
-        flex: 1
+        flex: 1,
+        alignItems: 'center',
     },
-    footer: {},
     iconStyle: {
         width: moderateScale(50),
         height: moderateScale(50),
@@ -54,12 +107,66 @@ const styles = StyleSheet.create({
     loginTitle: {
         color: '#FFFFFF',
         fontSize: moderateScale(35),
-        fontFamily: 'Roboto_300Light'
+        fontFamily: 'Roboto_300Light',
+        marginBottom: verticalScale(30)
+    },
+    footer: {
+        flex: 1,
+        alignItems: 'center'
     },
     footerText: {
-        fontSize: moderateScale(14),
+        fontSize: moderateScale(15),
         fontFamily: 'Roboto_300Light',
         color: '#FFFFFF'
+    },
+    footerIcons: {
+        flex: 1,
+        alignItems: 'center',
+        marginTop: verticalScale(35),
+        gap: moderateScale(30)
+    },
+    footerIconsTitle: {
+        color: '#FFFFFF',
+    },
+    icons: {
+        flexDirection: 'row',
+        gap: moderateScale(60),
+        alignItems: 'center'
+    },
+    icon: {
+        
+    },
+    inputContainer: {
+        height: moderateScale(60),
+        width: verticalScale(240),
+        gap: moderateScale(20)
+    },
+    input: {
+        backgroundColor: 'rgba(164, 148, 148, 0.4)',
+        borderWidth: moderateScale(1),
+        borderColor: '#FFFFFF',
+        borderRadius: moderateScale(1.5),
+        borderLeftWidth: moderateScale(5),
+        paddingHorizontal: moderateScale(10)
+    },
+    boldText: {
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    rememberContainer: {
+        flexDirection: 'row',
+        marginTop: verticalScale(50),
+        alignItems: 'center',
+        gap: moderateScale(25)
+    },
+    rememberText: {
+        color: '#FFFFFF'
+    },
+    forgotText: {
+        color: '#FFFFFF'
+    },
+    bottomContainer: {
+        marginTop: verticalScale(40)
     }
 });
 
