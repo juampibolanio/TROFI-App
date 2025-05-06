@@ -6,6 +6,7 @@ import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@e
 import { TextInput } from 'react-native';
 import BottomComponent from '@/components/atoms/BottomComponent';
 import { router } from 'expo-router';
+import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 
 const Auth = () => {
     const [fontsLoaded] = useFonts({
@@ -19,6 +20,9 @@ const Auth = () => {
     }
 
     const [isRemembered, setIsRemembered] = useState(false)
+
+    const [password, setPassword] = useState('');
+    const [nameEmail, setNameEmail] = useState('');
 
     return (
         <>
@@ -37,16 +41,19 @@ const Auth = () => {
                     <View style={styles.body}>
                         <Text style={styles.loginTitle}>¡Bienvenido!</Text>
                         <View style={styles.inputContainer}>
-                            <TextInput
-                                placeholder="Ingrese su nombre / email"
-                                placeholderTextColor="#F5F0F0"
-                                style={styles.input}
+                            <CustomTextInput
+                                placeholder='Ingrese su nombre/email'
+                                value={nameEmail}
+                                onChangeText={setNameEmail}
+                                keyboardType='email-address'
+                                autoCapitalize='none'
                             />
 
-                            <TextInput
-                                placeholder="Ingrese su contraseña"
-                                placeholderTextColor="#F5F0F0"
-                                style={styles.input}
+                            <CustomTextInput
+                                placeholder='Ingrese su contraseña'
+                                value={password}
+                                onChangeText={setPassword}
+                                isPassword={true}
                             />
                         </View>
 
@@ -147,17 +154,8 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         height: moderateScale(60),
-        width: verticalScale(240),
-        gap: moderateScale(20)
-    },
-    input: {
-        backgroundColor: 'rgba(164, 148, 148, 0.4)',
-        borderWidth: moderateScale(1),
-        borderColor: '#FFFFFF',
-        borderRadius: moderateScale(1.5),
-        borderLeftWidth: moderateScale(5),
-        paddingHorizontal: moderateScale(10),
-        color: '#FFFFFF'
+        width: verticalScale(280),
+        gap: moderateScale(5)
     },
     boldText: {
         fontWeight: 'bold',

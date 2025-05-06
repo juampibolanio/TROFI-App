@@ -9,6 +9,8 @@ export default {
     google: require("@/assets/images/Google.png"),
 
     /* REGISTER SCREEN */
-    registerBlob: require("@/assets/images/registerBlob.png")
-    
+    registerBlob: require("@/assets/images/registerBlob.png"),
+    closeBottom: require("@/assets/images/closeBottom.png"),
+    showPassBottom: require("@/assets/images/showPassBottom.png"),
+    noShowPassBottom: require("@/assets/images/noShowPassBottom.png")
 }

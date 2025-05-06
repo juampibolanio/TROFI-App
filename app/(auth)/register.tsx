@@ -1,25 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import imagePath from '@/constants/imagePath';
-import { moderateScale, verticalScale } from 'react-native-size-matters'; 
+import { moderateScale, verticalScale } from 'react-native-size-matters';
 import BottomComponent from '@/components/atoms/BottomComponent';
-import { router } from 'expo-router'; 
+import { router } from 'expo-router';
+import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 
 const RegisterScreen = () => {
 
+  /* CARGA DE FUENTES */
   const [fontsLoaded] = useFonts({
     Roboto_400Regular,
     Roboto_700Bold,
     Roboto_300Light
   });
 
+  /*NAVEGACIÓN HACIA EL LOGIN */
   const navigateToLogin = () => {
     router.push("/(auth)");
   };
 
   /* ACÁ FALTA AGREGAR LAS X EN LOS INPUTS Y EL OJO PARA VER O NO LA CONTRASEÑA */
+
+  const [nameEmail, setNameEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+
   return (
     <SafeAreaView style={styles.container}>
 
@@ -30,51 +40,53 @@ const RegisterScreen = () => {
       </View>
 
       {/* BODY */}
-      <View style={styles.bodyContent}> 
+      <View style={styles.bodyContent}>
         <View style={styles.inputContainer}>
-          <TextInput
+          <CustomTextInput
             placeholder='Ingrese su nombre/email'
-            style={styles.input}
-            placeholderTextColor="#F5F0F0"
+            value={nameEmail}
+            onChangeText={setNameEmail}
+            keyboardType='email-address'
+            autoCapitalize='none'
           />
 
-          <TextInput
+          <CustomTextInput
             placeholder='Ingrese una contraseña'
-            style={styles.input}
-            placeholderTextColor="#F5F0F0"
-            secureTextEntry 
+            value={password}
+            onChangeText={setPassword}
+            isPassword={true}
           />
 
-          <TextInput
-            placeholder='Confirme la contraseña'
-            style={styles.input}
-            placeholderTextColor="#F5F0F0"
-            secureTextEntry 
+          <CustomTextInput
+            placeholder='Vuelva a ingresar la contraseña'
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            isPassword={true}
           />
 
-          <TextInput
-            placeholder='Ingrese un teléfono'
-            style={styles.input}
-            placeholderTextColor="#F5F0F0"
-            keyboardType="phone-pad"
+          <CustomTextInput
+            placeholder='Ingrese un número de teléfono'
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            keyboardType='phone-pad'
           />
         </View>
 
         <View style={styles.registerButtonContainer}>
-          <BottomComponent title="Registrarse" onPress={() => { }}/>
+          <BottomComponent title="Registrarse" onPress={() => { }} />
         </View>
       </View>
 
       {/* FOOTER */}
       <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            ¿Ya tienes una cuenta?
+        <Text style={styles.footerText}>
+          ¿Ya tienes una cuenta?
+        </Text>
+        <TouchableOpacity onPress={navigateToLogin}>
+          <Text style={styles.boldText}>
+            Iniciar sesión
           </Text>
-          <TouchableOpacity onPress={navigateToLogin}>
-            <Text style={styles.boldText}>
-              Iniciar sesión
-            </Text>
-          </TouchableOpacity>
+        </TouchableOpacity>
       </View>
 
     </SafeAreaView>
@@ -83,7 +95,7 @@ const RegisterScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
+    flex: 1,
     backgroundColor: '#0E3549',
     alignItems: 'center',
     paddingHorizontal: moderateScale(20),
@@ -92,15 +104,15 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     gap: moderateScale(20),
-    marginBottom: moderateScale(40), 
+    marginBottom: moderateScale(40),
   },
   iconStyle: {
     width: moderateScale(50),
     height: moderateScale(50),
   },
   bodyContent: {
-    flex: 1, 
-    alignItems: 'center', 
+    flex: 1,
+    alignItems: 'center',
     width: '100%',
   },
   loginTitle: {
@@ -109,28 +121,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto_300Light',
   },
   inputContainer: {
-    gap: moderateScale(20),
-    width: moderateScale(280),
-    marginBottom: moderateScale(80), 
-  },
-  input: {
-    backgroundColor: 'rgba(164, 148, 148, 0.4)',
-    borderWidth: moderateScale(1),
-    borderColor: '#FFFFFF',
-    borderRadius: moderateScale(1.5),
-    borderLeftWidth: moderateScale(5),
-    paddingHorizontal: moderateScale(10),
-    color: '#FFFFFF',
-    height: verticalScale(40),
+    gap: moderateScale(5),
+    width: moderateScale(330),
+    marginBottom: moderateScale(80),
   },
   registerButtonContainer: {
-      width: moderateScale(250), 
+    width: moderateScale(250),
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    marginTop: moderateScale(30), 
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: moderateScale(30),
   },
   footerText: {
     fontSize: moderateScale(15),
