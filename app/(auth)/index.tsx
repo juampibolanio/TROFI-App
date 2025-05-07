@@ -1,10 +1,12 @@
-import { View, Text, SafeAreaView, StyleSheet, Image, Switch, ImageBackground } from 'react-native'
+import { View, Text, SafeAreaView, StyleSheet, Image, Switch, ImageBackground, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters'
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import { TextInput } from 'react-native';
 import BottomComponent from '@/components/atoms/BottomComponent';
+import { router } from 'expo-router';
+import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 
 const Auth = () => {
     const [fontsLoaded] = useFonts({
@@ -13,67 +15,81 @@ const Auth = () => {
         Roboto_300Light
     });
 
+    let navigateToRegister = () => {
+        router.push("/(auth)/register")
+    }
+
     const [isRemembered, setIsRemembered] = useState(false)
+
+    const [password, setPassword] = useState('');
+    const [nameEmail, setNameEmail] = useState('');
 
     return (
         <>
             <SafeAreaView style={styles.container}>
-                <ImageBackground 
+                <ImageBackground
                     source={imagePath.backgroundLogin}
                     resizeMode="cover"
                     style={styles.overlay}
                 >
-                {/* HEADER */}
-                <View style={styles.header}>
-                    <Image source={imagePath.icon} style={styles.iconStyle} resizeMode="contain" />
-                </View>
-
-                {/* BODY */}
-                <View style={styles.body}>
-                    <Text style={styles.loginTitle}>¡Bienvenido!</Text>
-                    <View style={styles.inputContainer}>
-                        <TextInput
-                            placeholder="Ingrese su nombre / email"
-                            placeholderTextColor="#F5F0F0"
-                            style={styles.input}
-                        />
-
-                        <TextInput
-                            placeholder="Ingrese su contraseña"
-                            placeholderTextColor="#F5F0F0"
-                            style={styles.input}
-                        />
+                    {/* HEADER */}
+                    <View style={styles.header}>
+                        <Image source={imagePath.icon} style={styles.iconStyle} resizeMode="contain" />
                     </View>
 
-                    <View style={styles.rememberContainer}>
-                        <Text style={styles.rememberText}>Recuérdame</Text>
-                        <Text style={styles.forgotText} /*onPress={null}*/>
-                            ¿Olvidaste tu contraseña?
-                        </Text>
-                    </View>
+                    {/* BODY */}
+                    <View style={styles.body}>
+                        <Text style={styles.loginTitle}>¡Bienvenido!</Text>
+                        <View style={styles.inputContainer}>
+                            <CustomTextInput
+                                placeholder='Ingrese su nombre/email'
+                                value={nameEmail}
+                                onChangeText={setNameEmail}
+                                keyboardType='email-address'
+                                autoCapitalize='none'
+                            />
 
-                    <View style={styles.bottomContainer}>
-                        <BottomComponent title="Iniciar sesión" onPress={() => {}} />
-                    </View>
-                </View>
+                            <CustomTextInput
+                                placeholder='Ingrese su contraseña'
+                                value={password}
+                                onChangeText={setPassword}
+                                isPassword={true}
+                            />
+                        </View>
 
-                <View style={styles.footer}>
-                    <View style={styles.footerIcons}>
-                        <Text style={styles.footerIconsTitle}>----------------- Inicia sesión con redes sociales -----------------</Text>
-                        <View style={styles.icons}>
-                            <Image source={imagePath.facebook} style={styles.icon}/>
-                            <Image source={imagePath.twitter} style={styles.icon}/>
-                            <Image source={imagePath.google} style={styles.icon}/>
+                        <View style={styles.rememberContainer}>
+                            <Text style={styles.rememberText}>Recuérdame</Text>
+                            <Text style={styles.forgotText} /*onPress={null}*/>
+                                ¿Olvidaste tu contraseña?
+                            </Text>
+                        </View>
+
+                        <View style={styles.bottomContainer}>
+                            <BottomComponent title="Iniciar sesión" onPress={() => { }} />
                         </View>
                     </View>
 
-                    <Text style={styles.footerText}>
-                        ¿No tienes una cuenta?{'    '}
-                        <Text style={styles.boldText} /*onPress={null}*/>
-                            Registrarse
-                        </Text>
-                    </Text>
-                </View>
+                    <View style={styles.footer}>
+                        <View style={styles.footerIcons}>
+                            <Text style={styles.footerIconsTitle}>----------------- Inicia sesión con redes sociales -----------------</Text>
+                            <View style={styles.icons}>
+                                <Image source={imagePath.facebook} style={styles.icon} />
+                                <Image source={imagePath.twitter} style={styles.icon} />
+                                <Image source={imagePath.google} style={styles.icon} />
+                            </View>
+                        </View>
+
+                        <View style={styles.footerLinkRegister}>
+                            <Text style={styles.footerText}>
+                                ¿No tienes una cuenta?{'    '}
+                            </Text>
+                            <TouchableOpacity onPress={navigateToRegister}>
+                                <Text style={styles.boldText}>
+                                    ¡Regístrate!
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </ImageBackground>
             </SafeAreaView>
         </>
@@ -86,7 +102,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#0E3549",
     },
     overlay: {
-        flex: 1, 
+        flex: 1,
         paddingHorizontal: moderateScale(20),
         paddingVertical: moderateScale(20),
         alignItems: 'center',
@@ -134,24 +150,21 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     icon: {
-        
+
     },
     inputContainer: {
         height: moderateScale(60),
-        width: verticalScale(240),
-        gap: moderateScale(20)
-    },
-    input: {
-        backgroundColor: 'rgba(164, 148, 148, 0.4)',
-        borderWidth: moderateScale(1),
-        borderColor: '#FFFFFF',
-        borderRadius: moderateScale(1.5),
-        borderLeftWidth: moderateScale(5),
-        paddingHorizontal: moderateScale(10)
+        width: verticalScale(280),
+        gap: moderateScale(5)
     },
     boldText: {
         fontWeight: 'bold',
         color: '#FFFFFF',
+
+    },
+    footerLinkRegister: {
+        flexDirection: 'row',
+        alignItems: 'center'
     },
     rememberContainer: {
         flexDirection: 'row',
