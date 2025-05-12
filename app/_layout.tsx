@@ -10,10 +10,12 @@ const RootNavigation = () => {
     SplashScreen.hideAsync();
   })
   return (
-
+// modifiquen esto para que los manden a las rutas que necesiten
+// yo lo dejo asi para que vean como hacerlo, si lo vuelven a (auth)
+// la app comienza normalmente
     <>
       <Stack screenOptions={() => ({ headerShown: false })}></Stack>
-      {isLogin ? <Redirect href="/(main)"/> : <Redirect href="/(auth)" />}
+      {isLogin ? <Redirect href="/(main)"/> : <Redirect href="/(main)/(tabs)/destacados" />}
     </>
 
   );

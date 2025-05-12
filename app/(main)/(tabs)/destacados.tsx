@@ -1,7 +1,7 @@
-import { View, Text } from 'react-native'
 import React from 'react'
+import { View, Text } from 'react-native'
 
-const Main = () => {
+const Destacados = () => {
   return (
     <View>
       <Text>Ingreso a la aplicación</Text>
@@ -9,4 +9,4 @@ const Main = () => {
   )
 }
 
-export default Main
+export default Destacados
