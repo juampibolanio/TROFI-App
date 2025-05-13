@@ -1,8 +1,9 @@
 import { Tabs } from 'expo-router';
 import { View, Text } from 'react-native';
 
-import { BuscarIcon, PerfilIcon, MensajeIcon, DestacadosIcon } from '../../../components/atoms/icon';
+import { BuscarIcon, PerfilIcon, MensajeIcon, DestacadosIcon } from '@/components/atoms/icon';
 import HeaderPropio from '@/components/headerTrofi';
+import { moderateScale } from 'react-native-size-matters';
 
 // esto es pa que el boton seleccionado tenga fondo, si lo
 // hacia de manera separada uno por uno tenia que configurar
@@ -20,7 +21,7 @@ const TabBarIcon = ({ icon: IconComponent, label, focused }: any) => (
       marginTop: 19,
     }}
   >
-    <IconComponent color="#0E3549" />
+    <IconComponent />
     <Text
       style={{
         fontSize: 12,
@@ -47,11 +48,13 @@ export default function TabsLayout(){
           borderTopWidth: 0,
           height: 60, 
           overflow: 'hidden',
+          borderRadius: moderateScale(10),
         },
       }}
       >
+
       <Tabs.Screen
-        name="destacados"
+        name="featured"
         options={{
           tabBarIcon: ({ focused }) => (
             <TabBarIcon icon={DestacadosIcon} label="Destacados" focused={focused} />
@@ -59,7 +62,7 @@ export default function TabsLayout(){
         }}
       />
       <Tabs.Screen
-        name="buscar"
+        name="search"
         options = {{
           title: 'Buscar',
           tabBarIcon: ({focused}) => (
@@ -68,7 +71,7 @@ export default function TabsLayout(){
         }}
       />
       <Tabs.Screen
-        name="mensajes"
+        name="messages"
         options = {{
           title: 'Mensajes',
           tabBarIcon: ({focused}) => (
@@ -77,7 +80,7 @@ export default function TabsLayout(){
         }}
       />
       <Tabs.Screen
-        name="perfil"
+        name="profile"
         options = {{
           title: 'Mi Perfil',
           tabBarIcon: ({focused}) => (
@@ -85,6 +88,7 @@ export default function TabsLayout(){
           ),
         }}
       />
+
     </Tabs>
   )
 }

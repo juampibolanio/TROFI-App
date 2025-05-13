@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text } from 'react-native'
 
-const Mensajes = () => {
+const Messages = () => {
   return (
     <View>
       <Text>Mensajes</Text>
@@ -9,4 +9,4 @@ const Mensajes = () => {
   )
 }
 
-export default Mensajes
+export default Messages;

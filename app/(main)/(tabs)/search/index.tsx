@@ -1,12 +1,12 @@
 import React from 'react'
 import { View, Text } from 'react-native'
 
-const Destacados = () => {
+const Search = () => {
   return (
     <View>
-      <Text>Ingreso a la aplicación</Text>
+      <Text>Buscar</Text>
     </View>
   )
 }
 
-export default Destacados
+export default Search;
