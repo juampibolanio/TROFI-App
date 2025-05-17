@@ -4,7 +4,7 @@ import { Redirect, SplashScreen, Stack } from 'expo-router'
 
 const RootNavigation = () => {
 
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
     SplashScreen.hideAsync();
