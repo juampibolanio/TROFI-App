@@ -2,6 +2,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import React from 'react'
 import { verticalScale } from 'react-native-size-matters'
 
+/*ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP */
+
 const BottomComponent = ({ title }: any) => {
     return (
         <TouchableOpacity style={styles.bottonContainer}>

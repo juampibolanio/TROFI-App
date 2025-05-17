@@ -16,5 +16,11 @@ export default {
 
     /*FEATUREDS SCREEN */
     backgroundFeatured: require("@/assets/images/trofi-transparent-logo.png"),
+    plumbing: require("@/assets/images/featuredImg/plumbing.png"),
+    smithy: require("@/assets/images/featuredImg/smithy.png"),
+    masonry: require("@/assets/images/featuredImg/masonry.png"),
+    electricity: require("@/assets/images/featuredImg/electricity.png"),
+    elderlyCare: require("@/assets/images/featuredImg/elderlyCare.png"),
+    carpentry: require("@/assets/images/featuredImg/carpentry.png"),
 
 }

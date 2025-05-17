@@ -1,8 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-// aca lo unico q cambie fue hacer constante estos valores, pq todos los iconos los tienen
-const ICON_SIZE = 20;
+// aca lo unico q cambie fue hacer constante estos valores, pq todos los iconos los tienen igual
+const ICON_SIZE = 10;
 const ICON_COLOR = "#0E3549";
 
 
@@ -15,7 +14,7 @@ export const DestacadosIcon = (props: any) => (
 );
 
 export const MensajeIcon = (props: any) => (
-  <MaterialCommunityIcons name="message-text-outline" size={ICON_SIZE} color={ICON_COLOR} {...props} />
+  <Ionicons name="chatbox-outline" size={ICON_SIZE} color={ICON_COLOR} {...props} />
 );
 
 export const PerfilIcon = (props: any) => (

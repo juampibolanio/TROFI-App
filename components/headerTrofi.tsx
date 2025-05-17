@@ -1,8 +1,12 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import fonts from '@/constants/fonts'
+import { useFonts } from '@expo-google-fonts/roboto';
 
 //el boton de configuracion y el de perfil es el que deben modificar cuando quieran que esos botones hagan algo
 const HeaderPropio = () => {
+  const [fontsLoaded] = useFonts(fonts);
+
   return (
     <View
       style={{
@@ -19,7 +23,7 @@ const HeaderPropio = () => {
         <Ionicons name="settings-outline" size={24} color="#0E3549" />
       </TouchableOpacity>
 
-      <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1C1C1C' }}>
+      <Text style={{ fontSize: 24, color: '#1C1C1C', fontFamily: 'Bauhaus93'}}>
         TROFI
       </Text>
 

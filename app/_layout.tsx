@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native'
+import { View, Text, StatusBar } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Redirect, SplashScreen, Stack } from 'expo-router'
 
@@ -14,6 +14,8 @@ const RootNavigation = () => {
     // yo lo dejo asi para que vean como hacerlo, si lo vuelven a (auth)
     // la app comienza normalmente
     <>
+      {/*configuro acá la barra de estado */}
+      <StatusBar backgroundColor="#0E3549" barStyle="light-content" />
       <Stack screenOptions={{headerShown: false}} />
       {isLogin
         ? <Redirect href="/(main)/(tabs)/featured" />
