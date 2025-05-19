@@ -12,5 +12,9 @@ export default {
     registerBlob: require("@/assets/images/registerBlob.png"),
     closeBottom: require("@/assets/images/closeBottom.png"),
     showPassBottom: require("@/assets/images/showPassBottom.png"),
-    noShowPassBottom: require("@/assets/images/noShowPassBottom.png")
-}
+    noShowPassBottom: require("@/assets/images/noShowPassBottom.png"),
+
+    /* RECOVERY PASSWORD */
+    passwordRecoveryBackground: require("@/assets/images/recoveryPasswordBackground.png"),
+    passwordRecoveryEmailBg: require("@/assets/images/recoveryPasswordEmailBg.png")
+}   

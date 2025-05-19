@@ -16,7 +16,11 @@ const Auth = () => {
     });
 
     let navigateToRegister = () => {
-        router.push("/(auth)/register")
+        router.push("/(auth)/register");
+    }
+
+    let navigateToRecoveryPassword = () => {
+        router.push("/(auth)/passwordRecovery");
     }
 
     const [isRemembered, setIsRemembered] = useState(false)
@@ -59,10 +63,14 @@ const Auth = () => {
 
                         <View style={styles.rememberContainer}>
                             <Text style={styles.rememberText}>Recuérdame</Text>
-                            <Text style={styles.forgotText} /*onPress={null}*/>
-                                ¿Olvidaste tu contraseña?
-                            </Text>
+                            <TouchableOpacity onPress={navigateToRecoveryPassword}>
+                                <Text style={styles.boldText}>
+                                    ¿Olvidaste tu contraseña?
+                                </Text>
+                            </TouchableOpacity>
                         </View>
+                    
+
 
                         <View style={styles.bottomContainer}>
                             <BottomComponent title="Iniciar sesión" onPress={() => { }} />
@@ -71,7 +79,7 @@ const Auth = () => {
 
                     <View style={styles.footer}>
                         <View style={styles.footerIcons}>
-                            <Text style={styles.footerIconsTitle}>----------------- Inicia sesión con redes sociales -----------------</Text>
+                            <Text style={styles.footerIconsTitle}>Inicia sesión con redes sociales</Text>
                             <View style={styles.icons}>
                                 <Image source={imagePath.facebook} style={styles.icon} />
                                 <Image source={imagePath.twitter} style={styles.icon} />

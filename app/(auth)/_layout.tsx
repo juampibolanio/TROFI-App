@@ -7,6 +7,8 @@ const AuthLayout = () => {
         <Stack>
             <Stack.Screen name='index' options={{headerShown: false}}/>
             <Stack.Screen name='register' options={{headerShown: false}}/>
+            <Stack.Screen name='passwordRecovery' options={{headerShown: false}}/>
+            <Stack.Screen name='passwordRecoveryTwo' options={{headerShown: false}}/>
         </Stack>
     )
 }

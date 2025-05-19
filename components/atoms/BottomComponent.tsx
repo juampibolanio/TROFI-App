@@ -1,17 +1,25 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import React from 'react'
-import { verticalScale } from 'react-native-size-matters'
+import { moderateScale, verticalScale } from 'react-native-size-matters'
 
-const BottomComponent = ({ title }: any) => {
+interface BottomComponentProps {
+    title: string;
+    onPress: () => void;
+}
+
+const BottomComponent: React.FC<BottomComponentProps> = ({ title, onPress }) => {
     return (
-        <TouchableOpacity style={styles.bottonContainer}>
+        <TouchableOpacity
+            onPress={onPress}
+            style={styles.bottomContainer}
+        >
             <Text style={styles.bottomText}>{title}</Text>
         </TouchableOpacity>
     )
 }
 
 const styles = StyleSheet.create({
-    bottonContainer: {
+    bottomContainer: {
         backgroundColor: 'rgba(164, 148, 148, 0.4)',
         width: '100%',
         paddingVertical: verticalScale(13),
@@ -22,9 +30,8 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: 'bold',
         textAlign: 'center',
-    }
+        fontSize: moderateScale(12),
+    },
 })
 
-
-
-export default BottomComponent
+export default BottomComponent;
