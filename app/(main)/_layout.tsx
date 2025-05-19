@@ -1,13 +1,12 @@
-import { View, Text } from 'react-native'
+import { Slot } from 'expo-router';
 import React from 'react'
-import { Stack } from 'expo-router/stack'
 
-const MainLayout = () => {
-  return (
-    <Stack>
-      <Stack.Screen name='index' options={{ headerShown: false }} />
-    </Stack>
-  )
+const _layout = () => {
+    return (
+
+        <Slot />
+
+    )
 }
 
-export default MainLayout
+export default _layout;

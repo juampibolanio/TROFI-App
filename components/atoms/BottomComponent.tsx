@@ -1,11 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import React from 'react'
-import { moderateScale, verticalScale } from 'react-native-size-matters'
+import { verticalScale } from 'react-native-size-matters'
 
-interface BottomComponentProps {
-    title: string;
-    onPress: () => void;
-}
+/*ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP */
 
 const BottomComponent: React.FC<BottomComponentProps> = ({ title, onPress }) => {
     return (
