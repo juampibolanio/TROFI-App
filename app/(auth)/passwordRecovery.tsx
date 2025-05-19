@@ -18,6 +18,11 @@ const passwordRecovery = () => {
         Roboto_300Light
     });
 
+    /* FALTA SOLUCIONAR NAV */
+    let navigateToRecoveryPasswordTwo = () => {
+            router.push("/");
+        }
+
     const [phoneNumber, setPhoneNumber] = useState('');
 
     return (
@@ -52,7 +57,7 @@ const passwordRecovery = () => {
                                 autoCapitalize='none'
                             />
 
-                            <BottomComponent title="Usa un correo en su lugar" onPress={() => { }} />
+                            <BottomComponent title="Usa un correo en su lugar" onPress={() => {navigateToRecoveryPasswordTwo}} />
                         </View>
                     </View>
 

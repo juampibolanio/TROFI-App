@@ -2,21 +2,18 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import React from 'react'
 import { verticalScale } from 'react-native-size-matters'
 
-/*ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP */
+/ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP/
 
-const BottomComponent: React.FC<BottomComponentProps> = ({ title, onPress }) => {
+const BottomComponent = ({ title }: any) => {
     return (
-        <TouchableOpacity
-            onPress={onPress}
-            style={styles.bottomContainer}
-        >
+        <TouchableOpacity style={styles.bottonContainer}>
             <Text style={styles.bottomText}>{title}</Text>
         </TouchableOpacity>
     )
 }
 
 const styles = StyleSheet.create({
-    bottomContainer: {
+    bottonContainer: {
         backgroundColor: 'rgba(164, 148, 148, 0.4)',
         width: '100%',
         paddingVertical: verticalScale(13),
@@ -27,8 +24,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: 'bold',
         textAlign: 'center',
-        fontSize: moderateScale(12),
-    },
+    }
 })
 
-export default BottomComponent;
+export default BottomComponent

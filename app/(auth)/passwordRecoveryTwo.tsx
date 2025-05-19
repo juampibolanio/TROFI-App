@@ -8,6 +8,7 @@ import BottomComponent from '@/components/atoms/BottomComponent';
 import { router } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 import HorizontalRule from '@/components/atoms/HorizontalRule';
+import { navigate } from 'expo-router/build/global-state/routing';
 
 const passwordRecovery = () => {
 
@@ -19,11 +20,6 @@ const passwordRecovery = () => {
     });
 
     const [phoneNumber, setPhoneNumber] = useState('');
-
-    let navigateToRecoveryPasswordTwo = () => {
-        router.push("/(auth)/passwordRecoveryTwo");
-        //Solucionar el problema de la navegacion 
-    }
 
     return (
         <>
@@ -56,8 +52,8 @@ const passwordRecovery = () => {
                                 keyboardType='email-address'
                                 autoCapitalize='none'
                             />
-
-                            <BottomComponent title="Usa un celular en su lugar" onPress={navigateToRecoveryPasswordTwo} />
+                            {/* FALTA SOLUCIONAR NAV */}
+                            <BottomComponent title="Usa un celular en su lugar" onPress={() => {}}  />
                         </View>
                     </View>
 
