@@ -1,6 +1,6 @@
 export default {
 
-    /*AUTH SCREEN */
+    /* AUTH SCREEN */
     logo: require("@/assets/images/trofi-logo.png"),
     icon: require("@/assets/images/logo-t.png"),
     backgroundLogin: require("@/assets/images/backgroundLogin.png"),
@@ -14,7 +14,7 @@ export default {
     showPassBottom: require("@/assets/images/showPassBottom.png"),
     noShowPassBottom: require("@/assets/images/noShowPassBottom.png"),
 
-    /*FEATUREDS SCREEN */
+    /* FEATUREDS SCREEN */
     backgroundFeatured: require("@/assets/images/trofi-transparent-logo.png"),
     plumbing: require("@/assets/images/featuredImg/plumbing.png"),
     smithy: require("@/assets/images/featuredImg/smithy.png"),
