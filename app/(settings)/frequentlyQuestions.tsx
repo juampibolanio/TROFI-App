@@ -34,7 +34,7 @@ const FrequenlyQuestions = () => {
                 <TouchableOpacity style={styles.button}>
                     <Text style={styles.buttonText}>Que es TROFI?</Text>
                 </TouchableOpacity>
-                <Text style={styles.versionText}>Testing this so i can be a contirubutor </Text>
+                <Text style={styles.versionText}>Now i can ????? </Text>
                 
             </View>
         </SafeAreaView>
