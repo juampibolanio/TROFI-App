@@ -1,22 +1,35 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import React from 'react'
+<<<<<<< HEAD
 import { moderateScale, verticalScale } from 'react-native-size-matters'
+=======
+import { verticalScale, moderateScale } from 'react-native-size-matters'
+>>>>>>> 0fccf41751fe57f572ec49c74dc59408301137ae
 
-/*ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP */
+
+/*para el error BottomComponentProps sin haberlo declarado antes.*/
+interface BottomComponentProps {
+  title: string;
+  onPress: () => void;
+}
+
+/ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP/
+
+<<<<<<< HEAD
+const BottomComponent = ({ title }: any) => {
+=======
 
 const BottomComponent: React.FC<BottomComponentProps> = ({ title, onPress }) => {
+>>>>>>> db6571816590ddcbd13f4f4b904797ed0ee5214b
     return (
-        <TouchableOpacity
-            onPress={onPress}
-            style={styles.bottomContainer}
-        >
+        <TouchableOpacity style={styles.bottonContainer}>
             <Text style={styles.bottomText}>{title}</Text>
         </TouchableOpacity>
     )
 }
 
 const styles = StyleSheet.create({
-    bottomContainer: {
+    bottonContainer: {
         backgroundColor: 'rgba(164, 148, 148, 0.4)',
         width: '100%',
         paddingVertical: verticalScale(13),
@@ -27,8 +40,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: 'bold',
         textAlign: 'center',
-        fontSize: moderateScale(12),
-    },
+    }
 })
 
-export default BottomComponent;
+export default BottomComponent

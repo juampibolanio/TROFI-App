@@ -20,3 +20,7 @@ export const MensajeIcon = (props: any) => (
 export const PerfilIcon = (props: any) => (
   <Ionicons name="person-outline" size={ICON_SIZE} color={ICON_COLOR} {...props} />
 );
+
+export const ContactIcon = (props: any) => (
+  <Ionicons name="copy1" size={ICON_SIZE} color={ICON_COLOR} {...props} />
+);
