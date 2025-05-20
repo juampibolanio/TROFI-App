@@ -23,10 +23,13 @@ export default {
     elderlyCare: require("@/assets/images/featuredImg/elderlyCare.png"),
     carpentry: require("@/assets/images/featuredImg/carpentry.png"),
 
-}
+
     noShowPassBottom: require("@/assets/images/noShowPassBottom.png"),
 
     /* RECOVERY PASSWORD */
     passwordRecoveryBackground: require("@/assets/images/recoveryPasswordBackground.png"),
-    passwordRecoveryEmailBg: require("@/assets/images/recoveryPasswordEmailBg.png")
-}   
+    passwordRecoveryEmailBg: require("@/assets/images/recoveryPasswordEmailBg.png"),
+
+    /* CHAT SCREEN */
+    //person1: require("@/assets/images/person1.png")
+}

@@ -19,7 +19,7 @@ const RootNavigation = () => {
       <Stack screenOptions={{headerShown: false}} />
       {isLogin
         ? <Redirect href="/(main)/(tabs)/featured" />
-        : <Redirect href="/(auth)" />}
+        : <Redirect href="/(main)/(tabs)/featured" />}
     </>
 
   );
