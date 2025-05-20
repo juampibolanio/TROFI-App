@@ -20,7 +20,7 @@ const RootNavigation = () => {
       <Stack screenOptions={{headerShown: false}} />
       {isLogin
         ? <Redirect href="/(main)/(tabs)/featured" />
-        : <Redirect href="/(settings)/aboutTrofi" />}
+        : <Redirect href="/(settings)/reportBug" />}
     </>
 
   );
