@@ -24,13 +24,11 @@ const AboutTrofi = () => {
         <SafeAreaView style={styles.container}>
             {/* Cabecera */}
             <View style={styles.header}>
-                <Text style={styles.headerText}>TROFI</Text>
+                <Image source={imagePath.icon} style={styles.icon} />
             </View>
 
             {/*contenido principal */}
             <View style={styles.content}>
-                <Image source={imagePath.icon} style={styles.icon} />
-
                 <TouchableOpacity style={styles.button}>
                     <Text style={styles.buttonText}>Acerca de TROFI</Text>
                 </TouchableOpacity>
@@ -46,11 +44,10 @@ const AboutTrofi = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0E3549',
-       
+        backgroundColor: '#0E3549',  
     },
     header: {
-        height: verticalScale(50),
+        height: verticalScale(75),
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#0E3549',
@@ -65,7 +62,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-start',
         paddingHorizontal: moderateScale(20),
-        gap: verticalScale(20),
+        gap: verticalScale(10),
         paddingTop: 10,
     },
     icon: {
