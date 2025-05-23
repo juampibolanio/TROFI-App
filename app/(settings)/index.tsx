@@ -33,7 +33,7 @@ const Settings = () => {
         return (
         <SafeAreaView style={styles.container}>
             <ImageBackground
-                source={imagePath.backgroundSettings}
+                source={imagePath.backgroundFeatured}
                 resizeMode='stretch'
                 style={styles.overlay}
             >
@@ -49,8 +49,9 @@ const Settings = () => {
             {/* BODY */}
             
             <View style={styles.body}>
-                <SettingsButton iconName="mail-open-sharp" title="Contacto" onPress={() => { }} />
-                <SettingsButton title="Preguntas frecuentes" onPress={() => { }} />
+                <SettingsButton iconName="mail-open-sharp" title="Contacto" onPress={() => {router.push('/(settings)/contact') }} />
+                <SettingsButton title="Preguntas frecuentes" onPress={() => {router.push('/(settings)/frequentlyQuestions') }} />
+                    {/*Falta hacer el redireccionamiento hacia las otras vistas*/}
                 <SettingsButton title="Acerca de TROFI" onPress={() => { }} />
                 <SettingsButton title="Reportar un bug" onPress={() => { }} />
                 <SettingsButton title="Términos y condiciones" onPress={() => { }} />

@@ -1,24 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     SafeAreaView,
     Image,
-    TouchableOpacity,
+    TouchableOpacity, 
 } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import imagePath from '@/constants/imagePath'; 
+import { FooterComponent } from 'react-native-screens/lib/typescript/components/ScreenFooter';
 
-const AboutTrofi = () => {
+    const AboutTrofi = () => {
+
+        
     const [fontsLoaded] = useFonts({
         Roboto_400Regular,
         Roboto_700Bold,
         Roboto_300Light,
     });
 
+// Estado para la animacion de expansion de la Pregunta
+// habilitar animaciones en Android ?*?*
+    const [isExpanded, setIsExpanded] = useState(false);
+    const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+};
+
+
     if (!fontsLoaded) return null;
+    
 
     return (
         <SafeAreaView style={styles.container}>
@@ -29,12 +41,29 @@ const AboutTrofi = () => {
 
             {/*contenido principal */}
             <View style={styles.content}>
-                <TouchableOpacity style={styles.button}>
-                    <Text style={styles.buttonText}>Acerca de TROFI</Text>
-                </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={toggleExpand}>
+            <Text style={styles.buttonText}>Acerca de TROFI</Text>
+            </TouchableOpacity>
+                {/* boton ACERCA DE */}
+                {isExpanded && (
+                    <View style={styles.drawerBox}>
+                        <Text style={styles.drawerText}>
+                        La aplicación TROFI es una aplicación para quienes buscan trabajos y oficios, 
+                        ya sea un profesional en áreas de electricidad, albañilería, plomería y demás, o para quienes 
+                        buscan ofrecer su trabajo y tener un perfil profesional donde conseguir nuevos clientes o profesionales.{"\n\n"}
+                        ¿Buscas un profesional confiable para reparaciones, construcciones o instalaciones? En TROFI tienes acceso a los mejores, con reseñas y precios transparentes.
+                        </Text>
+                    </View>
+                )}
 
                 <Text style={styles.versionText}>Versión 1.0.0.0</Text>
                 <Text style={styles.updateText}>Última actualización: [20/05/2025]</Text>
+                <Text style={styles.updateText}>Desarrollado por: team</Text> 
+                <Text style={styles.updateText}>Contacto:3625000012</Text>
+            </View>
+            {/* Pie de página */}
+            <View style={styles.footer}>
                 <Text style={styles.rightsText}>©2025 TROFI. Todos los derechos reservados.</Text>
             </View>
         </SafeAreaView>
@@ -46,7 +75,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0E3549',  
     },
-    header: {
+        header: {
         height: verticalScale(75),
         justifyContent: 'center',
         alignItems: 'center',
@@ -57,13 +86,35 @@ const styles = StyleSheet.create({
         fontFamily: 'Roboto_700Bold',
         color: '#FFFFFF',
     },
+
+    /*Boton que se expande*/
+    drawerBox: {
+    backgroundColor: 'rgba(64, 171, 201, 0.15)',
+    borderRadius: moderateScale(10),
+    padding: moderateScale(15),
+    marginBottom: verticalScale(10),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+    width: '100%',
+},
+drawerText: {
+    color: 'rgb(255, 255, 255)',
+    fontSize: moderateScale(12),
+    fontFamily: 'Roboto_300Light',
+    textAlign: 'justify',
+},
+    /* Fin boton que se expande*/
+    
     content: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
         paddingHorizontal: moderateScale(20),
         gap: verticalScale(10),
-        paddingTop: 10,
+
     },
     icon: {
         width: moderateScale(50),
@@ -86,12 +137,13 @@ const styles = StyleSheet.create({
     versionText: {
         color: '#FFFFFF',
         fontFamily: 'Roboto_300Light',
-        fontSize: moderateScale(12),
+        fontSize: moderateScale(12),   
+
     },
     updateText: {
-        color: '#FFFFFF',
+        color: 'rgb(255, 255, 255)',
         fontFamily: 'Roboto_300Light',
-        fontSize: moderateScale(12),
+        fontSize: moderateScale(10),
     },
     rightsText: {
         color: '#FFFFFF',
@@ -99,6 +151,14 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(12),
         marginTop: verticalScale(10),
     },
+    footer: {
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        paddingBottom: verticalScale(20),
+        backgroundColor: '#0E3549',
+    },
+    
 });
-
+// agregue un footer nose si sera necesario
+// falta la barra de navegacion.
 export default AboutTrofi;
