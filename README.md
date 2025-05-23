@@ -1,5 +1,4 @@
-📱 ¿Qué es TROFI? 📱
-TROFI es una aplicación móvil diseñada para facilitar la conexión entre profesionales de oficios (electricistas, plomeros, albañiles, etc.) y personas que necesitan sus servicios. 
+📱 TROFI es una aplicación móvil diseñada para facilitar la conexión entre profesionales de oficios (electricistas, plomeros, albañiles, etc.) y personas que necesitan sus servicios. 
 
 Con características como:
 🚀 Búsqueda inteligente de profesionales cercanos.
