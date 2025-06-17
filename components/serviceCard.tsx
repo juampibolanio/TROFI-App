@@ -4,11 +4,11 @@ import { View, Text, Image, StyleSheet, ImageSourcePropType, Pressable } from 'r
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 type Props = { //otra forma de pasar props a un componente
-    imageSource: ImageSourcePropType;  
+    imageSource: ImageSourcePropType;
     title: string;
 };
 
-    
+
 const ServiceCard: React.FC<Props> = ({ imageSource, title }) => {
     return (
         <Pressable style={({ pressed }) => [

@@ -2,9 +2,11 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import fonts from '@/constants/fonts'
 import { useFonts } from '@expo-google-fonts/roboto';
+import { router } from 'expo-router';
+import { moderateScale } from 'react-native-size-matters';
 
 //el boton de configuracion y el de perfil es el que deben modificar cuando quieran que esos botones hagan algo
-const HeaderPropio = () => {
+const HeaderTrofi = () => {
   const [fontsLoaded] = useFonts(fonts);
 
   return (
@@ -19,19 +21,20 @@ const HeaderPropio = () => {
       }}
     >
 
-      <TouchableOpacity onPress={() => console.log('Configuración')}>
+      <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/settings')}>
         <Ionicons name="settings-outline" size={24} color="#0E3549" />
       </TouchableOpacity>
 
-      <Text style={{ fontSize: 24, color: '#1C1C1C', fontFamily: 'Bauhaus93'}}>
+
+      <Text style={{ fontSize: 24, color: '#1C1C1C', fontFamily: 'Bauhaus93' }}>
         TROFI
       </Text>
 
-      <TouchableOpacity onPress={() => console.log('Perfil')}>
+      <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/profile')}>
         <Ionicons name="person-circle-outline" size={24} color="#0E3549" />
       </TouchableOpacity>
     </View>
   );
 };
 
-export default HeaderPropio;
+export default HeaderTrofi;

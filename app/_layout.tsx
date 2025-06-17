@@ -4,7 +4,7 @@ import { Redirect, SplashScreen, Stack } from 'expo-router'
 
 const RootNavigation = () => {
 
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
 
   useEffect(() => {
     SplashScreen.hideAsync();
@@ -20,9 +20,8 @@ const RootNavigation = () => {
       <Stack screenOptions={{headerShown: false}} />
       {isLogin
         ? <Redirect href="/(main)/(tabs)/featured" />
-        : <Redirect href="/(settings)/aboutTrofi" />}
+        : <Redirect href="/(main)/(auth)/" />}
     </>
-
   );
 }
 
