@@ -1,78 +1,78 @@
+// Librerías de React Native
 import {
     View,
     Text,
     SafeAreaView,
     StyleSheet,
     Image,
-    Switch,
     ImageBackground,
-    TouchableOpacity,
-    Pressable,
-    TextInput,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    TouchableWithoutFeedback,
-    Keyboard
 } from 'react-native';
-import React, { useState } from 'react';
+// React y estados
+import React from 'react';
 import imagePath from '@/constants/imagePath';
-import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
+// Escalado responsive
+import { moderateScale } from 'react-native-size-matters';
+// Fuentes personalizadas
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
+// Botón personalizado para ítems de configuración
 import SettingsButton from '@/components/SettingsButton';
+// Navegación con Expo Router
 import { router } from 'expo-router';
-import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 
 const Settings = () => {
+    // Cargamos fuentes Roboto
     const [fontsLoaded] = useFonts({
-            Roboto_400Regular,
-            Roboto_700Bold,
-            Roboto_300Light
-        });
+        Roboto_400Regular,
+        Roboto_700Bold,
+        Roboto_300Light
+    });
 
-        return (
+    // Si las fuentes aún no cargaron, no renderiza nada
+    if (!fontsLoaded) return null;
+
+    return (
         <SafeAreaView style={styles.container}>
             <ImageBackground
                 source={imagePath.backgroundFeatured}
                 resizeMode='stretch'
                 style={styles.overlay}
             >
+                {/* HEADER */}
+                <View style={styles.header}>
+                    <Image source={imagePath.icon} style={styles.iconStyle} resizeMode='contain'/>
+                </View>
 
-            {/* HEADER */}
-            <View style={styles.header}>
-                <Image source={imagePath.icon} style={styles.iconStyle} resizeMode='contain'/>
-            </View>
+                {/* BODY */}
+                <View style={styles.body}>
+                <SettingsButton
+                    iconName="mail-open-sharp"
+                    title="Contacto"
+                    onPress={() => router.push('/contact')}
+                />
+                <SettingsButton
+                    title="Preguntas frecuentes"
+                    onPress={() => router.push('/frequentlyQuestions')}
+                />
+                <SettingsButton
+                    title="Acerca de TROFI"
+                    onPress={() => router.push('/aboutTrofi')}
+                />
+                <SettingsButton
+                    title="Reportar un bug"
+                    onPress={() => router.push('/reportBug')}
+                />
+                <SettingsButton
+                    title="Términos y condiciones"
+                    onPress={() => router.push('/termsAndConditions')}
+                />
 
+                </View>
 
-
-
-            {/* BODY */}
-            
-            <View style={styles.body}>
-                <SettingsButton iconName="mail-open-sharp" title="Contacto" onPress={() => {router.push('/(settings)/contact') }} />
-                <SettingsButton title="Preguntas frecuentes" onPress={() => {router.push('/(settings)/frequentlyQuestions') }} />
-                    {/*Falta hacer el redireccionamiento hacia las otras vistas*/}
-                <SettingsButton title="Acerca de TROFI" onPress={() => { }} />
-                <SettingsButton title="Reportar un bug" onPress={() => { }} />
-                <SettingsButton title="Términos y condiciones" onPress={() => { }} />
-            </View>
-
-
-
-
-
-            {/* FOOTER */}
-            <View style={styles.footer}>
-            </View>
-
-            </ImageBackground>   
+                {/* FOOTER */}
+                <View style={styles.footer} />
+            </ImageBackground>
         </SafeAreaView>
-
-
-
-        );
-
-
+    );
 };
 
 const styles = StyleSheet.create({
@@ -93,9 +93,7 @@ const styles = StyleSheet.create({
         width: moderateScale(50),
         height: moderateScale(50),
     },
-    header: {
-
-    },
+    header: {},
     body: {
         flex: 1,
         alignItems: 'center',
@@ -107,4 +105,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Settings 
+export default Settings;
