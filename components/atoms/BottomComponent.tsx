@@ -1,8 +1,15 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import React from 'react'
-import { verticalScale } from 'react-native-size-matters'
+import { moderateScale, verticalScale } from 'react-native-size-matters'
 
-/*ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP */
+
+/*para el error BottomComponentProps sin haberlo declarado antes.*/
+interface BottomComponentProps {
+  title: string;
+  onPress: () => void;
+}
+
+/ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP/
 
 const BottomComponent = ({ title }: any) => {
     return (

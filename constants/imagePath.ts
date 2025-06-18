@@ -1,6 +1,6 @@
 export default {
 
-    /*AUTH SCREEN */
+    /* AUTH SCREEN */
     logo: require("@/assets/images/trofi-logo.png"),
     icon: require("@/assets/images/logo-t.png"),
     backgroundLogin: require("@/assets/images/backgroundLogin.png"),
@@ -29,5 +29,14 @@ export default {
     backgroundUDetails: require("@/assets/images/featuredImg/backgroundUserDetail.png"),
     backgroundGDetails: require("@/assets/images/searchImg/backgroundGalery.png"),
     backgroundRDetails: require("@/assets/images/searchImg/backgroundReviewDetail.png"),
-    backgroundSRDetails: require("@/assets/images/searchImg/backgroundSendReview.png")
+    backgroundSRDetails: require("@/assets/images/searchImg/backgroundSendReview.png"),
+
+   
+
+    /* RECOVERY PASSWORD */
+    passwordRecoveryBackground: require("@/assets/images/recoveryPasswordBackground.png"),
+    passwordRecoveryEmailBg: require("@/assets/images/recoveryPasswordEmailBg.png"),
+
+    /* CHAT SCREEN */
+    //person1: require("@/assets/images/person1.png")
 }
