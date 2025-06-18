@@ -22,8 +22,6 @@ const RegisterScreen = () => {
     router.push("/(auth)");
   };
 
-  /* ACÁ FALTA AGREGAR LAS X EN LOS INPUTS Y EL OJO PARA VER O NO LA CONTRASEÑA */
-
   const [nameEmail, setNameEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -132,7 +130,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: moderateScale(30),
+    marginTop: moderateScale(10),
   },
   footerText: {
     fontSize: moderateScale(15),

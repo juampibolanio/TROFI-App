@@ -4,7 +4,7 @@ import { Redirect, SplashScreen, Stack } from 'expo-router'
 
 const RootNavigation = () => {
 
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
 
   useEffect(() => {
     SplashScreen.hideAsync();
@@ -22,7 +22,10 @@ const RootNavigation = () => {
         : <Redirect href="/(auth)" />}
     </>
 
-  );
+  ); 
 }
 
 export default RootNavigation;
+
+
+//TENGO Q CREAR LA VISTA DE LAS RESEÑAS

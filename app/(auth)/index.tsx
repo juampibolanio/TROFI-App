@@ -20,7 +20,7 @@ import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import BottomComponent from '@/components/atoms/BottomComponent';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 
 const Auth = () => {
@@ -29,6 +29,9 @@ const Auth = () => {
         Roboto_700Bold,
         Roboto_300Light
     });
+
+    const router = useRouter();
+
 
     let navigateToRegister = () => {
         router.push("/(auth)/register");

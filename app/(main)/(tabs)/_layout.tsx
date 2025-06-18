@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import { View, Text } from 'react-native';
 import { BuscarIcon, PerfilIcon, MensajeIcon, DestacadosIcon } from '@/components/atoms/icon';
 import HeaderPropio from '@/components/headerTrofi';
@@ -7,6 +7,7 @@ import TabBarIcon from '@/components/tabBarIcon';
 
 
 export default function TabsLayout(){
+  
   return(
     <Tabs
       screenOptions={{
@@ -54,7 +55,7 @@ export default function TabsLayout(){
         options = {{
           title: 'Mi Perfil',
           tabBarIcon: ({focused}) => (
-            <TabBarIcon icon={PerfilIcon} label = 'Perfil' focused={focused} />
+            <TabBarIcon icon={PerfilIcon} label = 'Mi Perfil' focused={focused} />
           ),
         }}
       />

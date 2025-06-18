@@ -1,4 +1,6 @@
-import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
+import fonts from '@/constants/fonts';
+import { useFonts } from '@expo-google-fonts/roboto';
+import { router, useRouter } from 'expo-router';
 import React from 'react';
 import { View, Text, Image, StyleSheet, ImageSourcePropType, Pressable } from 'react-native';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
@@ -10,13 +12,27 @@ type Props = { //otra forma de pasar props a un componente
 
     
 const ServiceCard: React.FC<Props> = ({ imageSource, title }) => {
+
+    const categorias = ['Todos', 'Plomería', 'Electrónica', 'Cuidado de personas', 'Otros'];
+
+    const router = useRouter();
+
+    const goToDetails = () => {
+            router.push('/search');
+            params: { categorias: title }
+        };
+
+    const [fontsLoaded] = useFonts(fonts); //carga de fuentes
+
     return (
         <Pressable style={({ pressed }) => [
             {
-                transform: [{ scale: pressed ? 0.98 : 1 }], //esto es para hacer un efecto al presionar cada card.
+                transform: [{ scale: pressed ? 0.95 : 1 }], //esto es para hacer un efecto al presionar cada card.
             },
             styles.card,
-        ]} >
+        ]} 
+        onPress={goToDetails}
+        >
 
             {/* fondo */}
             <View style={styles.bottomBackground} />
@@ -77,6 +93,7 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(14),
         fontWeight: 'bold',
         marginTop: verticalScale(45),
+        fontFamily: 'RobotoLight'
     },
 });
 

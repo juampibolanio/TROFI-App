@@ -11,7 +11,7 @@ const TabBarIcon = ({ icon: IconComponent, label, focused }: any) => {
         <View
             style={{
                 backgroundColor: focused ? '#AAB1B6' : 'transparent',
-                borderRadius: moderateScale(20),
+                borderRadius: moderateScale(15),
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginTop: verticalScale(20),
