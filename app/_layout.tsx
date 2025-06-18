@@ -1,7 +1,7 @@
 import { View, Text, StatusBar } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Redirect, SplashScreen, Stack } from 'expo-router'
-
+  
 const RootNavigation = () => {
 
   const [isLogin, setIsLogin] = useState(false);
