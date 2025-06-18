@@ -9,12 +9,12 @@ export default {
     google: require("@/assets/images/Google.png"),
 
     /* REGISTER SCREEN */
-    registerBlob: require("@/assets/images/registerBlob.png"),
+    registerBackground: require("@/assets/images/registerBackground.png"),
     closeBottom: require("@/assets/images/closeBottom.png"),
     showPassBottom: require("@/assets/images/showPassBottom.png"),
     noShowPassBottom: require("@/assets/images/noShowPassBottom.png"),
 
-    /* FEATUREDS SCREEN */
+    /*FEATUREDS INDEX SCREEN */
     backgroundFeatured: require("@/assets/images/trofi-transparent-logo.png"),
     plumbing: require("@/assets/images/featuredImg/plumbing.png"),
     smithy: require("@/assets/images/featuredImg/smithy.png"),
@@ -23,6 +23,13 @@ export default {
     elderlyCare: require("@/assets/images/featuredImg/elderlyCare.png"),
     carpentry: require("@/assets/images/featuredImg/carpentry.png"),
 
+    /*SEARCH INDEX SCREEN */
+
+    backgroundFDetails: require("@/assets/images/featuredImg/backgroundDetails.png"),
+    backgroundUDetails: require("@/assets/images/featuredImg/backgroundUserDetail.png"),
+    backgroundGDetails: require("@/assets/images/searchImg/backgroundGalery.png"),
+    backgroundRDetails: require("@/assets/images/searchImg/backgroundReviewDetail.png"),
+    backgroundSRDetails: require("@/assets/images/searchImg/backgroundSendReview.png"),
 
    
 

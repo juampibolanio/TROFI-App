@@ -1,13 +1,15 @@
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Íconos de estilo iOS (engranaje, perfil, etc.)
-import fonts from '@/constants/fonts'; 
-import { useFonts } from '@expo-google-fonts/roboto'; 
-import { router } from 'expo-router';
-import { moderateScale } from 'react-native-size-matters';
+import { View, Text, TouchableOpacity, ActivityIndicator, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import fonts from '@/constants/fonts'
+import { useFonts } from '@expo-google-fonts/roboto';
+import { router, useRouter } from 'expo-router';
 
 //el boton de configuracion y el de perfil es el que deben modificar cuando quieran que esos botones hagan algo
 const HeaderTrofi = () => {
   const [fontsLoaded] = useFonts(fonts);
+
+  const router = useRouter();
+
 
 
   if (!fontsLoaded) return null;

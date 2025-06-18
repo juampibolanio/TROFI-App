@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import { View, Text } from 'react-native';
 import { BuscarIcon, PerfilIcon, MensajeIcon, DestacadosIcon, SettingsIcon } from '@/components/atoms/icon';
 import HeaderTrofi from '@/components/headerTrofi';

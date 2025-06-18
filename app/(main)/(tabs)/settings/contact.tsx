@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { moderateScale } from 'react-native-size-matters';
+import { router } from 'expo-router';
 
 const Contact = () => {
     const [focusedField, setFocusedField] = useState('');
@@ -94,7 +95,7 @@ const Contact = () => {
 
                     {/* Botones de acción */}
                     <View style={styles.buttonGroup}>
-                        <TouchableOpacity style={styles.cancelButton}>
+                        <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
                             <Text style={styles.cancelButtonText}>Cancelar</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.submitButton}>

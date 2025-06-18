@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: moderateScale(30),
+    marginTop: moderateScale(10),
   },
   footerText: {
     fontSize: moderateScale(15),
