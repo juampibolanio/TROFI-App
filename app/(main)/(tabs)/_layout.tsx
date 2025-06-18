@@ -1,60 +1,71 @@
 import { Tabs } from 'expo-router';
 import { View, Text } from 'react-native';
-import { BuscarIcon, PerfilIcon, MensajeIcon, DestacadosIcon } from '@/components/atoms/icon';
-import HeaderPropio from '@/components/headerTrofi';
+import { BuscarIcon, PerfilIcon, MensajeIcon, DestacadosIcon, SettingsIcon } from '@/components/atoms/icon';
+import HeaderTrofi from '@/components/headerTrofi';
 import { moderateScale } from 'react-native-size-matters';
 import TabBarIcon from '@/components/tabBarIcon';
 
 
-export default function TabsLayout(){
-  return(
+const TabsLayout = () => {
+  return (
     <Tabs
       screenOptions={{
-        header: () => <HeaderPropio/>,
+        header: () => <HeaderTrofi />,
         tabBarLabelPosition: 'below-icon',
         tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: '#D9D9D9',
           borderTopWidth: 0,
-          height: 60, 
+          height: 60,
           overflow: 'hidden',
           borderRadius: moderateScale(10),
         },
       }}
-      >
+    >
 
       <Tabs.Screen
         name="featured"
         options={{
+          title: 'Destacados',
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon icon={DestacadosIcon} label='Destacados' focused={focused} />
+            <TabBarIcon icon={DestacadosIcon} label='Destacado' focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
-        options = {{
+        options={{
           title: 'Buscar',
-          tabBarIcon: ({focused}) => (
-            <TabBarIcon icon={BuscarIcon} label = 'Buscar' focused={focused} />
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon icon={BuscarIcon} label='Buscar' focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="messages"
-        options = {{
+        options={{
           title: 'Mensajes',
-          tabBarIcon: ({focused}) => (
-            <TabBarIcon icon={MensajeIcon} label = 'Mensajes' focused={focused} />
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon icon={MensajeIcon} label='Mensajes' focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
-        options = {{
+        options={{
           title: 'Mi Perfil',
-          tabBarIcon: ({focused}) => (
-            <TabBarIcon icon={PerfilIcon} label = 'Perfil' focused={focused} />
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon icon={PerfilIcon} label='Perfil' focused={focused} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Ajustes',
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon icon={SettingsIcon} label='Ajustes' focused={focused} />
           ),
         }}
       />
@@ -62,3 +73,5 @@ export default function TabsLayout(){
     </Tabs>
   )
 }
+
+export default TabsLayout;

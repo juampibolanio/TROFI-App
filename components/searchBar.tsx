@@ -4,21 +4,21 @@ import { View, Text, Image, StyleSheet, ImageSourcePropType, Pressable, TextInpu
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
 type Props = {
-    placeHolder: string;
+  placeHolder: string;
 }
 
 const SearchBar: React.FC<Props> = ({ placeHolder }) => (
-    <View style={styles.searchBar}>
-        <TextInput
-            placeholder={placeHolder}
-            placeholderTextColor='#888'
-            style={styles.searchBarInput} />
-        <Ionicons name='search' size={25} color='#0E3549' />
-    </View>
+  <View style={styles.searchBar}>
+    <TextInput
+      placeholder={placeHolder}
+      placeholderTextColor='#888'
+      style={styles.searchBarInput} />
+    <Ionicons name='search' size={25} color='#0E3549' />
+  </View>
 );
 
 const styles = StyleSheet.create({
-  searchBar:{
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgb(255, 255, 255)',

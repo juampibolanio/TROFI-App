@@ -24,3 +24,7 @@ export const PerfilIcon = (props: any) => (
 export const ContactIcon = (props: any) => (
   <Ionicons name="copy1" size={ICON_SIZE} color={ICON_COLOR} {...props} />
 );
+
+export const SettingsIcon = (props: any) => (
+  <Ionicons name="settings-outline" size={ICON_SIZE} color={ICON_COLOR} {...props} />
+);

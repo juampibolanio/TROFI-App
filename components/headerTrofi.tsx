@@ -2,10 +2,11 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Íconos de estilo iOS (engranaje, perfil, etc.)
 import fonts from '@/constants/fonts'; 
 import { useFonts } from '@expo-google-fonts/roboto'; 
-import { router } from 'expo-router'; // permite navegar entre pantallas usando rutas
+import { router } from 'expo-router';
+import { moderateScale } from 'react-native-size-matters';
 
 //el boton de configuracion y el de perfil es el que deben modificar cuando quieran que esos botones hagan algo
-const HeaderPropio = () => {
+const HeaderTrofi = () => {
   const [fontsLoaded] = useFonts(fonts);
 
 
@@ -21,8 +22,9 @@ const HeaderPropio = () => {
         paddingHorizontal: 16,
       }}
     >
-    <TouchableOpacity onPress={() => router.push('/(settings)')}>
-    <Ionicons name="settings-outline" size={24} color="#0E3549" />
+
+      <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/settings')}>
+        <Ionicons name="settings-outline" size={24} color="#0E3549" />
       </TouchableOpacity>
 
 
@@ -37,4 +39,4 @@ const HeaderPropio = () => {
   );
 };
 
-export default HeaderPropio;
+export default HeaderTrofi;

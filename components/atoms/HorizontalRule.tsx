@@ -9,8 +9,8 @@ const HorizontalRule = () => {
 const styles = StyleSheet.create({
   rule: {
     width: moderateScale(500),
-    height: moderateScale(1), // grosor de la línea
-    backgroundColor: '#FFFFFF', // color visible sobre fondo oscuro 
+    height: moderateScale(1), 
+    backgroundColor: '#FFFFFF', 
   },
 });
 

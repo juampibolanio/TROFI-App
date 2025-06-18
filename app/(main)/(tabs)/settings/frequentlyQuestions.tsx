@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
     View,
     Text,
@@ -8,11 +8,14 @@ import {
     TouchableOpacity,
     LayoutAnimation,
     Platform,
-    UIManager 
+    UIManager,
+    ScrollView,
+    Animated
 } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import imagePath from '@/constants/imagePath';
+import { Ionicons } from '@expo/vector-icons';
 
 // habilitar animaciones en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -32,12 +35,11 @@ const FrequentlyQuestions = () => {
         Roboto_300Light,
     });
 
-    // STATE de las preguntas 
     const [faqs, setFaqs] = useState<FAQItem[]>([
         {
             question: "¿Qué es TROFI?",
             answer: "TROFI es la solución ideal para conectar profesionales con quienes necesitan sus servicios de manera rápida y sencilla. Con nuestra app, puedes encontrar expertos en distintos oficios, como electricistas, plomeros, carpinteros y muchos más.",
-            expanded: true // Mostrar esta expandida por defecto
+            expanded: false
         },
         {
             question: "¿Cómo funciona?",
@@ -53,20 +55,28 @@ const FrequentlyQuestions = () => {
             question: "¿Cómo contacto a un profesional?",
             answer: "Puedes contactar a profesionales o clientes:\n1. Buscando en el directorio de servicios\n2. Seleccionando el profesional que necesites\n3. Enviando un mensaje directo a través de la app\n4. Programando una cita en el calendario integrado\n5. Cada profesional tiene su propio perfil donde puedes ver sus servicios, calificaciones y comentarios de otros usuarios.",
             expanded: false
-        }
+        },
     ]);
 
-    // Function  alternar la expansión de un FAQ  
+
+    const animatedHeights = useRef<Animated.Value[]>(faqs.map(() => new Animated.Value(0))).current;  //Aca se crea un Animated.Value para cada FAQ . Esto es una  función para alternar la expansión de las preguntas frecuentes
+
     const toggleFAQ = (index: number) => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        
-        // crea una copia del estado actual
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); // Configurar la animación de diseño para que sea suave
         const updatedFaqs = faqs.map((faq, i) => ({
             ...faq,
-            expanded: i === index ? !faq.expanded : false
-             // solo el elemento clickeado cambia su estado, los demás se cierran 
+            expanded: i === index ? !faq.expanded : false // Alternar la expansión solo para el FAQ seleccionado
         }));
-        
+
+        // Actualizar las alturas animadas según el estado expandido
+        updatedFaqs.forEach((faq, i) => {
+            Animated.timing(animatedHeights[i], {
+                toValue: faq.expanded ? 1 : 0,
+                duration: 300,
+                useNativeDriver: false,
+            }).start();
+        });
+
         setFaqs(updatedFaqs);
     };
 
@@ -74,43 +84,60 @@ const FrequentlyQuestions = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Cabecera */}
             <View style={styles.header}>
                 <Image source={imagePath.icon} style={styles.icon} />
             </View>
-            {/* Contenido principal */}
-            <View style={styles.content}>
-                
-                {/* Lista de preguntas frecuentes */}
-                <View style={styles.faqContainer}>
-                    {faqs.map((faq, index) => (
-                        <View key={index} style={styles.faqItem}>
-                            <TouchableOpacity 
-                                style={styles.faqQuestion} 
-                                onPress={() => toggleFAQ(index)}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.faqQuestionText}>{faq.question}</Text>
-                            </TouchableOpacity>
-                            
-                            {faq.expanded && (
-                                <View style={styles.faqAnswer}>
-                                    <Text style={styles.faqAnswerText}>{faq.answer}</Text>
-                                </View>
-                            )}
-                        </View>
-                    ))}
-                </View>
 
-                {/*Pie de pagina */}
-                <View style={styles.footer}>
-                    <Text style={styles.rightsText}>©2025 TROFI. Todos los derechos reservados.</Text>
-                </View>
+            <View style={styles.content}>
+                <ScrollView>
+                    <View style={styles.faqContainer}>
+                        {faqs.map((faq, index) => {
+                            const height = animatedHeights[index].interpolate({ // esto se utiliza para animar la altura de la respuesta
+                                inputRange: [0, 1],
+                                outputRange: [0, 150], 
+                                extrapolate: 'clamp'
+                            });
+
+                            const opacity = animatedHeights[index].interpolate({ // esto se utiliza para animar la opacidad 
+                                inputRange: [0, 1],
+                                outputRange: [0, 1]
+                            });
+
+                            return (
+                                <View key={index} style={styles.faqItem}>
+                                    <TouchableOpacity
+                                        style={styles.faqQuestion}
+                                        onPress={() => toggleFAQ(index)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons
+                                            name={faq.expanded ? "chevron-up" : "chevron-down"}
+                                            size={20}
+                                            color="#0E3549"
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                        <Text style={styles.faqQuestionText}>{faq.question}</Text>
+                                    </TouchableOpacity>
+
+
+                                    <Animated.View style={[
+                                        styles.faqAnswer,
+                                        { height, opacity, marginBottom: faq.expanded ? verticalScale(10) : 0 } // acá se añade margen inferior solo si está expandido
+                                    ]}>
+                                        <ScrollView>
+                                            <Text style={styles.faqAnswerText}>{faq.answer}</Text>
+                                        </ScrollView>
+                                    </Animated.View>
+
+                                </View>
+                            );
+                        })}
+                    </View>
+                </ScrollView>
             </View>
         </SafeAreaView>
     );
 };
-
 
 const styles = StyleSheet.create({
     container: {
@@ -132,64 +159,46 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingHorizontal: moderateScale(20),
+        paddingHorizontal: moderateScale(15),
         paddingTop: verticalScale(20),
-    },
-    title: {
-        color: '#FFFFFF',
-        fontSize: moderateScale(24),
-        fontFamily: 'Roboto_700Bold',
-        marginBottom: verticalScale(30),
     },
     faqContainer: {
         width: '100%',
-        marginBottom: verticalScale(20),
     },
     faqItem: {
-        marginBottom: verticalScale(15),
         borderRadius: moderateScale(10),
         overflow: 'hidden',
     },
     faqQuestion: {
         backgroundColor: '#E5E5E5',
-        paddingVertical: verticalScale(15),
-        paddingHorizontal: moderateScale(20),
+        paddingVertical: verticalScale(10),
+        paddingHorizontal: moderateScale(15),
         borderRadius: moderateScale(10),
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: moderateScale(10),
     },
     faqQuestionText: {
         color: '#0E3549',
         fontFamily: 'Roboto_700Bold',
-        fontSize: moderateScale(16),
+        fontSize: moderateScale(14),
+        flexShrink: 1,
     },
     faqAnswer: {
         backgroundColor: 'rgba(229, 229, 229, 0.2)',
-        padding: moderateScale(20),
-        marginTop: verticalScale(5),
+        paddingVertical: verticalScale(10),
+        paddingHorizontal: moderateScale(15),
         borderRadius: moderateScale(10),
+        overflow: 'hidden',
     },
     faqAnswerText: {
         color: '#FFFFFF',
         fontFamily: 'Roboto_400Regular',
         fontSize: moderateScale(14),
         lineHeight: verticalScale(20),
-    },
-    footer: {
-        marginTop: 'auto',
-        paddingBottom: verticalScale(20),
-        alignItems: 'center',
-    },
-    rightsText: {
-        color: '#FFFFFF',
-        fontFamily: 'Roboto_300Light',
-        fontSize: moderateScale(12),
-        marginTop: verticalScale(10),
+        textAlign: 'justify',
     },
 });
 
-
-
-// 1era versión de FAQ
-// - Se agregaron preguntas frecuentes con animación de expansión
-// Posibilidad de agregar más estilos, mas preguntas y una barra de navegación vertical
-// Completando la función de FAQ.
 export default FrequentlyQuestions;
