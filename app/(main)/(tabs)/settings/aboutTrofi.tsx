@@ -59,7 +59,7 @@ const AboutTrofi = () => {
 
                 <Text style={styles.versionText}>Versión 1.0.0.0</Text>
                 <Text style={styles.updateText}>Última actualización: [20/05/2025]</Text>
-                <Text style={styles.updateText}>Desarrollado por: team</Text>
+                <Text style={styles.updateText}>Desarrollado por: CuperCode</Text>
                 <Text style={styles.updateText}>Contacto:3625000012</Text>
             </View>
             {/* Pie de página */}
@@ -89,14 +89,9 @@ const styles = StyleSheet.create({
 
     /*Boton que se expande*/
     drawerBox: {
-        backgroundColor: 'rgba(64, 171, 201, 0.15)',
         borderRadius: moderateScale(10),
         padding: moderateScale(15),
         marginBottom: verticalScale(10),
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
         elevation: 5,
         width: '100%',
     },
@@ -121,6 +116,7 @@ const styles = StyleSheet.create({
         height: moderateScale(50),
         resizeMode: 'contain',
         marginBottom: verticalScale(20),
+        marginTop: verticalScale(20),
     },
     button: {
         backgroundColor: '#E5E5E5',

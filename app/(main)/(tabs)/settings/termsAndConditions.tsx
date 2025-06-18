@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
         width: moderateScale(40),
         height: moderateScale(40),
         resizeMode: 'contain',
+        marginTop: verticalScale(10),
     },
     scrollContainer: {
         paddingHorizontal: moderateScale(20),

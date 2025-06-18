@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     View,
@@ -6,133 +6,156 @@ import {
     TextInput,
     TouchableOpacity,
     SafeAreaView,
+    ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { StatusBar } from 'expo-status-bar';
+import { moderateScale } from 'react-native-size-matters';
 
-const contactact = () => {
+const Contact = () => {
+    const [focusedField, setFocusedField] = useState('');
+
     return (
         <SafeAreaView style={styles.safeArea}>
-            <StatusBar style="light" backgroundColor="#24475E" />
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <View style={styles.container}>
+                    <View style={styles.iconContainer}>
+                        <Ionicons name="mail-outline" size={60} color="#ffffff" />
+                    </View>
 
-            <View style={styles.container}>
-                <View style={styles.iconContainer}>
-                    {/*ICONO CONTACTO */}
-                    <Ionicons name="mail-outline" size={60} color="#ffffff" />
+                    <Text style={styles.title}>¡Contáctanos!</Text>
+
+                    {/* Campos del formulario */}
+                    <View
+                        style={[
+                            styles.inputContainer,
+                            focusedField === 'nombre' && styles.inputContainerFocused,
+                        ]}
+                    >
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nombre"
+                            placeholderTextColor="#B0BEC5"
+                            autoCapitalize="words"
+                            onFocus={() => setFocusedField('nombre')}
+                            onBlur={() => setFocusedField('')}
+                        />
+                    </View>
+
+                    <View
+                        style={[
+                            styles.inputContainer,
+                            focusedField === 'email' && styles.inputContainerFocused,
+                        ]}
+                    >
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            placeholderTextColor="#B0BEC5"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            onFocus={() => setFocusedField('email')}
+                            onBlur={() => setFocusedField('')}
+                        />
+                    </View>
+
+                    <View
+                        style={[
+                            styles.inputContainer,
+                            focusedField === 'asunto' && styles.inputContainerFocused,
+                        ]}
+                    >
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Asunto"
+                            placeholderTextColor="#B0BEC5"
+                            autoCapitalize="words"
+                            onFocus={() => setFocusedField('asunto')}
+                            onBlur={() => setFocusedField('')}
+                        />
+                    </View>
+
+                    <View
+                        style={[
+                            styles.largeInputContainer,
+                            focusedField === 'mensaje' && styles.inputContainerFocused,
+                        ]}
+                    >
+                        <TextInput
+                            style={styles.largeInput}
+                            placeholder="Escribe tu mensaje aquí..."
+                            placeholderTextColor="#B0BEC5"
+                            multiline
+                            textAlignVertical="top"
+                            autoCapitalize="sentences"
+                            onFocus={() => setFocusedField('mensaje')}
+                            onBlur={() => setFocusedField('')}
+                        />
+                    </View>
+
+                    {/* Botones de acción */}
+                    <View style={styles.buttonGroup}>
+                        <TouchableOpacity style={styles.cancelButton}>
+                            <Text style={styles.cancelButtonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.submitButton}>
+                            <Text style={styles.submitButtonText}>Enviar</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
-
-                <Text style={styles.title}>¡Contáctanos!</Text>
-
-                {/* Campos del formulario */}
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nombre"
-                        placeholderTextColor="#B0BEC5"
-                    />
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Email"
-                        placeholderTextColor="#B0BEC5"
-                        keyboardType="email-address"
-                    />
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Asunto"
-                        placeholderTextColor="#B0BEC5"
-                    />
-                </View>
-
-                <View style={styles.largeInputContainer}>
-                    <TextInput
-                        style={styles.largeInput}
-                        placeholder="Escribe tu mensaje"
-                        placeholderTextColor="#B0BEC5"
-                        multiline
-                        textAlignVertical="top"
-                    />
-                </View>
-
-                {/* Botones de acción */}
-                <View style={styles.buttonGroup}>
-                    <TouchableOpacity style={styles.cancelButton}>
-                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.submitButton}>
-                        <Text style={styles.submitButtonText}>Enviar</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };
 
-// estilos reutilizados 
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#F5F5F5',
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#E0E0E0',
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-    },
-    headerButton: {
-        padding: 8,
-    },
-    logo: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: 'black',
-    },
     container: {
         flex: 1,
-        padding: 20,
+        padding: moderateScale(20),
         backgroundColor: '#24475E',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingTop: 30,
+        paddingTop: moderateScale(30),
     },
     iconContainer: {
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: moderateScale(20),
     },
     title: {
-        fontSize: 24,
+        fontSize: moderateScale(24),
         fontWeight: 'bold',
-        color: 'white',
-        marginBottom: 30,
+        color: '#FFFFFF',
+        marginBottom: moderateScale(30),
         textAlign: 'center',
     },
     inputContainer: {
         backgroundColor: '#37698A',
-        borderRadius: 10,
-        marginBottom: 15,
-        paddingHorizontal: 15,
-    },
-    input: {
-        height: 45,
-        color: 'white',
+        borderRadius: moderateScale(10),
+        marginBottom: moderateScale(15),
+        paddingHorizontal: moderateScale(15),
+        borderWidth: 0,
+        borderColor: 'transparent',
     },
     largeInputContainer: {
         backgroundColor: '#37698A',
-        borderRadius: 15,
-        marginBottom: 20,
-        paddingHorizontal: 15,
+        borderRadius: moderateScale(15),
+        marginBottom: moderateScale(20),
+        paddingHorizontal: moderateScale(15),
+        borderWidth: 0,
+        borderColor: 'transparent',
+    },
+    inputContainerFocused: {
+        borderColor: '#FFFFFF',
+        borderWidth: 2,
+    },
+    input: {
+        height: moderateScale(45),
+        color: '#FFFFFF',
     },
     largeInput: {
-        height: 120,
-        color: 'white',
+        height: moderateScale(120),
+        color: '#FFFFFF',
         textAlignVertical: 'top',
     },
     buttonGroup: {
@@ -142,33 +165,33 @@ const styles = StyleSheet.create({
     cancelButton: {
         backgroundColor: 'transparent',
         borderWidth: 1,
-        borderColor: 'white',
-        borderRadius: 25,
-        paddingVertical: 12,
-        paddingHorizontal: 30,
+        borderColor: '#FFFFFF',
+        borderRadius: moderateScale(25),
+        paddingVertical: moderateScale(12),
+        paddingHorizontal: moderateScale(30),
         alignItems: 'center',
         flex: 1,
-        marginRight: 10,
+        marginRight: moderateScale(10),
     },
     cancelButtonText: {
-        color: 'white',
+        color: '#FFFFFF',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: moderateScale(16),
     },
     submitButton: {
-        backgroundColor: 'white',
-        borderRadius: 25,
-        paddingVertical: 12,
-        paddingHorizontal: 30,
+        backgroundColor: '#FFFFFF',
+        borderRadius: moderateScale(25),
+        paddingVertical: moderateScale(12),
+        paddingHorizontal: moderateScale(30),
         alignItems: 'center',
         flex: 1,
-        marginLeft: 10,
+        marginLeft: moderateScale(10),
     },
     submitButtonText: {
         color: '#24475E',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: moderateScale(16),
     },
 });
 
-export default contactact;
+export default Contact;

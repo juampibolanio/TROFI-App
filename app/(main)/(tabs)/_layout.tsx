@@ -26,8 +26,9 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="featured"
         options={{
+          title: 'Destacados',
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon icon={DestacadosIcon} label='Destacados' focused={focused} />
+            <TabBarIcon icon={DestacadosIcon} label='Destacado' focused={focused} />
           ),
         }}
       />
