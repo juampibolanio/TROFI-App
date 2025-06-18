@@ -1,7 +1,7 @@
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import fonts from '@/constants/fonts'
-import { useFonts } from '@expo-google-fonts/roboto';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Íconos de estilo iOS (engranaje, perfil, etc.)
+import fonts from '@/constants/fonts'; 
+import { useFonts } from '@expo-google-fonts/roboto'; 
 import { router } from 'expo-router';
 import { moderateScale } from 'react-native-size-matters';
 
@@ -9,6 +9,8 @@ import { moderateScale } from 'react-native-size-matters';
 const HeaderTrofi = () => {
   const [fontsLoaded] = useFonts(fonts);
 
+
+  if (!fontsLoaded) return null;
   return (
     <View
       style={{
