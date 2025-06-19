@@ -34,7 +34,7 @@ const perfiles = [
         id: 3,
         nombre: 'Joaquín Sosa',
         puntaje: 9.0,
-        categoria: 'Herrero',
+        categoria: 'Herrería',
         ubicacion: 'Resistencia',
         descripcionLaboral: 'Diseño y fabricación de estructuras metálicas a medida.',
         descripcion: 'Soy una persona con años de experiencia.. .. ..',
@@ -54,7 +54,7 @@ const perfiles = [
         id: 5,
         nombre: 'Leandro Giménez',
         puntaje: 8.4,
-        categoria: 'Cuidado de personas',
+        categoria: 'Cuidados',
         ubicacion: 'Puerto vilelas',
         descripcionLaboral: 'Cuidador con experiencia en adultos mayores, atención y acompañamiento.',
         descripcion: 'Soy una persona con años de experiencia.. .. ..',
@@ -194,21 +194,21 @@ const UserDetail = () => {
 
                         <Pressable
                             style={({ pressed }) => [styles.workGalery, pressed && { opacity: 0.5 }]}
-                            onPress={() => router.push({ pathname: "/(main)/(tabs)/search/reviewDetail/[id]", params: { id: String(id) } })} /*Pasar push a funcion aparte */
+                            onPress={() => router.push({ pathname: "/(main)/(tabs)/search/[id]/reviewDetail", params: { id: String(id) } })} /*Pasar push a funcion aparte */
                         >
                             <Text style={styles.textBottom}>Reseñas de la comunidad</Text>
                         </Pressable>
 
                         <Pressable
                             style={({ pressed }) => [styles.workGalery, pressed && { opacity: 0.5 }]}
-                            onPress={() => router.push({ pathname: "/(main)/(tabs)/search/userGalery/[id]", params: { id: String(id) } })} /*Pasar router push a funcion aparte */
+                            onPress={() => router.push({ pathname: "/(main)/(tabs)/search/[id]/userGalery", params: { id: String(id) } })} /*Pasar router push a funcion aparte */
                         >
                             <Text style={styles.textBottom}>Galería de trabajo</Text>
                         </Pressable>
                     </View>
 
                     <ScrollView>
-                        <Pressable style={styles.reviewContainer} onPress={() => router.push({ pathname: "/(main)/(tabs)/search/reviewDetail/[id]", params: { id: String(id) } })} /*Pasar push a funcion aparte */>
+                        <Pressable style={styles.reviewContainer} onPress={() => router.push({ pathname: "/(main)/(tabs)/search/[id]/reviewDetail", params: { id: String(id) } })} /*Pasar push a funcion aparte */>
 
                             {reseñasConAutorFiltradas.map((r, index) => (
                                 <UserReview

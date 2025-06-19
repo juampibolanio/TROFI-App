@@ -3,7 +3,7 @@ import imagePath from '@/constants/imagePath';
 import { useFonts } from '@expo-google-fonts/roboto';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useRouter } from 'expo-router';
-import { useSearchParams } from 'expo-router/build/hooks';
+import { useLocalSearchParams, useSearchParams } from 'expo-router/build/hooks';
 import React, { useState } from 'react';
 import {
   View,
@@ -49,10 +49,9 @@ const ProfileCard: React.FC<{ item: Perfil; onPress: () => void }> = ({ item, on
 
 const Search = () => {
   const [fontsLoaded] = useFonts(fonts); // carga de fuentes
-  const router = useRouter();
 
-  const params = useSearchParams();
-  const categoriaParam = params.get('categoria') ?? 'Todos';
+  const params = useLocalSearchParams();
+  const categoriaParam = params.categoria ?? 'Todos';
 
   // Estado inicial con la categoría q traiga el parámetro o 'Todos'
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(categoriaParam);
@@ -61,7 +60,7 @@ const Search = () => {
   const [searchText, setSearchText] = useState('');
 
   /* Array de categorías posibles */
-  const categorias = ['Todos', 'Plomería', 'Electrónica', 'Cuidado de personas', 'Otros'];
+  const categorias = ['Todos', 'Plomería', 'Electrónica', 'Cuidados', 'Herrería', 'Albañilería', 'Electricidad', 'Otros'];
 
   /* Datos de perfiles simulados */
   const perfiles = [
@@ -89,7 +88,7 @@ const Search = () => {
       id: 3,
       nombre: 'Joaquín Sosa',
       puntaje: 9.0,
-      categoria: 'Herrero',
+      categoria: 'Herrería',
       ubicacion: 'Resistencia',
       descripcionLaboral: 'Diseño y fabricación de estructuras metálicas a medida.',
       descripcion: 'Soy una persona con años de experiencia.. .. ..',
@@ -109,7 +108,7 @@ const Search = () => {
       id: 5,
       nombre: 'Leandro Giménez',
       puntaje: 8.4,
-      categoria: 'Cuidado de personas',
+      categoria: 'Cuidados',
       ubicacion: 'Puerto vilelas',
       descripcionLaboral: 'Cuidador con experiencia en adultos mayores, atención y acompañamiento.',
       descripcion: 'Soy una persona con años de experiencia.. .. ..',
@@ -143,7 +142,7 @@ const Search = () => {
       categoriaSeleccionada === 'Todos'
         ? true
         : categoriaSeleccionada === 'Otros'
-          ? !['Plomería', 'Electrónica', 'Cuidado de personas'].includes(p.categoria)
+          ? !['Plomería', 'Electrónica', 'Cuidados', 'Herrería', 'Albañilería', 'Electricidad'].includes(p.categoria)
           : p.categoria === categoriaSeleccionada;
 
     const matchNombre = p.nombre.toLowerCase().includes(searchText.toLowerCase());
@@ -203,7 +202,8 @@ const Search = () => {
             renderItem={({ item }) => (
               <ProfileCard
                 item={item}
-                onPress={() => router.push(`/(main)/(tabs)/search/userDetail/${item.id}`)}
+                onPress={() => router.push({ pathname: "/(main)/(tabs)/search/[id]", params: { id: String(item.id) } })}
+
               />
             )}
           />

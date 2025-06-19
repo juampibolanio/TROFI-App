@@ -24,8 +24,8 @@ const Settings = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ImageBackground
-                source={imagePath.backgroundFeatured}
-                resizeMode='contain'
+                source={imagePath.backgroundSettings}
+                resizeMode='cover'
                 style={styles.overlay}
             >
 

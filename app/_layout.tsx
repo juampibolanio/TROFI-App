@@ -15,7 +15,6 @@ const RootNavigation = () => {
     // la app comienza normalmente
     <>
       {/*configuro acá la barra de estado */}
-      {/*ESTA PUESTO PARA LA VISTA QUE ESTOY HACIENDO AHORA EL HREF SETTINGS */}
       <StatusBar backgroundColor="#0E3549" barStyle="light-content" />
       <Stack screenOptions={{headerShown: false}} />
       {isLogin

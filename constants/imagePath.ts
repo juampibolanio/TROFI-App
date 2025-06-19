@@ -39,4 +39,8 @@ export default {
 
     /* CHAT SCREEN */
     //person1: require("@/assets/images/person1.png")
+
+
+    /* SETTINGS SCREENS */
+    backgroundSettings: require("@/assets/images/settingsImg/backgroundSettings.png"),
 }
