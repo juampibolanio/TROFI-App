@@ -4,7 +4,7 @@ import { Text } from 'react-native'
 const userSettings = () => {
     return (
         <>
-            <Text>Prueba</Text>
+            <Text>editar</Text>
         </>
     )
 }

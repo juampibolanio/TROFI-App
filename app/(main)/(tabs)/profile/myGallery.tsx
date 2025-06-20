@@ -4,7 +4,7 @@ import { Text } from 'react-native'
 const myGallery = () => {
     return (
         <>        
-            <Text>Prueba</Text>
+            <Text>mi galeria</Text>
         </>
 
     )
