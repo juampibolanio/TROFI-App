@@ -5,9 +5,9 @@ import {
   Text, 
   ScrollView, 
   SafeAreaView,
-  Platform 
+  Platform,
+  StatusBar
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
 const reviews = () => {
   const reviewsData = [
@@ -43,30 +43,31 @@ const reviews = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" backgroundColor="#0E3549" />
+      <StatusBar barStyle="light-content" backgroundColor="#0E3549" />
       
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Mis reseñas</Text>
-        </View>
-
-        <ScrollView style={styles.scrollContainer}>
-          {reviewsData.map((review) => (
-            <View key={review.id} style={styles.reviewCard}>
-              <View style={styles.initialsContainer}>
-                <Text style={styles.initialsText}>{review.initials}</Text>
-              </View>
-              
-              <View style={styles.contentContainer}>
-                <Text style={styles.nameText}>{review.name}</Text>
-                <Text style={styles.commentText}>{review.comment}</Text>
-              </View>
-              
-              <Text style={styles.scoreText}>{review.score.toFixed(1)}</Text>
-            </View>
-          ))}
-        </ScrollView>
+      <View style={styles.header}>
+        <Text style={styles.title}>Mis reseñas</Text>
       </View>
+
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {reviewsData.map((review) => (
+          <View key={review.id} style={styles.reviewCard}>
+            <View style={styles.initialsContainer}>
+              <Text style={styles.initialsText}>{review.initials}</Text>
+            </View>
+            
+            <View style={styles.contentContainer}>
+              <Text style={styles.nameText}>{review.name}</Text>
+              <Text style={styles.commentText}>{review.comment}</Text>
+            </View>
+            
+            <Text style={styles.scoreText}>{review.score.toFixed(1)}</Text>
+          </View>
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -76,26 +77,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0E3549",
   },
-  container: {
-    flex: 1,
-    paddingBottom: 70,
-  },
   header: {
     backgroundColor: '#24475E',
-    padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20, 
+    paddingBottom: 16,
     alignItems: 'center',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    marginBottom: 10,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
   },
-  scrollContainer: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 15,
+    paddingTop: 15,
+    paddingBottom: 70,
   },
   reviewCard: {
     backgroundColor: 'white',
