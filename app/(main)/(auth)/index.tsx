@@ -4,42 +4,75 @@ import {
     SafeAreaView,
     StyleSheet,
     Image,
-    Switch,
     ImageBackground,
-    TouchableOpacity,
     Pressable,
-    TextInput,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     TouchableWithoutFeedback,
-    Keyboard
+    Keyboard,
+    Alert
 } from 'react-native';
 import React, { useState } from 'react';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
-import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
+import { useFonts } from '@expo-google-fonts/roboto';
 import BottomComponent from '@/components/atoms/BottomComponent';
-import { router, useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
+import fonts from '@/constants/fonts';
+import { useDispatch } from 'react-redux';
+import { loginRequest } from '@/api/authService';
+import { setCredentials } from '@/redux/slices/authSlice';
+import { storeData } from '@/utils/storage';
+import api from '@/api/api';
+import { userProfileRequest } from '@/api/userService';
+import { setUserProfile } from '@/redux/slices/userSlice';
 
 const Auth = () => {
-    const [fontsLoaded] = useFonts({
-        Roboto_400Regular,
-        Roboto_700Bold,
-        Roboto_300Light
-    });
 
-    const router = useRouter();
+    const [fontsLoaded] = useFonts(fonts);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isRemembered, setIsRemembered] = useState(false);
+    const dispatch = useDispatch();
 
-
+    //ir a la pantalla de registro.
     let navigateToRegister = () => {
         router.push("/(auth)/register");
     };
 
-    const [isRemembered, setIsRemembered] = useState(false);
-    const [password, setPassword] = useState('');
-    const [nameEmail, setNameEmail] = useState('');
+    //ir a la pantalla home de la app
+    let navigateToHome = () => {
+        router.replace('/(main)/(tabs)/featured');
+    }
+
+    //procesar solicitud de login
+    const handleLogin = async () => {
+        try {
+            const data = await loginRequest(email, password);
+
+            const token = data.token;
+            const userEmail = data.user.email;
+
+            //guardo en redux
+            dispatch(setCredentials({ token: token, email: email }));
+            await storeData('auth', { token: token, email: userEmail })
+
+            //hago una peticion más para acceder al perfil completo del usuario 
+            const profileResponse = await userProfileRequest(userEmail);
+            dispatch(setUserProfile(profileResponse));
+            await storeData('user', profileResponse);
+
+            //redirijo al usuario luego de loguearse
+            navigateToHome();
+
+        } catch (e) {
+            Alert.alert('Error', 'Credenciales incorrectas o error en el servidor.');
+            console.error(e);
+        }
+    }
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -68,9 +101,9 @@ const Auth = () => {
                                 <Text style={styles.loginTitle}>¡Bienvenido!</Text>
                                 <View style={styles.inputContainer}>
                                     <CustomTextInput
-                                        placeholder='Ingrese su nombre/email'
-                                        value={nameEmail}
-                                        onChangeText={setNameEmail}
+                                        placeholder='Ingrese su correo electrónico'
+                                        value={email}
+                                        onChangeText={setEmail}
                                         keyboardType='email-address'
                                         autoCapitalize='none'
                                     />
@@ -91,7 +124,7 @@ const Auth = () => {
                                 </View>
 
                                 <View style={styles.bottomContainer}>
-                                    <BottomComponent title="Iniciar sesión" onPress={() => { }} />
+                                    <BottomComponent title="Iniciar sesión" onPress={handleLogin} />
                                 </View>
                             </View>
 

@@ -1,9 +1,6 @@
-// app/(main)/(tabs)/featured/layout.tsx
-
 import { Stack } from 'expo-router';
-import React from 'react';
 
-const Layout =() => {
+const Layout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
@@ -11,4 +8,4 @@ const Layout =() => {
     );
 }
 
-export default Layout
+export default Layout;

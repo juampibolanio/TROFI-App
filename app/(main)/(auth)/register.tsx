@@ -1,35 +1,91 @@
-import React, { useState } from 'react';
-import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
-import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { useFonts } from '@expo-google-fonts/roboto';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import imagePath from '@/constants/imagePath';
-import { moderateScale, verticalScale } from 'react-native-size-matters';
+import { moderateScale} from 'react-native-size-matters';
 import BottomComponent from '@/components/atoms/BottomComponent';
 import { router } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
+import fonts from '@/constants/fonts';
+import { useDispatch } from 'react-redux';
+import { registerRequest } from '@/api/authService';
+import { setCredentials } from '@/redux/slices/authSlice';
+import { storeData } from '@/utils/storage';
+import { setUserProfile } from '@/redux/slices/userSlice';
 
 const RegisterScreen = () => {
 
-  /* CARGA DE FUENTES */
-  const [fontsLoaded] = useFonts({
-    Roboto_400Regular,
-    Roboto_700Bold,
-    Roboto_300Light
-  });
-
-  /*NAVEGACIÓN HACIA EL LOGIN */
-  const navigateToLogin = () => {
-    router.push("/(auth)");
-  };
-
-  const [nameEmail, setNameEmail] = useState('');
+  const dispatch = useDispatch();
+  const [fontsLoaded] = useFonts(fonts);
+  const [fullname, setFullname] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
 
+  /*Navegación hacia el login */
+  const navigateToLogin = () => {
+    router.replace("/(auth)");
+  };
+
+  const navigateToOnboarding = () => {
+    router.replace("/(main)/(onBoarding)"); //modificar esto para que lleve al onboarding.
+  }
+
+  //procesar solicitud de registro
+  const handleRegister = async () => {
+    try {
+      //validaciones de campos
+      if (!fullname || !email || !password || !confirmPassword || !phoneNumber) {
+        Alert.alert("Uno o más campos están incompletos", "Por favor, completa todos los campos.");
+        return;
+      }
+
+      //validar que las contraseñas coincidan
+      if(password != confirmPassword) {
+        Alert.alert("Las contraseñas no coinciden.");
+        return;
+      }
+
+      // enviar request al backend
+      const response = await registerRequest({
+        fullname: fullname,
+        email: email,
+        password : password,
+        phoneNumber : phoneNumber
+      })
+
+      const token = response.token; //en caso de q se pueda cambiar la respuesta del back, dejar o cambiar el 'token' por el nombre q se le dé
+      const user = response.user;
+
+      //seteo token y email en redux
+      dispatch(setCredentials({ token, email: user.email}));
+      await storeData('auth', { token, email: user.email}); //guardo datos en async storage
+
+      //seteo id, nombre, y numero de tel. en redux
+      dispatch(setUserProfile({
+        id: user.id,
+        fullname: user.name,
+        phoneNumber: phoneNumber,
+      }));
+      await storeData('user', {  //guardo datos en async storage
+        id: user.id,
+        fullname: user.name,
+        phoneNumber: phoneNumber, //esto podría cambiarlo o eliminarlo, ya que depende si viene del backend o no.
+      });
+
+      //redirijo al usuario a la pantalla correspondiente
+      navigateToOnboarding();
+
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'No se pudo registrar el usuario.')
+    }
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>    
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -40,10 +96,19 @@ const RegisterScreen = () => {
       {/* BODY */}
       <View style={styles.bodyContent}>
         <View style={styles.inputContainer}>
+
           <CustomTextInput
-            placeholder='Ingrese su nombre/email'
-            value={nameEmail}
-            onChangeText={setNameEmail}
+            placeholder='Ingrese su nombre y apellido'
+            value={fullname}
+            onChangeText={setFullname}
+            keyboardType='default'
+            autoCapitalize='none'
+          />
+
+          <CustomTextInput
+            placeholder='Ingrese su correo electrónico'
+            value={email}
+            onChangeText={setEmail}
             keyboardType='email-address'
             autoCapitalize='none'
           />
@@ -71,7 +136,7 @@ const RegisterScreen = () => {
         </View>
 
         <View style={styles.registerButtonContainer}>
-          <BottomComponent title="Registrarse" onPress={() => { }} />
+          <BottomComponent title="Registrarse" onPress={handleRegister} />
         </View>
       </View>
 

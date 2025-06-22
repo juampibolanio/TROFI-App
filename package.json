@@ -17,8 +17,11 @@
   "dependencies": {
     "@expo-google-fonts/roboto": "^0.3.0",
     "@expo/vector-icons": "^14.1.0",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
+    "@reduxjs/toolkit": "^2.8.2",
+    "axios": "^1.10.0",
     "expo": "~52.0.43",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.8",
@@ -41,7 +44,9 @@
     "react-native-size-matters": "^0.4.2",
     "react-native-star-rating-widget": "^1.9.2",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5"
+    "react-native-webview": "13.12.5",
+    "react-redux": "^9.2.0",
+    "redux-persist": "^6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
