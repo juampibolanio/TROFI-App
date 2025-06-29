@@ -16,7 +16,7 @@ const Perfil = () => {
   const router = useRouter();
 
   const handleEditProfile = () => {
-    router.push('/profile/userSettings');
+    router.push('/profile/editProfile');
   };
 
   const handleMyReviews = () => {
