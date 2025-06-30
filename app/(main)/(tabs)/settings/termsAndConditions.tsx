@@ -1,9 +1,7 @@
-import React from 'react'
 import imagePath from '@/constants/imagePath';
 import { useFonts, Roboto_400Regular, Roboto_700Bold, Roboto_300Light } from '@expo-google-fonts/roboto';
 import { SafeAreaView, ScrollView, Text, View, Image } from 'react-native'
 import { Dimensions } from 'react-native';
-
 import { StyleSheet } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 
@@ -13,7 +11,6 @@ const termsAndConditions = () => {
         Roboto_700Bold,
         Roboto_300Light,
     });
-
 
     if (!fontsLoaded) return null;
 
@@ -113,6 +110,5 @@ const styles = StyleSheet.create({
         marginBottom: verticalScale(-5), // ajuste para que no se vea cortado
     },
 });
-
 
 export default termsAndConditions;

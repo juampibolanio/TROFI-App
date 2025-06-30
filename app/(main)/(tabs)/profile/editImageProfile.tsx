@@ -1,106 +1,227 @@
-import fonts from '@/constants/fonts';
 import imagePath from '@/constants/imagePath';
-import { useFonts } from '@expo-google-fonts/roboto';
-import { Ionicons } from '@expo/vector-icons';
-import { router, useRouter } from 'expo-router';
-import { useSearchParams } from 'expo-router/build/hooks';
-import React, { useState } from 'react';
 import {
     View,
     Text,
-    FlatList,
     ImageBackground,
-    Pressable,
     SafeAreaView,
-    ScrollView,
-    TextInput,
     StyleSheet,
     Image,
-    Modal
+    ScrollView,
 } from 'react-native';
-import { moderateScale, scale } from 'react-native-size-matters';
+import { moderateScale } from 'react-native-size-matters';
 import ButtonComponent from '@/components/atoms/ButtonComponent';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { useFonts } from '@expo-google-fonts/roboto';
+import fonts from '@/constants/fonts';
+import { useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import { setImageProfile as setImageProfileAction } from '@/redux/slices/userSlice';
+import { uploadProfileImage } from '@/services/imageService';
+import { storeData } from '@/utils/storage';
+import { router } from 'expo-router';
+import CustomAlert from '@/components/atoms/CustomAlert';
+import Loader from '@/components/atoms/Loader';
+import { updateUserProfileImage } from '@/services/userService';
 
+const EditImageProfile = () => {
+    const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user);
+    const [fontsLoaded] = useFonts(fonts);
 
-const editImageProfile = () => {
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: '',
+        message: '',
+        type: 'error' as 'success' | 'error' | 'warning' | 'info',
+        showCancel: false
+    });
+
+    // Estados para manejar el loading
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [isSavingImage, setIsSavingImage] = useState(false);
+
+    const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+        setAlertConfig({ title, message, type, showCancel: false });
+        setAlertVisible(true);
+    };
+
+    const closeAlert = () => setAlertVisible(false);
+
+    const handleSelectImage = async () => {
+        try {
+            setIsUploadingImage(true); // Mostrar loader
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets?.length > 0) {
+                const localUri = result.assets[0].uri;
+                const cloudinaryUrl = await uploadProfileImage(localUri);
+                setSelectedImage(cloudinaryUrl);
+
+                showAlert("Imagen subida", "La imagen fue cargada correctamente. ¡No olvides guardarla!", 'success');
+            }
+        } catch (error) {
+            console.error('Error seleccionando imagen:', error);
+            showAlert("Error", "No se pudo subir la imagen. Intenta nuevamente.", 'error');
+        } finally {
+            setIsUploadingImage(false); // Ocultar loader
+        }
+    };
+
+    const handleSaveImage = async () => {
+        try {
+            if (!selectedImage) {
+                showAlert("Imagen requerida", "Primero debes seleccionar una imagen para guardar.", 'warning');
+                return;
+            }
+
+            setIsSavingImage(true); // Mostrar loader
+
+            // actualizar el backend
+            await updateUserProfileImage(selectedImage);
+
+            // actualizar en Redux y AsyncStorage
+            const updatedUser = { ...user, imageProfile: selectedImage };
+            dispatch(setImageProfileAction(selectedImage));
+            await storeData('user', updatedUser);
+
+            showAlert("Guardado", "La imagen se actualizó correctamente.", 'success');
+
+            setTimeout(() => {
+                closeAlert();
+                router.back();
+            }, 1500);
+        } catch (error) {
+            console.error('Error guardando imagen:', error);
+            showAlert("Error", "No se pudo actualizar la imagen. Intenta nuevamente.", 'error');
+        } finally {
+            setIsSavingImage(false); // Ocultar loader
+        }
+    };
+
+    // Si está cargando, mostrar el loader
+    if (isUploadingImage || isSavingImage) {
+        return <Loader />;
+    }
 
     return (
         <>
+            <SafeAreaView style={styles.container}>
+                <ImageBackground style={styles.overlay} source={imagePath.editImageProfileBackground} resizeMode="cover">
+                    <ScrollView 
+                        contentContainerStyle={styles.scrollContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {/* HEADER */}
+                        <View style={styles.header}>
+                            <Image source={imagePath.icon} style={styles.iconStyle} resizeMode="contain" />
+                            <Text style={styles.editionText}>Foto de perfil actual</Text>
 
-        <SafeAreaView style={styles.container}>
-            <ImageBackground style={styles.overlay} source={imagePath.editImageProfileBackground} resizeMode="cover">
+                            <Image
+                                source={
+                                    selectedImage
+                                        ? { uri: selectedImage }
+                                        : user.imageProfile
+                                            ? typeof user.imageProfile === 'string'
+                                                ? { uri: user.imageProfile }
+                                                : user.imageProfile
+                                            : imagePath.defaultUserImage
+                                }
+                                style={styles.userImage}
+                                resizeMode="cover"
+                            />
+                        </View>
 
-                {/* HEADER */}
-                    <View style={styles.header}>
-                        <Image source={imagePath.icon} style={styles.iconStyle} resizeMode="contain" />
-                            <Text style={styles.editionText}>
-                                Foto de perfil actual
-                            </Text>
-                            <Image source={imagePath.editProfileImage} style={styles.userImage} resizeMode="contain" />
-                    </View>
+                        {/* BOTONES */}
+                        <View style={styles.containerButton}>
+                            <ButtonComponent
+                                title="Subir imagen"
+                                iconName="push-outline"
+                                onPress={handleSelectImage}
+                            />
 
-                {/* BODY */}
-                <View style={styles.containerButton}>
-                    <ButtonComponent 
-                        title="Subir imagen"
-                        iconName="push-outline"
-                    />
+                            <ButtonComponent
+                                title="Guardar y actualizar"
+                                iconName="save-outline"
+                                onPress={handleSaveImage}
+                            />
 
-                    <ButtonComponent 
-                        title="Guardar y actualizar"
-                        iconName="save-outline"
-                    />
+                            <ButtonComponent
+                                title="Cancelar"
+                                iconName="close-outline"
+                                onPress={() => router.back()}
+                            />
+                        </View>
+                    </ScrollView>
+                </ImageBackground>
+            </SafeAreaView>
 
-                    <ButtonComponent 
-                        title="Cancelar"
-                        iconName="close-outline"
-                    />
-                </View>
-
-            </ImageBackground>
-        </SafeAreaView>
-
+            {/* ALERTA */}
+            <CustomAlert
+                visible={alertVisible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                showCancel={alertConfig.showCancel}
+                onConfirm={closeAlert}
+                confirmText="Aceptar"
+            />
         </>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
-container: {
-    flex: 1,
-    backgroundColor: '#0E3549',
-},
-overlay: {
-    justifyContent: "space-between",
-    flex: 1,
-},
-header: {
-    alignItems: 'center',
-    gap: moderateScale(20),
-    marginBottom: moderateScale(40),
-    paddingTop: moderateScale(10)
-},
-    iconStyle: {
-    width: moderateScale(50),
-    height: moderateScale(50),
-},
-editionText: {
-    textAlign: "center",
-    fontSize: moderateScale(25),
-    fontFamily: 'Roboto_300Light',
-    color: '#FFFFFF',
-    marginRight: moderateScale(5),
+    container: {
+        flex: 1,
+        backgroundColor: '#0E3549',
     },
-userImage: {
-    width: moderateScale(250),
-    height: moderateScale(250),
-    borderRadius: moderateScale(155),
-    borderWidth: 6,
-    borderColor: '#FFFFFF',
-},
-containerButton: {
-    padding: moderateScale(50),
-    gap: moderateScale(20)
-},
+    overlay: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: moderateScale(30),
+    },
+    header: {
+        alignItems: 'center',
+        gap: moderateScale(20),
+        paddingTop: moderateScale(20),
+        paddingHorizontal: moderateScale(20),
+    },
+    iconStyle: {
+        width: moderateScale(50),
+        height: moderateScale(50),
+    },
+    editionText: {
+        textAlign: "center",
+        fontSize: moderateScale(25),
+        fontFamily: 'Roboto_300Light',
+        color: '#FFFFFF',
+        marginRight: moderateScale(5),
+    },
+    userImage: {
+        width: moderateScale(200),
+        height: moderateScale(200),
+        borderRadius: moderateScale(100),
+        borderWidth: 6,
+        borderColor: '#FFFFFF',
+        marginBottom: moderateScale(20),
+    },
+    containerButton: {
+        paddingHorizontal: moderateScale(30),
+        paddingVertical: moderateScale(20),
+        gap: moderateScale(15),
+        flex: 1,
+        justifyContent: 'flex-end',
+        minHeight: moderateScale(200),
+    },
 });
 
-export default editImageProfile;
+export default EditImageProfile;

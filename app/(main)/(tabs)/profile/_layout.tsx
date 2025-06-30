@@ -1,6 +1,4 @@
 import { Stack } from 'expo-router';
-import React from 'react';
-
 
 export default function Layout() {
     return (
@@ -8,7 +6,12 @@ export default function Layout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="myGallery" />
             <Stack.Screen name="reviews" />
-            <Stack.Screen name="userSettings" />
+            <Stack.Screen name="editProfile" />
+            <Stack.Screen name="editWorkInfo" />
+            <Stack.Screen name="editImageProfile" />
+            <Stack.Screen name="editPersonalInfo1" />
+            <Stack.Screen name="editPersonalInfo2" />
+            <Stack.Screen name="editEmploymentInfo" />
         </Stack>
     );
 }

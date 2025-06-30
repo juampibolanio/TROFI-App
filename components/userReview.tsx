@@ -12,10 +12,9 @@ type Props = {
     score: number
 }
 
-
 const UserReview: React.FC<Props> = ({ profileImage, username, description, score }) => {
 
-    const [fontsLoaded] = useFonts(fonts); //carga de fuentes
+    const [fontsLoaded] = useFonts(fonts); 
 
     return (
         <View style={styles.cardContainer}>

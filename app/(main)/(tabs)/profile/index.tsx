@@ -1,269 +1,377 @@
-import React from 'react';
 import {
   StyleSheet,
   View,
   Text,
-  TouchableOpacity,
   Image,
-  ScrollView,
   SafeAreaView,
-  StatusBar
+  Pressable,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { moderateScale } from 'react-native-size-matters';
+import imagePath from '@/constants/imagePath';
 
 const Perfil = () => {
-  const router = useRouter();
+  const user = useSelector((state: RootState) => state.user);
 
-  const handleEditProfile = () => {
+  const navigateToEditProfile = () => {
     router.push('/profile/editProfile');
   };
 
-  const handleMyReviews = () => {
+  const navigateToMyReviews = () => {
     router.push('/profile/reviews');
   };
 
-  const handleMyPhotos = () => {
+  const navigateToMyPhotos = () => {
     router.push('/profile/myGallery');
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#0E3549" barStyle="light-content" />
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.profileCard}>
-          <View style={styles.profileInfo}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/100' }}
-              style={styles.profileImage}
-            />
-            <View style={styles.profileTextContainer}>
-              <Text style={styles.userName}>Lucas iondo</Text>
-              <View style={styles.locationContainer}>
-                <Ionicons name="location-outline" size={16} color="white" />
-                <Text style={styles.location}>Resistencia, Chaco</Text>
+    <SafeAreaView style={styles.container}>
+      <ImageBackground source={imagePath.backgroundUDetails} style={styles.overlay} resizeMode='cover'>
+
+        {/* HEADER */}
+        <View style={styles.header}>
+          <Image source={{ uri: user.imageProfile ?? 'https://via.placeholder.com/100' }} style={styles.imagen} />
+          <View style={styles.infoContainer}>
+            <Text style={styles.username}>{user.name || 'Sin nombre'}</Text>
+
+            {user.isProfileComplete ? (
+              <>
+                {user.location && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons name="location-outline" size={14} color="white" style={{ marginRight: 4 }} />
+                    <Text style={styles.ubication}>{user.location}</Text>
+                  </View>
+                )}
+                <Text style={styles.jobDescription}>{user.jobDescripction || 'Sin descripción laboral'}</Text>
+              </>
+            ) : (
+              <Text style={styles.incompleteText}>
+                Tu perfil no está completo. Termina de completarlo aquí.
+              </Text>
+            )}
+
+            <Pressable style={({ pressed }) => [styles.sendMessageBottom, pressed && { opacity: 0.5 }]} onPress={navigateToEditProfile}>
+              <Ionicons name='pencil' size={15} color={'#0E3549'} />
+              <Text style={styles.sendText}>
+                {user.isProfileComplete ? 'Editar' : 'Completar perfil'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* BODY */}
+        <View style={styles.body}>
+          <View style={styles.descriptionOverlay}>
+            <View style={styles.description}>
+              <Text style={styles.descriptionTitle}>Descripción</Text>
+              <Text style={styles.descriptionText}>
+                {user.userDescription || 'Sin descripción'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.scoreOverlay}>
+            <View style={styles.score}>
+              <Text style={styles.scoreTitle}>Puntuación</Text>
+              <View style={styles.scoreContainer}>
+                <Text style={styles.scoreNumber}>
+                  {user.score && user.score > 0 ? user.score : 'N/D'}
+                </Text>
+                <Ionicons name="star-outline" size={30} color="#0E3549" />
               </View>
-              <Text style={styles.jobDescription}>Mi descripción laboral</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-            <Ionicons name="pencil-outline" size={20} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.contentSectionsContainer}>
-          <View style={styles.descriptionCard}>
-            <Text style={styles.sectionTitle}>Descripción</Text>
-            <Text style={styles.descriptionText}>
-              Lorem ipsum dolor sit amet consectetur adipiscing elit Ut et massa mi. Aliquam in hendrerit urna.
-            </Text>
-          </View>
-
-          <View style={styles.scoreCard}>
-            <Text style={styles.sectionTitle}>Puntuación</Text>
-            <View style={styles.scoreContent}>
-              <Text style={styles.scoreValue}>9.9</Text>
-              <Ionicons name="star-outline" size={24} color="#607D8B" />
             </View>
           </View>
         </View>
 
-        <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleMyReviews}>
-            <Text style={styles.actionButtonText}>Mis reseñas</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleMyPhotos}>
-            <Text style={styles.actionButtonText}>Mis fotos</Text>
-          </TouchableOpacity>
-        </View>
+        {/* FOOTER */}
+        <View style={styles.footer}>
+          <View style={styles.profileBottomsContainer}>
+            <Pressable
+              style={({ pressed }) => [styles.workGalery, pressed && { opacity: 0.5 }]}
+              onPress={navigateToMyReviews}
+            >
+              <Text style={styles.textBottom}>Reseñas para mí</Text>
+            </Pressable>
 
-        <View style={styles.reviewSection}>
-          <View style={styles.reviewCard}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/50' }}
-              style={styles.reviewerImage}
-            />
-            <View style={styles.reviewTextContainer}>
-              <Text style={styles.reviewerName}>Claudia Lopez</Text>
-              <Text style={styles.reviewComment}>Muy buen trabajo</Text>
-            </View>
-            <Text style={styles.reviewScore}>9.0</Text>
+            <Pressable
+              style={({ pressed }) => [styles.workGalery, pressed && { opacity: 0.5 }]}
+              onPress={navigateToMyPhotos}
+            >
+              <Text style={styles.textBottom}>Mi galería de fotos</Text>
+            </Pressable>
           </View>
         </View>
+
+        {/* Condición para perfil laboral incompleto */}
+        {user.isProfileComplete && user.isWorkerProfileComplete == false && (
+          <View style={styles.workerProfileSection}>
+            <View style={styles.workerProfileCard}>
+              <Text style={styles.workerProfileText}>
+                ¿Querés aparecer como trabajador? Completá tu perfil laboral.
+              </Text>
+              <Pressable style={({ pressed }) => [styles.workerProfileButton, pressed && { opacity: 0.5 }]} onPress={navigateToEditProfile}>
+                <Text style={styles.workerProfileButtonText}>Completar perfil laboral</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         <View style={{ height: 50 }} />
-      </ScrollView>
+      </ImageBackground>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: "#0E3549",
+    backgroundColor: '#0E3549',
   },
-  scrollView: {
+
+  overlay: {
     flex: 1,
   },
-  profileCard: {
-    backgroundColor: '#24475E',
-    borderRadius: 20,
-    marginHorizontal: 20,
-    marginTop: 20,
-    padding: 20,
+
+  /* ----------------------------------- HEADER -----------------------------------*/
+
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    position: 'relative',
+    alignItems: 'flex-start',
+    padding: moderateScale(20),
   },
-  profileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+
+  imagen: {
+    width: moderateScale(115),
+    height: moderateScale(115),
+    borderRadius: moderateScale(60),
+    borderColor: '#FFFFFF',
+    borderWidth: moderateScale(2)
+  },
+
+  infoContainer: {
     flex: 1,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: 'white',
-    marginRight: 15,
-  },
-  profileTextContainer: {
     justifyContent: 'center',
+    gap: moderateScale(5),
+    marginLeft: moderateScale(15),
   },
-  userName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 5,
+
+  username: {
+    fontSize: moderateScale(22),
+    color: '#FFFFFF',
+    fontFamily: 'RobotoRegular'
   },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
+
+  ubication: {
+    fontSize: moderateScale(14),
+    color: '#FFFFFF',
+    fontFamily: 'RobotoRegular'
   },
-  location: {
-    fontSize: 14,
-    color: 'white',
-    marginLeft: 5,
-  },
+
   jobDescription: {
-    fontSize: 16,
-    color: 'white',
+    fontSize: moderateScale(12),
+    color: '#FFFFFF',
+    fontFamily: 'RobotoRegular'
   },
-  editButton: {
-    position: 'absolute',
-    top: -15,
-    right: 15,
-    backgroundColor: '#607D8B',
-    borderRadius: 25,
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+
+  incompleteText: {
+    fontSize: moderateScale(12),
+    color: '#FFCDD2',
+    fontFamily: 'RobotoRegular'
   },
-  contentSectionsContainer: {
+
+  sendMessageBottom: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-    marginTop: 20,
-  },
-  descriptionCard: {
-    backgroundColor: '#24475E',
-    borderRadius: 15,
-    padding: 15,
-    flex: 2,
-    marginRight: 10,
-  },
-  scoreCard: {
-    backgroundColor: '#24475E',
-    borderRadius: 15,
-    padding: 15,
-    flex: 1,
-    marginLeft: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#D9D9D9',
+    paddingVertical: moderateScale(6),
+    paddingHorizontal: moderateScale(13),
+    borderRadius: moderateScale(15),
+    marginTop: moderateScale(5),
+    alignSelf: 'flex-end',
+    gap: moderateScale(6)
   },
-  sectionTitle: {
-    fontSize: 16,
+
+  sendText: {
+    color: '#000000',
+    fontSize: moderateScale(12),
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 10,
+    fontFamily: 'RobotoRegular'
   },
+
+  /* ----------------------------------- BODY -----------------------------------*/
+  body: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: moderateScale(10),
+  },
+
+  descriptionOverlay: {
+    backgroundColor: '#696969',
+    paddingVertical: moderateScale(4),
+    paddingHorizontal: moderateScale(5),
+    borderRadius: moderateScale(15)
+  },
+
+  scoreOverlay: {
+    backgroundColor: '#696969',
+    paddingVertical: moderateScale(4),
+    paddingHorizontal: moderateScale(5),
+    borderRadius: moderateScale(10)
+  },
+
+  description: {
+    width: moderateScale(200),
+    height: moderateScale(250),
+    backgroundColor: '#D9D9D9',
+    padding: moderateScale(10),
+    borderRadius: moderateScale(10)
+  },
+
+  descriptionTitle: {
+    borderRadius: moderateScale(10),
+    padding: moderateScale(3),
+    fontSize: moderateScale(20),
+    fontWeight: 'bold'
+  },
+
   descriptionText: {
-    fontSize: 14,
-    color: '#CFD8DC',
-    lineHeight: 20,
+    backgroundColor: 'transparent',
+    fontFamily: 'RobotoLight',
+    fontSize: moderateScale(14),
+    textAlign: 'justify'
   },
-  scoreContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+
+  score: {
+    width: moderateScale(115),
+    height: moderateScale(250),
+    backgroundColor: '#D9D9D9',
+    padding: moderateScale(10),
+    borderRadius: moderateScale(10)
   },
-  scoreValue: {
-    fontSize: 32,
+
+  scoreTitle: {
+    borderRadius: moderateScale(10),
+    padding: moderateScale(3),
+    fontSize: moderateScale(15),
     fontWeight: 'bold',
-    color: 'white',
-    marginRight: 5,
+    textAlign: 'center'
   },
-  actionButtonsContainer: {
+
+  scoreContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginHorizontal: 20,
-    marginTop: 20,
+    alignItems: 'center'
   },
-  actionButton: {
-    backgroundColor: '#607D8B',
-    borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 5,
+
+  scoreNumber: {
+    fontSize: moderateScale(32),
+    fontFamily: 'RobotoLight'
   },
-  actionButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 14,
+
+  /* ----------------------------------- FOOTER -----------------------------------*/
+
+  footer: {
+    justifyContent: 'center',
   },
-  reviewSection: {
-    marginHorizontal: 20,
-    marginTop: 20,
+
+  profileBottomsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: moderateScale(15)
   },
-  reviewCard: {
-    backgroundColor: '#24475E',
-    borderRadius: 15,
-    padding: 15,
+
+  workGalery: {
+    padding: moderateScale(12),
+    backgroundColor: '#D9D9D9',
+    borderRadius: moderateScale(12)
+  },
+
+  textBottom: {
+    color: '#000000',
+    fontSize: moderateScale(12),
+    fontFamily: 'RobotoRegular',
+    fontWeight: 'bold'
+  },
+
+  /* ----------------------------------- WORKER PROFILE SECTION -----------------------------------*/
+
+  workerProfileSection: {
+    marginHorizontal: moderateScale(20),
+    marginTop: moderateScale(20)
+  },
+
+  workerProfileCard: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: moderateScale(15),
+    paddingHorizontal: moderateScale(15),
+    borderRadius: moderateScale(15),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#E0E0E0'
+  },
+
+  workerProfileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'center',
+    marginBottom: moderateScale(12),
+    gap: moderateScale(8)
   },
-  reviewerImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
+
+  workerProfileTitle: {
+    color: '#0E3549',
+    fontSize: moderateScale(16),
+    fontFamily: 'RobotoRegular',
+    fontWeight: 'bold'
   },
-  reviewTextContainer: {
-    flex: 1,
+
+  workerProfileText: {
+    color: '#333333',
+    fontSize: moderateScale(13),
+    fontFamily: 'RobotoRegular',
+    textAlign: 'center',
+    lineHeight: moderateScale(18),
+    marginBottom: moderateScale(15)
   },
-  reviewerName: {
-    fontSize: 16,
+
+  workerProfileButton: {
+    backgroundColor: '#0E3549',
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(12),
+    borderRadius: moderateScale(25),
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0E3549',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+
+  workerProfileButtonText: {
+    color: '#FFFFFF',
     fontWeight: 'bold',
-    color: 'white',
-  },
-  reviewComment: {
-    fontSize: 14,
-    color: '#CFD8DC',
-  },
-  reviewScore: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: moderateScale(13),
+    fontFamily: 'RobotoRegular'
   },
 });
 

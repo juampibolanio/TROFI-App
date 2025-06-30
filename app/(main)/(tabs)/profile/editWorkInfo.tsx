@@ -39,14 +39,22 @@ const editWorkInfo = () => {
                         title="Editar información laboral"
                         //={`Editar información laboral /(${job.title})`} <-- para mostrar el trabajo actual
                         iconName="pencil"
-                        onPress={() => router.push('/profile/editEmploymentInfo')}
+                        onPress={() => router.push('/(main)/(tabs)/profile/editEmploymentInfo')}
                     />
 
-                    <ButtonComponent title="Guardar y actualizar" iconName="save-outline" />
+                    <ButtonComponent
+                        title="Guardar y actualizar"
+                        iconName="save-outline"
+                        onPress={() => {}}
+                    />
                 </View>
 
                 <View style={styles.containerButton}>
-                    <ButtonComponent title="Cancelar" iconName="exit-outline" />
+                    <ButtonComponent
+                        title="Cancelar"
+                        iconName="exit-outline"
+                        onPress={() => router.back()}
+                    />
                 </View>
             </ImageBackground>
         </SafeAreaView>
@@ -54,13 +62,13 @@ const editWorkInfo = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: '#0E3549' 
+    container: {
+        flex: 1,
+        backgroundColor: '#0E3549'
     },
-    overlay: { 
-        flex: 1, 
-        justifyContent: 'space-between' 
+    overlay: {
+        flex: 1,
+        justifyContent: 'space-between'
     },
     header: {
         alignItems: 'center',

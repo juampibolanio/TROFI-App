@@ -4,42 +4,138 @@ import {
     SafeAreaView,
     StyleSheet,
     Image,
-    Switch,
     ImageBackground,
-    TouchableOpacity,
     Pressable,
-    TextInput,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     TouchableWithoutFeedback,
-    Keyboard
+    Keyboard,
 } from 'react-native';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
-import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
+import { useFonts } from '@expo-google-fonts/roboto';
 import BottomComponent from '@/components/atoms/BottomComponent';
-import { router, useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
+import fonts from '@/constants/fonts';
+import { useDispatch } from 'react-redux';
+import { loginRequest } from '@/services/authService';
+import { setCredentials } from '@/redux/slices/authSlice';
+import { storeData } from '@/utils/storage';
+import { userProfileRequest } from '@/services/userService';
+import { setUserProfile } from '@/redux/slices/userSlice';
+import CustomAlert from '@/components/atoms/CustomAlert'; 
 
 const Auth = () => {
-    const [fontsLoaded] = useFonts({
-        Roboto_400Regular,
-        Roboto_700Bold,
-        Roboto_300Light
+
+    const [fontsLoaded] = useFonts(fonts);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isRemembered, setIsRemembered] = useState(false);
+    const dispatch = useDispatch();
+
+    // Estados para el CustomAlert
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: '',
+        message: '',
+        type: 'error' as 'success' | 'error' | 'warning' | 'info',
+        showCancel: false
     });
 
-    const router = useRouter();
-
-
+    //ir a la pantalla de registro.
     let navigateToRegister = () => {
         router.push("/(auth)/register");
     };
 
-    const [isRemembered, setIsRemembered] = useState(false);
-    const [password, setPassword] = useState('');
-    const [nameEmail, setNameEmail] = useState('');
+    //ir a la pantalla home de la app
+    let navigateToHome = () => {
+        router.push('/(main)/(tabs)/featured');
+    }
+
+    // Función para mostrar alert
+    const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+        setAlertConfig({
+            title,
+            message,
+            type,
+            showCancel: false
+        });
+        setAlertVisible(true);
+    };
+
+    // Función para cerrar alert
+    const closeAlert = () => {
+        setAlertVisible(false);
+    };
+
+    //procesar solicitud de login
+    const handleLogin = async () => {
+        console.log("se ejecuto")
+        
+        // Validaciones básicas
+        if (!email.trim()) {
+            showAlert('Campo requerido', 'Por favor ingrese su correo electrónico', 'warning');
+            return;
+        }
+
+        if (!password.trim()) {
+            showAlert('Campo requerido', 'Por favor ingrese su contraseña', 'warning');
+            return;
+        }
+
+        // Validación básica de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showAlert('Email inválido', 'Por favor ingrese un correo electrónico válido', 'warning');
+            return;
+        }
+
+        try {
+            const data = await loginRequest(email, password);
+
+            const token = data.token;
+            const userEmail = data.user.email;
+
+            //guardo en redux
+            dispatch(setCredentials({ token: token, email: email }));
+            await storeData('auth', { token: token, email: userEmail })
+
+            //hago una peticion más para acceder al perfil completo del usuario 
+            const profileResponse = await userProfileRequest(userEmail);
+
+            // Mapear campos al formato del Redux
+            const formattedUser = {
+                ...profileResponse,
+                isWorker: profileResponse.is_worker === 1,
+                jobId: profileResponse.id_job,
+                jobDescripction: profileResponse.job_description,
+                jobImages: Array.isArray(profileResponse.job_images)
+                    ? profileResponse.job_images.map((url: string, index: number) => ({ id: index, url }))
+                    : [],
+            };
+
+            // Guardar en Redux y AsyncStorage
+            dispatch(setUserProfile(formattedUser));
+            await storeData('user', formattedUser);
+
+            // Mostrar mensaje de éxito antes de redirigir
+            showAlert('¡Bienvenido!', 'Inicio de sesión exitoso', 'success');
+            
+            //delay para que se vea el mensaje de éxito
+            setTimeout(() => {
+                closeAlert();
+                navigateToHome();
+            }, 1500);
+
+        } catch (e) {
+            console.error(e);
+            showAlert('Error de autenticación', 'Las credenciales ingresadas son incorrectas. Por favor verifique su correo y contraseña.', 'error');
+        }
+    }
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -68,9 +164,9 @@ const Auth = () => {
                                 <Text style={styles.loginTitle}>¡Bienvenido!</Text>
                                 <View style={styles.inputContainer}>
                                     <CustomTextInput
-                                        placeholder='Ingrese su nombre/email'
-                                        value={nameEmail}
-                                        onChangeText={setNameEmail}
+                                        placeholder='Ingrese su correo electrónico'
+                                        value={email}
+                                        onChangeText={setEmail}
                                         keyboardType='email-address'
                                         autoCapitalize='none'
                                     />
@@ -91,7 +187,7 @@ const Auth = () => {
                                 </View>
 
                                 <View style={styles.bottomContainer}>
-                                    <BottomComponent title="Iniciar sesión" onPress={() => { }} />
+                                    <BottomComponent title="Iniciar sesión" onPress={handleLogin} />
                                 </View>
                             </View>
 
@@ -99,32 +195,9 @@ const Auth = () => {
                             <View style={styles.footer}>
                                 <View style={styles.footerIcons}>
                                     <Text style={styles.footerIconsTitle}>
-                                        ----------------- Inicia sesión con redes sociales -----------------
+                                        ----------------- O Inicia sesión con Google -----------------
                                     </Text>
                                     <View style={styles.icons}>
-                                        <Pressable
-                                            onPress={() => console.log('Facebook')}
-                                            style={({ pressed }) => [
-                                                {
-                                                    opacity: pressed ? 0.6 : 1,
-                                                    transform: [{ scale: pressed ? 0.95 : 1 }],
-                                                },
-                                            ]}
-                                        >
-                                            <Image source={imagePath.facebook} style={styles.icon} />
-                                        </Pressable>
-
-                                        <Pressable
-                                            onPress={() => console.log('Twitter')}
-                                            style={({ pressed }) => [
-                                                {
-                                                    opacity: pressed ? 0.6 : 1,
-                                                    transform: [{ scale: pressed ? 0.95 : 1 }],
-                                                },
-                                            ]}
-                                        >
-                                            <Image source={imagePath.twitter} style={styles.icon} />
-                                        </Pressable>
 
                                         <Pressable
                                             onPress={() => console.log('Google')}
@@ -160,6 +233,17 @@ const Auth = () => {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
+
+            {/* Configuración de custom alert */}
+            <CustomAlert
+                visible={alertVisible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                showCancel={alertConfig.showCancel}
+                onConfirm={closeAlert}
+                confirmText="Aceptar"
+            />
         </SafeAreaView>
     );
 };
@@ -176,7 +260,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: moderateScale(30),
-        flexDirection: 'column',
     },
     header: {},
     body: {

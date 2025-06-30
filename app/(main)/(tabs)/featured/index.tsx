@@ -1,7 +1,6 @@
 import imagePath from '@/constants/imagePath'
-import React from 'react'
 import { View, Text, StyleSheet, SafeAreaView, ImageBackground, ScrollView } from 'react-native'
-import { moderateScale, verticalScale } from 'react-native-size-matters'
+import { verticalScale } from 'react-native-size-matters'
 import ServiceCard from '@/components/serviceCard'
 
 const Featureds = () => {
@@ -38,7 +37,6 @@ const Featureds = () => {
 
   )
 }
-
 
 const styles = StyleSheet.create({
   container: {

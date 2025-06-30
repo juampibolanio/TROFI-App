@@ -1,22 +1,21 @@
 import imagePath from '@/constants/imagePath';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react'
 import { ImageSourcePropType, TextInput, TextInputProps, View, StyleSheet, TouchableOpacity, Image } from 'react-native'
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 
 interface CustomTextInputProps extends TextInputProps {
     isPassword?: boolean;
+    selectionColor?: string; 
 }
 
 export const CustomTextInput: React.FC<CustomTextInputProps> = ({
     isPassword = false,
+    selectionColor = '#FFFFFF', 
     ...restOfProps
-
 }) => {
 
-    /* ESTADO PARA LA VISIBILIDAD DE LA CONTRASEÑA */
     const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
-
-    /* MANEJAR EL CLICK AL PRESIONAR EL ICONO */
 
     const handleIconPress = () => {
         if (isPassword) {
@@ -28,20 +27,13 @@ export const CustomTextInput: React.FC<CustomTextInputProps> = ({
         }
     }
 
-    /*DEFINIR Q ICONO UTILIZAR */
-
-    let iconToShow: ImageSourcePropType | null = null;
-    let shouldShowIcon = false
+    let shouldShowIcon = false;
 
     if (isPassword) {
-        /* SI ES UN CAMPO DE CONTRASEÑA, SE USAN LOS ÍCONOS DE SHOWPASSWORD */
         shouldShowIcon = true;
-        iconToShow = isPasswordVisible ? imagePath.showPassBottom : imagePath.noShowPassBottom;
     } else {
-        /* SI ES UN CAMPO NORMAL SE USA EL ÍCONO DE LA X */
         if (restOfProps.value != null && String(restOfProps.value).length > 0) {
             shouldShowIcon = true;
-            iconToShow = imagePath.closeBottom
         }
     }
 
@@ -52,28 +44,29 @@ export const CustomTextInput: React.FC<CustomTextInputProps> = ({
                 {...restOfProps}
                 secureTextEntry={isPassword && !isPasswordVisible}
                 placeholderTextColor="#F5F0F0"
+                selectionColor={selectionColor} 
             />
 
-            {/*BOTÓN DEL ÍCONO */}
-            {shouldShowIcon && iconToShow && (
+            {shouldShowIcon && (
                 <TouchableOpacity
                     onPress={handleIconPress}
                     style={styles.iconBottom}
                     disabled={!isPassword && !restOfProps.onChangeText}
                 >
-                    <Image
-                        source={iconToShow}
-                        style={styles.iconImage}
-                    />
-
-
+                    {isPassword ? (
+                        isPasswordVisible ? (
+                            <Ionicons name="eye-outline" size={24} color="white" />
+                        ) : (
+                            <Ionicons name="eye-off-outline" size={24} color="white" />
+                        )
+                    ) : (
+                        <Ionicons name="close" size={24} color="white" />
+                    )}
                 </TouchableOpacity>
-            )
-            }
+            )}
         </View>
     )
 }
-
 
 const styles = StyleSheet.create({
     container: {

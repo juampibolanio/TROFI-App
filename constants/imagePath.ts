@@ -33,8 +33,6 @@ export default {
     backgroundRDetails: require("@/assets/images/searchImg/backgroundReviewDetail.png"),
     backgroundSRDetails: require("@/assets/images/searchImg/backgroundSendReview.png"),
 
-   
-
     /* RECOVERY PASSWORD */
     passwordRecoveryBackground: require("@/assets/images/recoveryPasswordBackground.png"),
     passwordRecoveryEmailBg: require("@/assets/images/recoveryPasswordEmailBg.png"),
@@ -46,5 +44,16 @@ export default {
     editProfileBackground: require("@/assets/images/editProfileBackground.png"),
     editProfileImage: require("@/assets/images/editProfileImage.png"),
     editImageProfileBackground: require("@/assets/images/editImageProfileBackground.png"),
-    editWorkInfoBackground: require("@/assets/images/editWorkInfoBackground.png")
+    editWorkInfoBackground: require("@/assets/images/editWorkInfoBackground.png"),
+
+
+    /* SETTINGS SCREENS */
+    backgroundSettings: require("@/assets/images/settingsImg/backgroundSettings.png"),
+
+    //ONBOARDING SCREENS
+    backgroundOnBoarding: require("@/assets/images/onBoardingImg/onBoardingBackground.png"),
+
+
+    //imagen por defecto si el usuario no tiene una
+    defaultUserImage: require("@/assets/images/defaultProfile.png")
 }

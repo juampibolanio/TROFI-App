@@ -1,28 +1,20 @@
-import { View, Text, StatusBar } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { Redirect, SplashScreen, Stack } from 'expo-router'
-  
+import { StatusBar } from 'react-native'
+import { Provider } from 'react-redux';
+import { store } from '../redux/store';
+import AppLoader from '@/components/AppLoader';
+import { Stack } from 'expo-router';
+
+//este root navigation es el que carga a la app
 const RootNavigation = () => {
-
-  const [isLogin, setIsLogin] = useState(true);
-
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  })
   return (
-    // modifiquen esto para que los manden a las rutas que necesiten
-    // yo lo dejo asi para que vean como hacerlo, si lo vuelven a (auth)
-    // la app comienza normalmente
     <>
-      {/*configuro acá la barra de estado */}
-      {/*ESTA PUESTO PARA LA VISTA QUE ESTOY HACIENDO AHORA EL HREF SETTINGS */}
       <StatusBar backgroundColor="#0E3549" barStyle="light-content" />
-      <Stack screenOptions={{headerShown: false}} />
-      {isLogin
-        ? <Redirect href="/(main)/(tabs)/featured" />
-        : <Redirect href="/(main)/(auth)/" />}
+      <Provider store={store}>
+        <Stack screenOptions={{ headerShown: false }} />
+        <AppLoader />
+      </Provider>
     </>
-  );
-}
+  )
+};
 
 export default RootNavigation;

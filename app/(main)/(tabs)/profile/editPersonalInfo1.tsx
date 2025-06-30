@@ -93,7 +93,7 @@ const EditPersonalInfo1 = () => {
           </View>
 
           {/* Ver más datos */}
-          <TouchableOpacity style={styles.viewMoreButton}>
+          <TouchableOpacity style={styles.viewMoreButton} onPress={router.push('/(main)/(tabs)/profile/editPersonalInfo2')}>
             <Text style={styles.viewMoreButtonText}>Ver más datos</Text>
           </TouchableOpacity>
 

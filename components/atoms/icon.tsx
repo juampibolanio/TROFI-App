@@ -1,6 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-// aca lo unico q cambie fue hacer constante estos valores, pq todos los iconos los tienen igual
 const ICON_SIZE = 10;
 const ICON_COLOR = "#0E3549";
 
