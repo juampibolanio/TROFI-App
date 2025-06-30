@@ -1,21 +1,25 @@
 import fonts from '@/constants/fonts';
 import imagePath from '@/constants/imagePath';
+import { useFonts } from '@expo-google-fonts/roboto';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
     View,
+    Text,
     ImageBackground,
+    Pressable,
     SafeAreaView,
     StyleSheet,
     Image,
+    Modal
 } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import ButtonComponent from '@/components/atoms/ButtonComponent';
 
 const editWorkInfo = () => {
-//const [job, setJob] = useState({ id: 1, title: 'electricista' });
-// para mostrar el trabajo actual, si es que se tiene uno
+    //const [job, setJob] = useState({ id: 1, title: 'electricista' });
+    // para mostrar el trabajo actual, si es que se tiene uno
 
     return (
         <SafeAreaView style={styles.container}>
@@ -50,8 +54,14 @@ const editWorkInfo = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#0E3549' },
-    overlay: { flex: 1, justifyContent: 'space-between' },
+    container: { 
+        flex: 1, 
+        backgroundColor: '#0E3549' 
+    },
+    overlay: { 
+        flex: 1, 
+        justifyContent: 'space-between' 
+    },
     header: {
         alignItems: 'center',
         gap: moderateScale(20),

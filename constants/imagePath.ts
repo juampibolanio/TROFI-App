@@ -1,3 +1,5 @@
+import editWorkInfo from "@/app/(main)/(tabs)/profile/editWorkInfo";
+
 export default {
 
     /* AUTH SCREEN */
@@ -39,4 +41,10 @@ export default {
 
     /* CHAT SCREEN */
     //person1: require("@/assets/images/person1.png")
+
+    /* EDIT PROFILE SCREEN */
+    editProfileBackground: require("@/assets/images/editProfileBackground.png"),
+    editProfileImage: require("@/assets/images/editProfileImage.png"),
+    editImageProfileBackground: require("@/assets/images/editImageProfileBackground.png"),
+    editWorkInfoBackground: require("@/assets/images/editWorkInfoBackground.png")
 }

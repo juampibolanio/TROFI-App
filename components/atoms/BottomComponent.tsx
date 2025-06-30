@@ -9,7 +9,7 @@ interface BottomComponentProps {
   onPress: () => void;
 }
 
-/ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP/
+{/* ESTE ES EL BOTON CON FONDO GRIS UTILIZADO EN LAS PRIMERAS PANTALLAS DE LA APP */}
 
 const BottomComponent = ({ title }: any) => {
     return (
