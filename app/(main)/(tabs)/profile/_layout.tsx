@@ -9,6 +9,9 @@ export default function Layout() {
             <Stack.Screen name="editProfile" />
             <Stack.Screen name="editWorkInfo" />
             <Stack.Screen name="editImageProfile" />
+            <Stack.Screen name="editPersonalInfo1" />
+            <Stack.Screen name="editPersonalInfo2" />
+            <Stack.Screen name="editEmploymentInfo" />
         </Stack>
     );
 }

@@ -41,12 +41,12 @@ const editProfile = () => {
     // Handlers para los alerts
     const handlePersonalInfoConfirm = () => {
         setPersonalAlert(false);
-        // router.push('/profile/editPersonalInfo');
+        router.push('/(main)/(tabs)/profile/editPersonalInfo1');
     };
 
     const handleLaboralInfoConfirm = () => {
         setLaboralAlert(false);
-        router.push('/profile/editWorkInfo');
+        router.push('/(main)/(tabs)/profile/editWorkInfo');
     };
 
     // Función para mostrar el modal de confirmación de logout

@@ -17,86 +17,73 @@ import {
 import { moderateScale } from 'react-native-size-matters';
 import ButtonComponent from '@/components/atoms/ButtonComponent';
 
-
 const editWorkInfo = () => {
+    //const [job, setJob] = useState({ id: 1, title: 'electricista' });
+    // para mostrar el trabajo actual, si es que se tiene uno
 
+    return (
+        <SafeAreaView style={styles.container}>
+            <ImageBackground
+                style={styles.overlay}
+                source={imagePath.editWorkInfoBackground}
+                resizeMode="cover"
+            >
+                {/* Header */}
+                <View style={styles.header}>
+                    <Image source={imagePath.icon} style={styles.iconStyle} resizeMode="contain" />
+                </View>
 
+                {/* Botones */}
+                <View style={styles.containerButton}>
+                    <ButtonComponent
+                        title="Editar información laboral"
+                        //={`Editar información laboral /(${job.title})`} <-- para mostrar el trabajo actual
+                        iconName="pencil"
+                        onPress={() => router.push('/(main)/(tabs)/profile/editEmploymentInfo')}
+                    />
 
-return (
-<SafeAreaView style={styles.container}>
-    <ImageBackground 
-            style={styles.overlay} 
-            source={imagePath.editWorkInfoBackground} 
-            resizeMode="cover">
+                    <ButtonComponent
+                        title="Guardar y actualizar"
+                        iconName="save-outline"
+                        onPress={() => {}}
+                    />
+                </View>
 
-    <View style={styles.header}>
-        <Image 
-            source={imagePath.icon} 
-            style={styles.iconStyle} 
-            resizeMode="contain" 
-        />
-    </View>
-
-    <View style={styles.containerButton}>
-        
-        <ButtonComponent 
-            title="Editar información de empleo 1"
-            iconName="pencil"
-        />
-
-        <ButtonComponent 
-            title="Editar información de empleo 2"
-            iconName="pencil"
-        />
-
-        <ButtonComponent 
-            title="Agregar nuevo oficio"
-            iconName="pencil"
-        />
-
-        <ButtonComponent 
-            title="Guardar y actualizar"
-            iconName="save-outline"
-        />
-
-    </View>
-
-    <View style={styles.containerButton}>
-        <ButtonComponent 
-            title="Cancelar"
-            iconName="exit-outline"
-        />
-    </View>
-
-
-    </ImageBackground>
-</SafeAreaView>
+                <View style={styles.containerButton}>
+                    <ButtonComponent
+                        title="Cancelar"
+                        iconName="exit-outline"
+                        onPress={() => router.back()}
+                    />
+                </View>
+            </ImageBackground>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-container: {
-    flex: 1,
-    backgroundColor: '#0E3549',
-},
-overlay: {
-    justifyContent: "space-between",
-    flex: 1,
-},
-header: {
-    alignItems: 'center',
-    gap: moderateScale(20),
-    marginBottom: moderateScale(40),
-    paddingTop: moderateScale(10),
-},
-iconStyle: {
-    width: moderateScale(50),
-    height: moderateScale(50),
-},
-containerButton: {
-    padding: moderateScale(50),
-    gap: moderateScale(20),
-},
+    container: {
+        flex: 1,
+        backgroundColor: '#0E3549'
+    },
+    overlay: {
+        flex: 1,
+        justifyContent: 'space-between'
+    },
+    header: {
+        alignItems: 'center',
+        gap: moderateScale(20),
+        marginBottom: moderateScale(40),
+        paddingTop: moderateScale(10),
+    },
+    iconStyle: {
+        width: moderateScale(50),
+        height: moderateScale(50),
+    },
+    containerButton: {
+        padding: moderateScale(50),
+        gap: moderateScale(20),
+    },
 });
 
 export default editWorkInfo;
