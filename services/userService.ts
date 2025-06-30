@@ -51,6 +51,12 @@ export const deletePhoto = async (photoId: number) => {
     }
 };
 
+// actualizar foto de perfil del usuario
+export const updateUserProfileImage = async (imageProfile: string) => {
+    const response = await api.put('/api/user/profile-image', { imageProfile });
+    return response.data;
+};
+
 //solicitud para listar TODOS los trabajadores registrados en la app
 export const searchWorkers = async ({
     searchText,

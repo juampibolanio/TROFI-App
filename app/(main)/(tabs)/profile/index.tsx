@@ -55,7 +55,7 @@ const Perfil = () => {
               </Text>
             )}
 
-            <Pressable style={styles.sendMessageBottom} onPress={navigateToEditProfile}>
+            <Pressable style={({ pressed }) => [styles.sendMessageBottom, pressed && { opacity: 0.5 }]} onPress={navigateToEditProfile}>
               <Ionicons name='pencil' size={15} color={'#0E3549'} />
               <Text style={styles.sendText}>
                 {user.isProfileComplete ? 'Editar' : 'Completar perfil'}
@@ -114,7 +114,7 @@ const Perfil = () => {
               <Text style={styles.workerProfileText}>
                 ¿Querés aparecer como trabajador? Completá tu perfil laboral.
               </Text>
-              <Pressable style={styles.workerProfileButton} onPress={navigateToEditProfile}>
+              <Pressable style={({ pressed }) => [styles.workerProfileButton, pressed && { opacity: 0.5 }]} onPress={navigateToEditProfile}>
                 <Text style={styles.workerProfileButtonText}>Completar perfil laboral</Text>
               </Pressable>
             </View>

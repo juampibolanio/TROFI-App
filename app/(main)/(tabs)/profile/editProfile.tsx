@@ -1,9 +1,8 @@
 import fonts from '@/constants/fonts';
 import imagePath from '@/constants/imagePath';
-import { useFonts } from '@expo-google-fonts/roboto';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     View,
     Text,
@@ -12,289 +11,268 @@ import {
     SafeAreaView,
     StyleSheet,
     Image,
-    Modal
+    ScrollView
 } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import ButtonComponent from '@/components/atoms/ButtonComponent';
+import CustomAlert from '@/components/atoms/CustomAlert';
+import { useFonts } from '@expo-google-fonts/roboto';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { logoutRequest } from '@/services/authService';
+import { logout } from '@/redux/slices/authSlice';
+import { clearUserProfile } from '@/redux/slices/userSlice';
 
 const editProfile = () => {
-    const [showPersonalModal, setShowPersonalModal] = useState(false);
-    const [shownLaboralModal, setLaboralModal] = useState(false);
-    const [shownSessionModal, setShownSessionModal] = useState(false);
+    const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user);
+    const [fontsLoaded] = useFonts(fonts);
 
-const navigateToEditImageProfile = () => {
-    router.push("/profile/editImageProfile");
-};
+    // Estados para controlar los diferentes alerts
+    const [personalAlert, setPersonalAlert] = useState(false);
+    const [laboralAlert, setLaboralAlert] = useState(false);
+    const [logoutAlert, setLogoutAlert] = useState(false);
+    const [logoutErrorAlert, setLogoutErrorAlert] = useState(false);
 
+    const navigateToEditImageProfile = () => {
+        router.push("/profile/editImageProfile");
+    };
+
+    // Handlers para los alerts
+    const handlePersonalInfoConfirm = () => {
+        setPersonalAlert(false);
+        // router.push('/profile/editPersonalInfo');
+    };
+
+    const handleLaboralInfoConfirm = () => {
+        setLaboralAlert(false);
+        router.push('/profile/editWorkInfo');
+    };
+
+    // Función para mostrar el modal de confirmación de logout
+    const handleLogoutPress = () => {
+        setLogoutAlert(true);
+    };
+
+    // Función para confirmar el logout (usando la lógica de Settings)
+    const handleLogoutConfirm = async () => {
+        setLogoutAlert(false);
+        try {
+            await logoutRequest();
+
+            dispatch(logout()); // limpia Redux y AsyncStorage
+            dispatch(clearUserProfile()); // limpia perfil
+            router.replace('/(main)/(auth)'); // redirige al login
+        } catch (e) {
+            console.error('Error al cerrar sesión:', e);
+            setLogoutErrorAlert(true);
+        }
+    };
+
+    // Función para cancelar el logout
+    const handleLogoutCancel = () => {
+        setLogoutAlert(false);
+    };
+
+    // Función para cerrar el alert de error de logout
+    const closeLogoutErrorAlert = () => {
+        setLogoutErrorAlert(false);
+    };
 
     return (
-<SafeAreaView style={styles.container}>
-    <ImageBackground 
-        style={styles.overlay} 
-        source={imagePath.editProfileBackground} 
-        resizeMode="cover">
-        
-        {/* HEADER */}
-        <View style={styles.header}>
-            <Image 
-                source={imagePath.icon} 
-                style={styles.iconStyle} 
-                resizeMode="contain" 
-            />
+        <SafeAreaView style={styles.container}>
+            <ImageBackground
+                style={styles.overlay}
+                source={imagePath.editProfileBackground}
+                resizeMode="cover">
 
-            <View style={styles.avatarWrapper}>
-                <Image 
-                    source={imagePath.editProfileImage} 
-                    style={styles.userImage} 
-                    resizeMode="cover" 
-                />
-                    <Pressable 
-                        style={styles.editButton} 
-                        onPress={navigateToEditImageProfile}>
-                            <Ionicons 
-                                name="pencil" 
-                                size={16} 
-                                color="#0E3549" 
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* HEADER */}
+                    <View style={styles.header}>
+                        <Image
+                            source={imagePath.icon}
+                            style={styles.iconStyle}
+                            resizeMode="contain"
+                        />
+
+                        <View style={styles.avatarWrapper}>
+                            <Image
+                                source={
+                                    user.imageProfile
+                                        ? { uri: user.imageProfile }
+                                        : imagePath.defaultUserImage
+                                }
+                                style={styles.userImage}
+                                resizeMode="cover"
                             />
-                    </Pressable>
-            </View>
+                            <Pressable
+                                style={styles.editButton}
+                                onPress={navigateToEditImageProfile}>
+                                <Ionicons
+                                    name="pencil"
+                                    size={14}
+                                    color="#0E3549"
+                                />
+                            </Pressable>
+                        </View>
 
-            <Text style={styles.editionText}>
-                Hola! -NOMBRE USUARIO- te encuentras en edición de perfil
-            </Text>
-        </View>
+                        <Text style={styles.editionText}>
+                            Hola {user.name}!{'\n'}
+                            <Text style={styles.subText}>Te encuentras en edición de perfil</Text>
+                        </Text>
+                    </View>
 
-        {/* BODY */}
-        <View style={styles.containerButton}>
-            <ButtonComponent 
+                    {/* BODY - Botones principales */}
+                    <View style={styles.mainButtonsContainer}>
+                        <ButtonComponent
+                            title="Editar información personal"
+                            iconName="person-outline"
+                            onPress={() => setPersonalAlert(true)}
+                        />
+
+                        <ButtonComponent
+                            title="Editar información laboral"
+                            iconName="briefcase-outline"
+                            onPress={() => setLaboralAlert(true)}
+                        />
+                    </View>
+
+                    {/* FOOTER - Botón de cerrar sesión */}
+                    <View style={styles.logoutContainer}>
+                        <ButtonComponent
+                            title="Cerrar sesión"
+                            iconName="log-out-outline"
+                            onPress={handleLogoutPress}
+                        />
+                    </View>
+                </ScrollView>
+            </ImageBackground>
+
+            {/* ALERT INFORMACIÓN PERSONAL */}
+            <CustomAlert
+                visible={personalAlert}
                 title="Editar información personal"
-                iconName="pencil"
-                onPress={() => setShowPersonalModal(true)}
+                message="Para editar tu información personal deberás proporcionar datos adicionales."
+                type="info"
+                showCancel={true}
+                confirmText="Confirmar"
+                cancelText="Cancelar"
+                onConfirm={handlePersonalInfoConfirm}
+                onCancel={() => setPersonalAlert(false)}
             />
 
-            <ButtonComponent 
+            {/* ALERT INFORMACIÓN LABORAL */}
+            <CustomAlert
+                visible={laboralAlert}
                 title="Editar información laboral"
-                iconName="pencil"
-                onPress={() => setLaboralModal(true)}
+                message="Para editar tu información laboral deberás proporcionar datos adicionales."
+                type="info"
+                showCancel={true}
+                confirmText="Confirmar"
+                cancelText="Cancelar"
+                onConfirm={handleLaboralInfoConfirm}
+                onCancel={() => setLaboralAlert(false)}
             />
-        </View>
 
-        {/* FOOTER */}
-        <View style={styles.containerButton}>
-            <ButtonComponent 
+            {/* ALERT CERRAR SESIÓN */}
+            <CustomAlert
+                visible={logoutAlert}
                 title="Cerrar sesión"
-                iconName="exit-outline"
-                onPress={() => setShownSessionModal(true)}
+                message="¿Estás seguro de que deseas cerrar sesión?"
+                type="warning"
+                showCancel={true}
+                confirmText="Sí, cerrar sesión"
+                cancelText="Cancelar"
+                onConfirm={handleLogoutConfirm}
+                onCancel={handleLogoutCancel}
             />
-        </View>
 
-    </ImageBackground>
-
-      {/* MODAL */}
-
-    <Modal
-        visible={showPersonalModal}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShowPersonalModal(false)}
-    >
-        <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-
-                <Text style={styles.modalTitle}>
-                    Editar información personal
-                </Text>
-
-                <Text style={styles.modalDescription}>
-                    Para editar su información personal deberá proporcionar más datos adicionales.
-                </Text>
-
-                <View style={styles.modalButtons}>
-                    <Pressable onPress={() => setShowPersonalModal(false)}>
-                        <Text style={styles.cancelText}>Cancelar</Text>
-                    </Pressable>
-
-                    <Pressable onPress={() => {
-                            setShowPersonalModal(false);
-                            // aca deberia ir la ruta para editar esa información
-                            }}>
-                        <Text style={styles.confirmText}>
-                            Confirmar
-                        </Text>
-                    </Pressable>
-                </View>
-            </View>
-        </View>
-    </Modal>
-
-    <Modal
-        visible={shownLaboralModal}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShowPersonalModal(false)}
-    >
-        <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-
-                <Text style={styles.modalTitle}>
-                    Editar información laboral
-                </Text>
-
-                <Text style={styles.modalDescription}>
-                    Para editar su información laboral deberá proporcionar más datos adicionales.
-                </Text>
-
-                <View style={styles.modalButtons}>
-                    <Pressable onPress={() => setLaboralModal(false)}>
-                        <Text style={styles.cancelText}>Cancelar</Text>
-                    </Pressable>
-
-                    <Pressable onPress={() => {
-                            setLaboralModal(false);
-                            router.push('/profile/editWorkInfo');
-                            }}>
-                        <Text style={styles.confirmText}>
-                            Confirmar
-                        </Text>
-                    </Pressable>
-                </View>
-            </View>
-        </View>
-    </Modal>
-
-    <Modal
-        visible={shownSessionModal}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setShownSessionModal(false)}
-    >
-        <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-
-                <Text style={styles.modalTitle}>
-                    Cerrar sesión
-                </Text>
-
-                <Text style={styles.modalDescription}>
-                    ¿Esta seguro que desea cerrar sersión?
-                </Text>
-
-                <View style={styles.modalButtons}>
-                    <Pressable onPress={() => setShownSessionModal(false)}>
-                        <Text style={styles.cancelText}>Cancelar</Text>
-                    </Pressable>
-
-                    <Pressable onPress={() => {
-                            setShownSessionModal(false);
-                            // aca deberia ir la ruta al cerrar sesion
-                            }}>
-                        <Text style={styles.confirmText}>
-                            Confirmar
-                        </Text>
-                    </Pressable>
-                </View>
-            </View>
-        </View>
-    </Modal>
-</SafeAreaView>
+            {/* ALERT ERROR DE LOGOUT */}
+            <CustomAlert
+                visible={logoutErrorAlert}
+                title="Error"
+                message="Ocurrió un error al cerrar la sesión. Por favor, inténtalo de nuevo."
+                type="error"
+                confirmText="Entendido"
+                onConfirm={closeLogoutErrorAlert}
+            />
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-container: {
-    flex: 1,
-    backgroundColor: '#0E3549',
-},
-overlay: {
-    justifyContent: "space-between",
-    flex: 1,
-},
-header: {
-    alignItems: 'center',
-    gap: moderateScale(20),
-    marginBottom: moderateScale(40),
-    paddingTop: moderateScale(10),
-},
-iconStyle: {
-    width: moderateScale(50),
-    height: moderateScale(50),
-},
-editionText: {
-    textAlign: "center",
-    fontSize: moderateScale(25),
-    fontFamily: 'Roboto_300Light',
-    color: '#FFFFFF',
-    marginRight: moderateScale(5),
-},
-containerButton: {
-    padding: moderateScale(50),
-    gap: moderateScale(20),
-},
-userImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: moderateScale(60),
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-},
-editButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#D9D9D9',
-    width: moderateScale(38),
-    height: moderateScale(38),
-    borderRadius: moderateScale(18),
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#0E3549',
-},
-avatarWrapper: {
-    position: 'relative',
-    width: moderateScale(120),
-    height: moderateScale(120),
-    justifyContent: 'center',
-    alignItems: 'center',
-},
-modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-},
-modalContainer: {
-    backgroundColor: '#fff',
-    borderRadius: moderateScale(20),
-    padding: moderateScale(20),
-    width: "80%",
-    alignItems: 'center',
-},
-modalTitle: {
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-    marginBottom: moderateScale(10),
-    textAlign: 'center',
-},
-modalDescription: {
-    fontSize: moderateScale(14),
-    textAlign: 'center',
-    marginBottom: moderateScale(20),
-    color: '#4A4A4A',
-},
-modalButtons: {
-    flexDirection: 'row',
-    gap: moderateScale(30),
-},
-cancelText: {
-    fontSize: moderateScale(16),
-    color: '#666',
-},
-confirmText: {
-    fontSize: moderateScale(16),
-    color: '#007AFF',
-    fontWeight: 'bold',
-},
+    container: {
+        flex: 1,
+        backgroundColor: '#0E3549',
+    },
+    overlay: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'space-between',
+        paddingBottom: moderateScale(20),
+    },
+    header: {
+        alignItems: 'center',
+        paddingTop: moderateScale(20),
+        paddingHorizontal: moderateScale(20),
+        gap: moderateScale(16),
+    },
+    iconStyle: {
+        width: moderateScale(40),
+        height: moderateScale(40),
+    },
+    avatarWrapper: {
+        position: 'relative',
+        width: moderateScale(100),
+        height: moderateScale(100),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    userImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: moderateScale(50),
+        borderWidth: 3,
+        borderColor: '#FFFFFF',
+    },
+    editButton: {
+        position: 'absolute',
+        bottom: -2,
+        right: -2,
+        backgroundColor: '#D9D9D9',
+        width: moderateScale(32),
+        height: moderateScale(32),
+        borderRadius: moderateScale(16),
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: '#0E3549',
+    },
+    editionText: {
+        textAlign: 'center',
+        fontSize: moderateScale(22),
+        fontFamily: 'Roboto_300Light',
+        color: '#FFFFFF',
+        lineHeight: moderateScale(28),
+    },
+    subText: {
+        fontSize: moderateScale(16),
+        color: '#E0E0E0',
+    },
+    mainButtonsContainer: {
+        paddingHorizontal: moderateScale(30),
+        gap: moderateScale(16),
+        marginTop: moderateScale(30),
+    },
+    logoutContainer: {
+        paddingHorizontal: moderateScale(30),
+        marginTop: moderateScale(40),
+    },
 });
 
 export default editProfile;
