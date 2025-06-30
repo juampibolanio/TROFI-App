@@ -18,7 +18,7 @@ const Perfil = () => {
   const user = useSelector((state: RootState) => state.user);
 
   const navigateToEditProfile = () => {
-    router.push('/(main)/(onBoarding)/completeJobProfile');
+    router.push('/profile/editProfile');
   };
 
   const navigateToMyReviews = () => {

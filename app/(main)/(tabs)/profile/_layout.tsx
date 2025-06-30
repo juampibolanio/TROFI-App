@@ -6,7 +6,9 @@ export default function Layout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="myGallery" />
             <Stack.Screen name="reviews" />
-            <Stack.Screen name="userSettings" />
+            <Stack.Screen name="editProfile" />
+            <Stack.Screen name="editWorkInfo" />
+            <Stack.Screen name="editImageProfile" />
         </Stack>
     );
 }
