@@ -1,5 +1,4 @@
-import imagePath from "@/constants/imagePath";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,55 +9,88 @@ import {
 } from "react-native";
 import ChatButton from "@/components/chatButton";
 import SearchBar from "@/components/searchBar";
-import { ScreenStackHeaderCenterView } from "react-native-screens";
+import imagePath from "@/constants/imagePath";
 import { moderateScale } from "react-native-size-matters";
 
+import { ref, onValue } from "firebase/database";
+import { database } from "@/constants/firebaseConfig";
+
+type Chat = {
+  chatId: string;
+  namePerson: string;
+  profileImageSource: any; // ajusta según tu tipado de imagen
+};
+
+const currentUserId = "2"; // cambiar por el usuario real
+
 const Messages = () => {
-  return (
-    <>
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const chatsRef = ref(database, "chats");
+    const unsubscribe = onValue(chatsRef, (snapshot) => {
+      const chatsData = snapshot.val() || {};
+      const chatArray: Chat[] = [];
+
+      Object.keys(chatsData).forEach((chatId) => {
+        // Por ejemplo, si el id es '1_2' y currentUserId = '2', chequeamos si contiene '2'
+        if (chatId.includes(currentUserId)) {
+          chatArray.push({
+            chatId,
+            namePerson: "Id 2", // Podrías armar el nombre con lógica propia
+            profileImageSource: imagePath.logo, // o lógica para la imagen
+          });
+        }
+      });
+
+      setChats(chatArray);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
       <SafeAreaView style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <ImageBackground
-            source={imagePath.backgroundFeatured}
-            resizeMode="contain"
-            style={styles.backgroundImage}
-          >
-            <View style={styles.container2}>
-              <View style={styles.search}>
-              <SearchBar placeHolder="Buscar"/>
-              </View>
-              <ChatButton
-                profileImageSource={imagePath.elderlyCare}
-                namePerson="Maria"
-              />
-              <ChatButton
-                profileImageSource={imagePath.electricity}
-                namePerson="Dario"
-              />
-              <ChatButton 
-                profileImageSource={imagePath.carpentry}
-                namePerson="Pedro Ramirez"
-              />
-              <View style = {styles.container3}>
-              <Text style={styles.text}>Todos los chats</Text>
-                <ChatButton 
-                  profileImageSource={imagePath.logo}
-                  namePerson="Lucas Sanchez"
-                />
-                <ChatButton 
-                  profileImageSource={imagePath.masonry}
-                  namePerson="Memo Fierro"
-                />
-                <ChatButton 
-                  profileImageSource={imagePath.plumbing}
-                  namePerson="Sofia"
-                />
-              </View>
-            </View>
-          </ImageBackground>
-        </ScrollView>
+        <Text style={{ color: "#fff", textAlign: "center", marginTop: 50 }}>
+          Cargando chats...
+        </Text>
       </SafeAreaView>
-    </>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <ImageBackground
+          source={imagePath.backgroundFeatured}
+          resizeMode="contain"
+          style={styles.backgroundImage}
+        >
+          <View style={styles.container2}>
+            <View style={styles.search}>
+              <SearchBar placeHolder="Buscar" />
+            </View>
+
+            {chats.length === 0 && (
+              <Text style={[styles.text, { textAlign: "center" }]}>
+                No tenés chats todavía.
+              </Text>
+            )}
+
+            {chats.map(({ chatId, namePerson, profileImageSource }) => (
+              <ChatButton
+                key={chatId}
+                profileImageSource={profileImageSource}
+                namePerson={namePerson}
+              />
+            ))}
+          </View>
+        </ImageBackground>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -77,23 +109,18 @@ const styles = StyleSheet.create({
     marginRight: 10,
     borderRadius: 30,
   },
-  search:{
+  search: {
     marginTop: 10,
     marginLeft: 30,
     marginRight: 30,
-    marginBottom: 10
+    marginBottom: 10,
   },
-  container3:{
-    backgroundColor: "rgba(217, 217, 217, 0.5)",
-    borderRadius: 30,
-    paddingTop: 10,
-    marginTop: 5
-  },
-  text:{
+  text: {
     marginLeft: 15,
     marginBottom: 5,
-    fontSize: moderateScale(13)
-  }
+    fontSize: moderateScale(13),
+    color: "#090909",
+  },
 });
 
 export default Messages;
