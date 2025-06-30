@@ -11,9 +11,8 @@ import {
     ScrollView,
     TouchableWithoutFeedback,
     Keyboard,
-    Alert
 } from 'react-native';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { useFonts } from '@expo-google-fonts/roboto';
@@ -22,12 +21,12 @@ import { router } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 import fonts from '@/constants/fonts';
 import { useDispatch } from 'react-redux';
-import { loginRequest } from '@/api/authService';
+import { loginRequest } from '@/services/authService';
 import { setCredentials } from '@/redux/slices/authSlice';
 import { storeData } from '@/utils/storage';
-import api from '@/api/api';
-import { userProfileRequest } from '@/api/userService';
+import { userProfileRequest } from '@/services/userService';
 import { setUserProfile } from '@/redux/slices/userSlice';
+import CustomAlert from '@/components/atoms/CustomAlert'; 
 
 const Auth = () => {
 
@@ -37,6 +36,15 @@ const Auth = () => {
     const [isRemembered, setIsRemembered] = useState(false);
     const dispatch = useDispatch();
 
+    // Estados para el CustomAlert
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: '',
+        message: '',
+        type: 'error' as 'success' | 'error' | 'warning' | 'info',
+        showCancel: false
+    });
+
     //ir a la pantalla de registro.
     let navigateToRegister = () => {
         router.push("/(auth)/register");
@@ -44,11 +52,47 @@ const Auth = () => {
 
     //ir a la pantalla home de la app
     let navigateToHome = () => {
-        router.replace('/(main)/(tabs)/featured');
+        router.push('/(main)/(tabs)/featured');
     }
+
+    // Función para mostrar alert
+    const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+        setAlertConfig({
+            title,
+            message,
+            type,
+            showCancel: false
+        });
+        setAlertVisible(true);
+    };
+
+    // Función para cerrar alert
+    const closeAlert = () => {
+        setAlertVisible(false);
+    };
 
     //procesar solicitud de login
     const handleLogin = async () => {
+        console.log("se ejecuto")
+        
+        // Validaciones básicas
+        if (!email.trim()) {
+            showAlert('Campo requerido', 'Por favor ingrese su correo electrónico', 'warning');
+            return;
+        }
+
+        if (!password.trim()) {
+            showAlert('Campo requerido', 'Por favor ingrese su contraseña', 'warning');
+            return;
+        }
+
+        // Validación básica de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showAlert('Email inválido', 'Por favor ingrese un correo electrónico válido', 'warning');
+            return;
+        }
+
         try {
             const data = await loginRequest(email, password);
 
@@ -61,15 +105,34 @@ const Auth = () => {
 
             //hago una peticion más para acceder al perfil completo del usuario 
             const profileResponse = await userProfileRequest(userEmail);
-            dispatch(setUserProfile(profileResponse));
-            await storeData('user', profileResponse);
 
-            //redirijo al usuario luego de loguearse
-            navigateToHome();
+            // Mapear campos al formato del Redux
+            const formattedUser = {
+                ...profileResponse,
+                isWorker: profileResponse.is_worker === 1,
+                jobId: profileResponse.id_job,
+                jobDescripction: profileResponse.job_description,
+                jobImages: Array.isArray(profileResponse.job_images)
+                    ? profileResponse.job_images.map((url: string, index: number) => ({ id: index, url }))
+                    : [],
+            };
+
+            // Guardar en Redux y AsyncStorage
+            dispatch(setUserProfile(formattedUser));
+            await storeData('user', formattedUser);
+
+            // Mostrar mensaje de éxito antes de redirigir
+            showAlert('¡Bienvenido!', 'Inicio de sesión exitoso', 'success');
+            
+            //delay para que se vea el mensaje de éxito
+            setTimeout(() => {
+                closeAlert();
+                navigateToHome();
+            }, 1500);
 
         } catch (e) {
-            Alert.alert('Error', 'Credenciales incorrectas o error en el servidor.');
             console.error(e);
+            showAlert('Error de autenticación', 'Las credenciales ingresadas son incorrectas. Por favor verifique su correo y contraseña.', 'error');
         }
     }
 
@@ -132,32 +195,9 @@ const Auth = () => {
                             <View style={styles.footer}>
                                 <View style={styles.footerIcons}>
                                     <Text style={styles.footerIconsTitle}>
-                                        ----------------- Inicia sesión con redes sociales -----------------
+                                        ----------------- O Inicia sesión con Google -----------------
                                     </Text>
                                     <View style={styles.icons}>
-                                        <Pressable
-                                            onPress={() => console.log('Facebook')}
-                                            style={({ pressed }) => [
-                                                {
-                                                    opacity: pressed ? 0.6 : 1,
-                                                    transform: [{ scale: pressed ? 0.95 : 1 }],
-                                                },
-                                            ]}
-                                        >
-                                            <Image source={imagePath.facebook} style={styles.icon} />
-                                        </Pressable>
-
-                                        <Pressable
-                                            onPress={() => console.log('Twitter')}
-                                            style={({ pressed }) => [
-                                                {
-                                                    opacity: pressed ? 0.6 : 1,
-                                                    transform: [{ scale: pressed ? 0.95 : 1 }],
-                                                },
-                                            ]}
-                                        >
-                                            <Image source={imagePath.twitter} style={styles.icon} />
-                                        </Pressable>
 
                                         <Pressable
                                             onPress={() => console.log('Google')}
@@ -193,6 +233,17 @@ const Auth = () => {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
+
+            {/* Configuración de custom alert */}
+            <CustomAlert
+                visible={alertVisible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                showCancel={alertConfig.showCancel}
+                onConfirm={closeAlert}
+                confirmText="Aceptar"
+            />
         </SafeAreaView>
     );
 };
@@ -209,7 +260,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: moderateScale(30),
-        flexDirection: 'column',
     },
     header: {},
     body: {

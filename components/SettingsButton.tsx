@@ -1,14 +1,13 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { Text, StyleSheet, Pressable } from 'react-native';
 import React from 'react';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import type { To } from 'expo-router';
 
 type Props = {
     title: string;
     iconName: keyof typeof Ionicons.glyphMap;
-    route: To;
+    route: Parameters<typeof router.push>[0];
 };
 
 const SettingsButton: React.FC<Props> = ({ title, iconName, route }) => {

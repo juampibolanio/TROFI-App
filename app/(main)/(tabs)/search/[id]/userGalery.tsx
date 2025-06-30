@@ -1,117 +1,69 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ImageBackground, Image, Pressable } from 'react-native'; // si es React Native
+import React, { useState, useEffect } from 'react';
+import { 
+    View, 
+    Text, 
+    ScrollView, 
+    StyleSheet, 
+    ImageBackground, 
+    Image, 
+    Pressable,
+    Modal,
+    TouchableOpacity,
+    Dimensions
+} from 'react-native';
 import { router, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { useFonts } from '@expo-google-fonts/roboto';
+import { getUserPhotos } from '@/services/userService';
+import Loader from '@/components/atoms/Loader';
 import fonts from '@/constants/fonts';
 import { Ionicons } from '@expo/vector-icons';
 
-const perfiles = [
-    {
-        id: 1,
-        nombre: 'Facundo Pereyra',
-        puntaje: 7.6,
-        categoria: 'Plomería',
-        ubicacion: 'Resistencia',
-        descripcionLaboral: 'Especialista en instalaciones sanitarias y reparación de cañerías.',
-        descripcion: 'Soy una persona con años de experiencia.. .. ..',
-        imagen: require('@/assets/images/searchImg/usersImg/facPereyra.png')
-    },
-    {
-        id: 2,
-        nombre: 'Tomás Álvarez',
-        puntaje: 8.2,
-        categoria: 'Plomería',
-        ubicacion: 'Fontana',
-        descripcionLaboral: 'Plomero con más de 10 años de experiencia en mantenimiento de domicilios.',
-        descripcion: 'Soy una persona con años de experiencia.. .. ..',
-        imagen: require('@/assets/images/searchImg/usersImg/tomasAlvarez.png')
-    },
-    {
-        id: 3,
-        nombre: 'Joaquín Sosa',
-        puntaje: 9.0,
-        categoria: 'Herrería',
-        ubicacion: 'Resistencia',
-        descripcionLaboral: 'Diseño y fabricación de estructuras metálicas a medida.',
-        descripcion: 'Soy una persona con años de experiencia.. .. ..',
-        imagen: require('@/assets/images/searchImg/usersImg/joaSosa.png')
-    },
-    {
-        id: 4,
-        nombre: 'Nicolás Benítez',
-        puntaje: 8.4,
-        categoria: 'Electrónica',
-        ubicacion: 'Barranqueras',
-        descripcionLaboral: 'Reparación de dispositivos electrónicos y placas.',
-        descripcion: 'Soy una persona con años de experiencia.. .. ..',
-        imagen: require('@/assets/images/searchImg/usersImg/nicoBenitez.png')
-    },
-    {
-        id: 5,
-        nombre: 'Leandro Giménez',
-        puntaje: 8.4,
-        categoria: 'Cuidados',
-        ubicacion: 'Puerto vilelas',
-        descripcionLaboral: 'Cuidador con experiencia en adultos mayores, atención y acompañamiento.',
-        descripcion: 'Soy una persona con años de experiencia.. .. ..',
-        imagen: require('@/assets/images/searchImg/usersImg/leaGimenez.png')
-    },
-    {
-        id: 6,
-        nombre: 'Lucas López',
-        puntaje: 8,
-        categoria: 'Herrería',
-        ubicacion: 'Resistencia',
-        descripcionLaboral: 'Herrero con experiencia ... ... ....',
-        descripcion: 'Soy una persona con años de experiencia.. .. ..',
-        imagen: require('@/assets/images/searchImg/usersImg/luLopez.png')
-    },
-    {
-        id: 7,
-        nombre: 'Hernán Bermudez',
-        puntaje: 8,
-        categoria: 'Plomería',
-        ubicacion: 'Resistencia',
-        descripcionLaboral: 'Plomero con experiencia ... ... ....',
-        descripcion: 'Soy una persona con años de experiencia.. .. ..',
-        imagen: require('@/assets/images/searchImg/usersImg/herBermudez.png')
-    },
-];
-
-const galeriaPorUsuario: { [id: number]: any[] } = {
-    1: [
-        require('@/assets/images/galeryUserImg/one.png'),
-        require('@/assets/images/galeryUserImg/two.png'),
-        require('@/assets/images/galeryUserImg/three.png'),
-        require('@/assets/images/galeryUserImg/four.png'),
-        require('@/assets/images/featuredImg/electricity.png'),
-        require('@/assets/images/featuredImg/masonry.png'),
-    ],
-    2: [],
-    3: [],
-    4: []
-}
-
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const UserGalery = () => {
-    const { id } = useLocalSearchParams();
+    const { id, name } = useLocalSearchParams();
 
     const userId = parseInt(id as string);
+    const [fontsLoaded] = useFonts(fonts);
+    const [photos, setPhotos] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
-    const perfil = perfiles.find((p) => p.id === Number(id));
+    // Estados para la vista previa
+    const [previewVisible, setPreviewVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    const userImages = galeriaPorUsuario[userId] || [];
+    //traigo las fotos del usuario
+    useEffect(() => {
+        const fetchPhotos = async () => {
+            try {
+                const data = await getUserPhotos(userId);
+                setPhotos(data);
+            } catch (err) {
+                console.error('Error al obtener fotos del usuario:', err);
+                setError(true);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const haveImages = userImages.length > 0;
+        fetchPhotos();
+    }, [userId]);
 
-    const [fontsLoaded] = useFonts(fonts); //carga de fuentes
+    // Mostrar imagen en vista previa
+    const handleImagePress = (imageUrl: string) => {
+        setSelectedImage(imageUrl);
+        setPreviewVisible(true);
+    };
 
-    const router = useRouter();
-
-
+    // Cerrar vista previa
+    const closePreview = () => {
+        setPreviewVisible(false);
+        setSelectedImage(null);
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -124,30 +76,70 @@ const UserGalery = () => {
                             pressed && { opacity: 0.5 }
                         ]}
                         onPress={() => router.back()}>
-
                         <Ionicons name="arrow-back" size={28} color="black" />
-
                     </Pressable>
-                    <Text style={styles.title}>Galería de {perfil?.nombre}</Text>
+                    <Text style={styles.title}>Galería de {name}</Text>
                 </View>
-
 
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <View style={styles.imageContainer}>
-                        {haveImages ? (
-                            userImages.map((img, index) => (
-                                <Image
+                        {loading ? (
+                            <Loader />
+                        ) : photos.length > 0 ? (
+                            photos.map((uri, index) => (
+                                <TouchableOpacity
                                     key={index}
-                                    source={img}
-                                    style={styles.image}
-                                    resizeMode="cover"
-                                />
+                                    onPress={() => handleImagePress(uri)}
+                                    activeOpacity={0.8}
+                                >
+                                    <Image
+                                        source={{ uri }}
+                                        style={styles.image}
+                                        resizeMode="cover"
+                                    />
+                                </TouchableOpacity>
                             ))
                         ) : (
-                            <Text style={styles.textNoImage}>No se encontraron imágenes cargadas</Text>
+                            <Text style={styles.textNoImage}>
+                                No se encontraron imágenes cargadas
+                            </Text>
                         )}
                     </View>
                 </ScrollView>
+
+                {/* MODAL DE VISTA PREVIA */}
+                <Modal
+                    visible={previewVisible}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={closePreview}
+                >
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity 
+                            style={styles.modalBackground} 
+                            activeOpacity={1}
+                            onPress={closePreview}
+                        >
+                            <View style={styles.modalContent}>
+                                <TouchableOpacity
+                                    style={styles.closeButton}
+                                    onPress={closePreview}
+                                >
+                                    <Ionicons name="close" size={30} color="#FFFFFF" />
+                                </TouchableOpacity>
+                                
+                                {selectedImage && (
+                                    <Image 
+                                        source={{ uri: selectedImage }} 
+                                        style={styles.previewImage}
+                                        resizeMode="contain"
+                                    />
+                                )}
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
+
             </ImageBackground>
         </SafeAreaView>
     );
@@ -199,12 +191,12 @@ const styles = StyleSheet.create({
     },
 
     image: {
-        width: scale(125),
-        height: scale(200),
+        width: scale(150),
+        height: scale(150),
         margin: moderateScale(13),
         borderRadius: moderateScale(25),
         borderColor: '#FFFFFF',
-        borderWidth: 3
+        borderWidth: 2
     },
 
     scrollContent: {
@@ -215,9 +207,49 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: moderateScale(16),
         textAlign: 'center',
-        marginTop: verticalScale(20)
+        marginTop: verticalScale(20),
+        fontFamily: 'RobotoLight',
     },
 
+    /* ----------------------------------- MODAL VISTA PREVIA -----------------------------------*/
+
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    modalBackground: {
+        flex: 1,
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    modalContent: {
+        flex: 1,
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+    },
+
+    closeButton: {
+        position: 'absolute',
+        top: moderateScale(50),
+        right: moderateScale(20),
+        zIndex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: moderateScale(20),
+        padding: moderateScale(5),
+    },
+
+    previewImage: {
+        width: screenWidth,
+        height: screenHeight * 0.8,
+        borderRadius: moderateScale(10),
+    },
 })
 
 export default UserGalery;

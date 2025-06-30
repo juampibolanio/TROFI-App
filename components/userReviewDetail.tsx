@@ -12,10 +12,9 @@ type Props = {
     score: number
 }
 
-
 const UserReviewDetail: React.FC<Props> = ({ profileImage, username, description, score }) => {
 
-    const [fontsLoaded] = useFonts(fonts); //carga de fuentes
+    const [fontsLoaded] = useFonts(fonts); 
 
     return (
         <View style={styles.cardContainer}>
@@ -56,7 +55,7 @@ const styles = StyleSheet.create({
         borderRadius: moderateScale(30),
         marginLeft: moderateScale(14),
         borderColor: '#0E3549',
-        borderWidth: 3
+        borderWidth: 2
     },
 
     textContainer: {
@@ -89,6 +88,5 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(16)
     },
 });
-
 
 export default UserReviewDetail;

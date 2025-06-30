@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import { View, Text, StyleSheet, ImageBackground, Image, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import BottomComponent from '@/components/atoms/BottomComponent';
-import { router } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 import HorizontalRule from '@/components/atoms/HorizontalRule';
-import { navigate } from 'expo-router/build/global-state/routing';
 
 const passwordRecovery = () => {
 
@@ -52,7 +50,6 @@ const passwordRecovery = () => {
                                 keyboardType='email-address'
                                 autoCapitalize='none'
                             />
-                            {/* FALTA SOLUCIONAR NAV */}
                             <BottomComponent title="Usa un celular en su lugar" onPress={() => {}}  />
                         </View>
                     </View>

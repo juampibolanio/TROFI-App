@@ -10,10 +10,8 @@ import {
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import imagePath from '@/constants/imagePath';
-import { FooterComponent } from 'react-native-screens/lib/typescript/components/ScreenFooter';
 
 const AboutTrofi = () => {
-
 
     const [fontsLoaded] = useFonts({
         Roboto_400Regular,
@@ -22,15 +20,12 @@ const AboutTrofi = () => {
     });
 
     // Estado para la animacion de expansion de la Pregunta
-    // habilitar animaciones en Android ?*?*
     const [isExpanded, setIsExpanded] = useState(false);
     const toggleExpand = () => {
         setIsExpanded(!isExpanded);
     };
 
-
     if (!fontsLoaded) return null;
-
 
     return (
         <SafeAreaView style={styles.container}>

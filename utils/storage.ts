@@ -26,3 +26,11 @@ export const removeData = async (key: string) => {
         console.log('Error al eliminar en AsyncStorage', e)
     }
 }
+
+export const clearAllData = async () => {
+    try {
+        await AsyncStorage.clear();
+    } catch (e) {
+        console.log('Error al limpiar en AsyncStorage', e);
+    }
+};

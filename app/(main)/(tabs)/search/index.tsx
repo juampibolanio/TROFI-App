@@ -1,10 +1,13 @@
+import Loader from '@/components/atoms/Loader';
 import fonts from '@/constants/fonts';
 import imagePath from '@/constants/imagePath';
+import { fetchJobCategories } from '@/services/jobService';
+import { searchWorkers } from '@/services/userService';
 import { useFonts } from '@expo-google-fonts/roboto';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useRouter } from 'expo-router';
-import { useLocalSearchParams, useSearchParams } from 'expo-router/build/hooks';
-import React, { useState } from 'react';
+import { router} from 'expo-router';
+import { useLocalSearchParams} from 'expo-router/build/hooks';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -22,10 +25,10 @@ import { moderateScale, scale } from 'react-native-size-matters';
 // Tipado de datos para el perfil
 type Perfil = {
   id: number;
-  nombre: string;
-  puntaje: number;
-  categoria: string;
-  imagen: any;
+  fullname: string;
+  score: number;
+  jobCategory: string;
+  imageProfile: any;
 };
 
 // esto hay q mover a componente
@@ -34,13 +37,13 @@ const ProfileCard: React.FC<{ item: Perfil; onPress: () => void }> = ({ item, on
     style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.5 }]}
     onPress={onPress}
   >
-    <Image source={item.imagen} style={styles.profileCardImg} />
+    <Image source={item.imageProfile} style={styles.profileCardImg} />
     <View style={styles.nameAndStartConteiner}>
       <Text style={styles.profileCardName} numberOfLines={1}>
-        {item.nombre}
+        {item.fullname}
       </Text>
       <View style={styles.starPointsContainer}>
-        <Text style={styles.profileCardStar}>{item.puntaje}</Text>
+        <Text style={styles.profileCardStar}>{item.score > 0 ? item.score : 'N/D'}</Text>
         <Ionicons name="star-outline" size={20} color="#0E3549" />
       </View>
     </View>
@@ -48,107 +51,54 @@ const ProfileCard: React.FC<{ item: Perfil; onPress: () => void }> = ({ item, on
 );
 
 const Search = () => {
-  const [fontsLoaded] = useFonts(fonts); // carga de fuentes
-
+  const [fontsLoaded] = useFonts(fonts);
   const params = useLocalSearchParams();
-  const categoriaParam = params.categoria ?? 'Todos';
-
-  // Estado inicial con la categoría q traiga el parámetro o 'Todos'
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(categoriaParam);
-
-  // Estado para texto de búsqueda
+  const categoriaParam = Array.isArray(params.categoria) ? params.categoria[0] : params.categoria ?? 'Todos'; // esto nos asegura que sea string
   const [searchText, setSearchText] = useState('');
+  const [perfiles, setPerfiles] = useState<Perfil[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [jobCategories, setJobCategories] = useState<{ id: number; name: string }[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
-  /* Array de categorías posibles */
-  const categorias = ['Todos', 'Plomería', 'Electrónica', 'Cuidados', 'Herrería', 'Albañilería', 'Electricidad', 'Otros'];
+  // cargo las categorías (trabajos) desde el backend 
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        const jobs = await fetchJobCategories();
+        setJobCategories([{ id: 0, name: 'Todos' }, ...jobs]);
+      } catch (error) {
+        console.error("Error al cargar categorías");
+      }
+    };
 
-  /* Datos de perfiles simulados */
-  const perfiles = [
-    {
-      id: 1,
-      nombre: 'Facundo Pereyra',
-      puntaje: 7.6,
-      categoria: 'Plomería',
-      ubicacion: 'Resistencia',
-      descripcionLaboral: 'Especialista en instalaciones sanitarias y reparación de cañerías.',
-      descripcion: 'Soy una persona con años de experiencia.. .. ..',
-      imagen: require('@/assets/images/searchImg/usersImg/facPereyra.png')
-    },
-    {
-      id: 2,
-      nombre: 'Tomás Álvarez',
-      puntaje: 8.2,
-      categoria: 'Plomería',
-      ubicacion: 'Fontana',
-      descripcionLaboral: 'Plomero con más de 10 años de experiencia en mantenimiento de domicilios.',
-      descripcion: 'Soy una persona con años de experiencia.. .. ..',
-      imagen: require('@/assets/images/searchImg/usersImg/tomasAlvarez.png')
-    },
-    {
-      id: 3,
-      nombre: 'Joaquín Sosa',
-      puntaje: 9.0,
-      categoria: 'Herrería',
-      ubicacion: 'Resistencia',
-      descripcionLaboral: 'Diseño y fabricación de estructuras metálicas a medida.',
-      descripcion: 'Soy una persona con años de experiencia.. .. ..',
-      imagen: require('@/assets/images/searchImg/usersImg/joaSosa.png')
-    },
-    {
-      id: 4,
-      nombre: 'Nicolás Benítez',
-      puntaje: 8.4,
-      categoria: 'Electrónica',
-      ubicacion: 'Barranqueras',
-      descripcionLaboral: 'Reparación de dispositivos electrónicos y placas.',
-      descripcion: 'Soy una persona con años de experiencia.. .. ..',
-      imagen: require('@/assets/images/searchImg/usersImg/nicoBenitez.png')
-    },
-    {
-      id: 5,
-      nombre: 'Leandro Giménez',
-      puntaje: 8.4,
-      categoria: 'Cuidados',
-      ubicacion: 'Puerto vilelas',
-      descripcionLaboral: 'Cuidador con experiencia en adultos mayores, atención y acompañamiento.',
-      descripcion: 'Soy una persona con años de experiencia.. .. ..',
-      imagen: require('@/assets/images/searchImg/usersImg/leaGimenez.png')
-    },
-    {
-      id: 6,
-      nombre: 'Lucas López',
-      puntaje: 8,
-      categoria: 'Herrería',
-      ubicacion: 'Resistencia',
-      descripcionLaboral: 'Herrero con experiencia ... ... ....',
-      descripcion: 'Soy una persona con años de experiencia.. .. ..',
-      imagen: require('@/assets/images/searchImg/usersImg/luLopez.png')
-    },
-    {
-      id: 7,
-      nombre: 'Hernán Bermudez',
-      puntaje: 8,
-      categoria: 'Plomería',
-      ubicacion: 'Resistencia',
-      descripcionLaboral: 'Plomero con experiencia ... ... ....',
-      descripcion: 'Soy una persona con años de experiencia.. .. ..',
-      imagen: require('@/assets/images/searchImg/usersImg/herBermudez.png')
-    },
-  ];
+    loadJobs();
+  }, []);
 
-  /* Filtrado de perfiles según categoría y texto de búsqueda */
-  const perfilesFiltrados = perfiles.filter(p => {
-    const matchCategoria =
-      categoriaSeleccionada === 'Todos'
-        ? true
-        : categoriaSeleccionada === 'Otros'
-          ? !['Plomería', 'Electrónica', 'Cuidados', 'Herrería', 'Albañilería', 'Electricidad'].includes(p.categoria)
-          : p.categoria === categoriaSeleccionada;
+  //cargar datos desde el backend
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      setLoading(true);
 
-    const matchNombre = p.nombre.toLowerCase().includes(searchText.toLowerCase());
+      const data = await searchWorkers({
+        searchText,
+        selectedJobId,
+      });
 
-    return matchCategoria && matchNombre;
-  });
+      //aca mapeo los perfiles para que tomen el formato q espera el front
+      const perfilesTransformados = data.map((item: any) => ({
+        id: item.id,
+        fullname: item.fullname,
+        score: item.score,
+        jobCategory: item.jobCategory || '',
+        imageProfile: item.imageProfile,
+      }));
+
+      setPerfiles(perfilesTransformados);
+      setLoading(false);
+    };
+
+    fetchProfiles();
+  }, [searchText, selectedJobId]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,40 +123,56 @@ const Search = () => {
             </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryTabs}>
-              {categorias.map(cat => (
+              {jobCategories.map(cat => (
                 <Pressable
-                  key={cat}
-                  onPress={() => setCategoriaSeleccionada(cat)}
+                  key={cat.id}
+                  onPress={() => setSelectedJobId(cat.id === 0 ? null : cat.id)}
                   style={{
-                    backgroundColor: categoriaSeleccionada === cat ? '#fff' : '#ffffff22',
+                    backgroundColor: selectedJobId === cat.id || (cat.id === 0 && selectedJobId === null) ? '#fff' : '#ffffff22',
                     paddingHorizontal: scale(35),
                     paddingVertical: scale(4),
                     borderRadius: 20,
                     marginRight: 8,
                   }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: categoriaSeleccionada === cat }}
                 >
-                  <Text style={{ color: categoriaSeleccionada === cat ? '#000' : '#fff' }}>{cat}</Text>
+                  <Text style={{ color: selectedJobId === cat.id || (cat.id === 0 && selectedJobId === null) ? '#000' : '#fff' }}>{cat.name}</Text>
                 </Pressable>
               ))}
             </ScrollView>
           </View>
 
           {/* LISTA DE PERFILES */}
-          <FlatList
-            data={perfilesFiltrados}
-            keyExtractor={item => item.id.toString()}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <ProfileCard
-                item={item}
-                onPress={() => router.push({ pathname: "/(main)/(tabs)/search/[id]", params: { id: String(item.id) } })}
-
-              />
-            )}
-          />
+          {loading ? (
+            <Loader />
+          ) : perfiles.length === 0 ? (
+            <Text style={{ color: '#fff', textAlign: 'center', marginTop: 30, fontSize: 16 }}>
+              No se encontraron perfiles con los filtros seleccionados.
+            </Text>
+          ) : (
+            <FlatList
+              data={perfiles}
+              keyExtractor={item => item.id.toString()}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <ProfileCard
+                  item={{
+                    id: item.id,
+                    fullname: item.fullname,
+                    score: item.score,
+                    jobCategory: item.jobCategory,
+                    imageProfile: { uri: item.imageProfile },
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(main)/(tabs)/search/[id]",
+                      params: { id: String(item.id) },
+                    })
+                  }
+                />
+              )}
+            />
+          )}
         </View>
       </ImageBackground>
     </SafeAreaView>
@@ -264,7 +230,9 @@ const styles = StyleSheet.create({
   profileCardImg: {
     width: moderateScale(75),
     height: moderateScale(75),
-    borderRadius: 10,
+    borderRadius: moderateScale(35),
+    borderColor: '#FFFFFF',
+    borderWidth: 1,
     marginRight: 12,
   },
   nameAndStartConteiner: {

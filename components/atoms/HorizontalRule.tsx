@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 

@@ -1,72 +1,103 @@
+import { storeData } from "@/utils/storage";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+interface Photo {
+    id: number,
+    url: string
+}
 
 interface UserProfile {
     id: number | null;
-    fullname: string | null;
+    name: string | null;
     userDescription: string | null;
     imageProfile: string | null;
     phoneNumber: string | null;
     dni: string | null;
+    location: string | null;
 
     isWorker: boolean | null;
-    jobCategory: string | null;
+    jobId: number | null;
     jobDescripction: string | null;
     score: number | null;
-    jobImages: string[] | null;
+    jobImages: Photo[] | null;
 
     isProfileComplete?: boolean;
     isWorkerProfileComplete?: boolean;
 }
 
-
 const initialState: UserProfile = {
     id: null,
-    fullname: null,
+    name: null,
     userDescription: null,
     imageProfile: null,
     phoneNumber: null,
     dni: null,
+    location: null,
 
     isWorker: false,
-    jobCategory: null,
+    jobId: null,
     jobDescripction: null,
     score: null,
-    jobImages: null,
+    jobImages: [],
 
     isProfileComplete: false,
     isWorkerProfileComplete: false,
 };
-//proximo paso, leer el nombre de usuario desde el perfil del usuario para probar si anda redux como debe ser
+
 const userSlice = createSlice({
-    name: 'user',
+    name: "user",
     initialState,
     reducers: {
         setUserProfile(state, action: PayloadAction<Partial<UserProfile>>) {
             const newState = { ...state, ...action.payload };
 
-            //validacion del perfil basico
+            //Validación de perfil básico completo
             const isProfileComplete =
-                !!newState.fullname && !!newState.phoneNumber && !!newState.dni;
+                !!newState.userDescription &&
+                !!newState.imageProfile &&
+                !!newState.dni &&
+                !!newState.location;
 
-            //validacion para ver si tiene perfil de trabajador
+            //Validación de perfil de trabajador
             const isWorkerProfileComplete =
-                !!newState.jobCategory &&
+                !!newState.jobId &&
                 !!newState.jobDescripction &&
                 Array.isArray(newState.jobImages) &&
                 newState.jobImages.length > 0;
 
-            return { 
+            return {
                 ...newState,
                 isProfileComplete,
                 isWorkerProfileComplete,
             };
         },
-        clearUserProfile() {
+        clearUserProfile() { //eliminar del estado un usuario
             return initialState;
         },
+        addUserPhoto(state, action: PayloadAction<Photo>) {
+            const newPhoto = {
+                id: action.payload.id,
+                url: typeof action.payload.url === 'string' ? action.payload.url : '',
+            };
+
+            const updatedPhotos = [...(state.jobImages || []), newPhoto];
+            state.jobImages = updatedPhotos;
+            storeData('userPhotos', updatedPhotos);
+        },
+        removeUserPhoto(state, action: PayloadAction<number>) { //eliminar foto de la galeria del usuario.
+            const updatedPhotos = (state.jobImages || []).filter(
+                (photo) => photo.id !== action.payload
+            );
+            state.jobImages = updatedPhotos;
+            storeData('userPhotos', updatedPhotos);
+        },
+        setImageProfile(state, action: PayloadAction<string>) { //establecer imagen de perfil del usuario
+            state.imageProfile = action.payload;
+            storeData('userProfileImage', action.payload);
+        }
+
     },
 });
 
-export const { setUserProfile, clearUserProfile } = userSlice.actions;
+export const { setUserProfile, clearUserProfile, addUserPhoto, removeUserPhoto, setImageProfile } = userSlice.actions;
 export default userSlice.reducer;

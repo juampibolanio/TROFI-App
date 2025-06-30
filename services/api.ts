@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { store } from '../redux/store';
 
-const API_BASE_URL = 'http://192.168.X.X:8000/api'  //aca luego hay que poner la url del backend
+const API_BASE_URL = 'http://192.168.0.10:8000'  
 
 //url del backend y encabezado
 const api = axios.create({
     baseURL:  API_BASE_URL,
     headers: {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
     },
 });
 

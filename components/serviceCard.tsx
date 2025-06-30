@@ -5,24 +5,21 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, ImageSourcePropType, Pressable } from 'react-native';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
 
-type Props = { //otra forma de pasar props a un componente
+type Props = { 
     imageSource: ImageSourcePropType;
     title: string;
 };
 
-
 const ServiceCard: React.FC<Props> = ({ imageSource, title }) => {
-
+    const [fontsLoaded] = useFonts(fonts); 
     const categorias = ['Todos', 'Plomería', 'Electrónica', 'Cuidados', 'Herrería', 'Albañilería', 'Electricidad', 'Otros'];
 
     const goToDetails = () => {
         router.push({
-            pathname: '/(main)/(tabs)/search', // o la ruta exacta de tu pantalla
+            pathname: '/(main)/(tabs)/search', 
             params: { categoria: title },
         });
     };
-
-    const [fontsLoaded] = useFonts(fonts); //carga de fuentes
 
     return (
         <Pressable style={({ pressed }) => [

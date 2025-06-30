@@ -4,13 +4,9 @@ import fonts from '@/constants/fonts'
 import { useFonts } from '@expo-google-fonts/roboto';
 import { router, useRouter } from 'expo-router';
 
-//el boton de configuracion y el de perfil es el que deben modificar cuando quieran que esos botones hagan algo
+
 const HeaderTrofi = () => {
   const [fontsLoaded] = useFonts(fonts);
-
-  const router = useRouter();
-
-
 
   if (!fontsLoaded) return null;
   return (

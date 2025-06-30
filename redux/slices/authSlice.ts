@@ -13,7 +13,7 @@ const initialState: AuthState = {
     email: null,
     isLoggedIn: false,
 };
-//NOTA: TENGO QUE SEGUIR HACIENDO EL REGISTER, VALIDACIONES DE CAMPOS, INTEGRACION CON GOOGLE, Y VERIFICAR QUE EL REDUX Y SLICES FUNCIONEN BIEN 
+
 //slice para login y logout de un usuario
 const authSlice = createSlice({
     name: 'auth',
