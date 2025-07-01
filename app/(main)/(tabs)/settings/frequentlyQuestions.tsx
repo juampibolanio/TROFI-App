@@ -23,7 +23,7 @@
     import imagePath from '@/constants/imagePath';
     import { Ionicons } from '@expo/vector-icons';
 
-    // animaciones para Android
+    
     if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
     }
