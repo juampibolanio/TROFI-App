@@ -1,18 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, Text, Image, StyleSheet, ImageSourcePropType, Pressable, TextInput } from 'react-native';
-import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import { View, TextInput, StyleSheet } from 'react-native';
+import { moderateScale } from 'react-native-size-matters';
 
 type Props = {
   placeHolder: string;
+  value: string;
+  onChangeText: (text: string) => void;
 }
 
-const SearchBar: React.FC<Props> = ({ placeHolder }) => (
+const SearchBar: React.FC<Props> = ({ placeHolder, value, onChangeText }) => (
   <View style={styles.searchBar}>
     <TextInput
       placeholder={placeHolder}
       placeholderTextColor='#888'
-      style={styles.searchBarInput} />
+      style={styles.searchBarInput}
+      value={value}
+      onChangeText={onChangeText}
+    />
     <Ionicons name='search' size={25} color='#0E3549' />
   </View>
 );

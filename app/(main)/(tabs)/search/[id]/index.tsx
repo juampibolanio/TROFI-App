@@ -8,6 +8,8 @@ import { useFonts } from '@expo-google-fonts/roboto';
 import fonts from '@/constants/fonts';
 import Loader from '@/components/atoms/Loader';
 import { getUserById } from '@/services/userService';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 const UserDetail = () => {
     const { id } = useLocalSearchParams();
@@ -15,12 +17,35 @@ const UserDetail = () => {
     const [perfil, setPerfil] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const currentUserId = useSelector((state: RootState) => state.user.id);
+
     const navigateToUserGalery = () => {
         router.push({ pathname: "/(main)/(tabs)/search/[id]/userGalery", params: { id: perfil.id, name: perfil.fullname } })
     }
 
     const navigateToReviewDetail = () => {
         router.push({ pathname: "/(main)/(tabs)/search/[id]/reviewDetail", params: { id: perfil.id, name: perfil.fullname, imageProfile: perfil.imageProfile } })
+    }
+
+    // función para navegar al chat
+    const navigateToChat = () => {
+        if (!currentUserId || !perfil) return;
+
+        // Crear el chatId 
+        const chatId = currentUserId < perfil.id
+            ? `${currentUserId}_${perfil.id}`
+            : `${perfil.id}_${currentUserId}`;
+
+        // Navegar a la conversación con todos los parámetros necesarios
+        router.push({
+            pathname: "/(main)/(tabs)/messages/conversation",
+            params: {
+                chatId: chatId,
+                otherUserId: perfil.id.toString(),
+                otherUserName: perfil.fullname,
+                otherUserImage: perfil.imageProfile || ''
+            }
+        });
     }
 
     const goBack = () => {
@@ -84,7 +109,14 @@ const UserDetail = () => {
                             <Text style={styles.ubication}>{perfil.location}</Text>
                         </View>
                         <Text style={styles.jobDescription}>{perfil.jobDescription}</Text>
-                        <Pressable style={styles.sendMessageBottom}>
+
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.sendMessageBottom,
+                                pressed && { opacity: 0.8 },
+                            ]}
+                            onPress={navigateToChat}
+                        >
                             <Ionicons name='send' size={15} color={'#0E3549'} />
                             <Text style={styles.sendText}>Enviar mensaje</Text>
                         </Pressable>
@@ -209,7 +241,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: moderateScale(13),
         borderRadius: moderateScale(15),
         marginTop: moderateScale(5),
-        alignSelf: 'flex-start',
+        alignSelf: 'flex-end',
         gap: moderateScale(6)
 
     },
