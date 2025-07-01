@@ -15,11 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { deletePhoto, uploadPhoto } from '@/services/userService';
-import { addUserPhoto, removeUserPhoto } from '@/redux/slices/userSlice';
+import { deletePhoto, uploadPhoto, getUserPhotos } from '@/services/userService';
+import { addUserPhoto, removeUserPhoto, setUserProfile } from '@/redux/slices/userSlice';
 import { uploadProfileImage } from '@/services/imageService';
-import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import { useEffect, useState, useCallback } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import fonts from '@/constants/fonts';
@@ -42,15 +42,64 @@ const MyGallery = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const [isGalleryReady, setIsGalleryReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Función para cargar las fotos del usuario
+  const loadUserPhotos = async () => {
+    try {
+      setIsLoading(true);
+
+      // Verificar si tenemos el ID del usuario
+      if (!user.id) {
+        console.log('No hay ID de usuario disponible');
+        setIsLoading(false);
+        return;
+      }
+
+      const photos = await getUserPhotos(user.id);
+
+      // Si hay fotos, actualizamos el estado con todas las fotos
+      if (Array.isArray(photos) && photos.length > 0) {
+        // Convertir las fotos al formato esperado si es necesario
+        const formattedPhotos = photos.map((photo: any) => ({
+          id: photo.id,
+          url: typeof photo.url === 'string' ? photo.url : (typeof photo === 'string' ? photo : ''),
+        }));
+
+        // Usar setUserProfile para actualizar las fotos
+        dispatch(setUserProfile({ jobImages: formattedPhotos }));
+      }
+    } catch (error) {
+      console.error('Error al cargar las fotos:', error);
+      showAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudieron cargar las fotos. Verifica tu conexión e intenta nuevamente.',
+        showCancel: false,
+        confirmText: 'Aceptar',
+        onConfirm: () => setAlertVisible(false),
+        onCancel: () => { },
+        cancelText: ''
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cargar fotos cuando el componente se monta
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsGalleryReady(true);
-    }, 500); // Espera de 0.5 segundos
-
-    return () => clearTimeout(timer);
+    loadUserPhotos();
   }, []);
+
+  // Recargar fotos cada vez que la pantalla obtiene el foco
+  useFocusEffect(
+    useCallback(() => {
+      if (jobImages.length === 0) {
+        loadUserPhotos();
+      }
+    }, [])
+  );
+
   // Estados para CustomAlert
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
@@ -286,15 +335,15 @@ const MyGallery = () => {
           )}
 
           <View style={styles.imageContainer}>
-            {!isGalleryReady ? (
+            {isLoading ? (
               <Loader />
             ) : Array.isArray(jobImages) && jobImages.length > 0 ? (
-              jobImages.map((photo) => {
+              jobImages.map((photo, index) => {
                 if (!photo?.url || typeof photo.url !== 'string') return null;
 
                 return (
                   <TouchableOpacity
-                    key={photo.id}
+                    key={photo.id || `photo-${index}`}
                     onLongPress={() => !selectionMode && handleDeletePhoto(photo.id)}
                     onPress={() => handleImagePress(photo.url, photo.id)}
                     style={[
@@ -536,10 +585,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(20),
     borderRadius: moderateScale(8),
     shadowColor: '#2F3A45',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
   },
 
   textBottom: {
