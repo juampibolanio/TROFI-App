@@ -5,8 +5,8 @@ import { fetchJobCategories } from '@/services/jobService';
 import { searchWorkers } from '@/services/userService';
 import { useFonts } from '@expo-google-fonts/roboto';
 import { Ionicons } from '@expo/vector-icons';
-import { router} from 'expo-router';
-import { useLocalSearchParams} from 'expo-router/build/hooks';
+import { router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router/build/hooks';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -31,7 +31,7 @@ type Perfil = {
   imageProfile: any;
 };
 
-// esto hay q mover a componente
+// ProfileCard component
 const ProfileCard: React.FC<{ item: Perfil; onPress: () => void }> = ({ item, onPress }) => (
   <Pressable
     style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.5 }]}
@@ -53,52 +53,82 @@ const ProfileCard: React.FC<{ item: Perfil; onPress: () => void }> = ({ item, on
 const Search = () => {
   const [fontsLoaded] = useFonts(fonts);
   const params = useLocalSearchParams();
-  const categoriaParam = Array.isArray(params.categoria) ? params.categoria[0] : params.categoria ?? 'Todos'; // esto nos asegura que sea string
+  const categoriaParam = Array.isArray(params.categoria) ? params.categoria[0] : params.categoria ?? 'Todos';
+  
   const [searchText, setSearchText] = useState('');
   const [perfiles, setPerfiles] = useState<Perfil[]>([]);
   const [loading, setLoading] = useState(false);
   const [jobCategories, setJobCategories] = useState<{ id: number; name: string }[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
-  // cargo las categorías (trabajos) desde el backend 
+  // Función para encontrar el ID de la categoría por nombre
+  const findCategoryIdByName = (categoryName: string) => {
+    if (categoryName === 'Todos') return null;
+    const category = jobCategories.find(cat => cat.name === categoryName);
+    return category ? category.id : null;
+  };
+
+  // Cargar las categorías desde el backend 
   useEffect(() => {
     const loadJobs = async () => {
       try {
         const jobs = await fetchJobCategories();
         setJobCategories([{ id: 0, name: 'Todos' }, ...jobs]);
       } catch (error) {
-        console.error("Error al cargar categorías");
+        console.error("Error al cargar categorías:", error);
       }
     };
 
     loadJobs();
   }, []);
 
-  //cargar datos desde el backend
+  // Establecer la categoría seleccionada cuando llegue el parámetro y las categorías estén cargadas
+  useEffect(() => {
+    if (jobCategories.length > 0 && categoriaParam) {
+      const categoryId = findCategoryIdByName(categoriaParam);
+      setSelectedJobId(categoryId);
+    }
+  }, [categoriaParam, jobCategories]);
+
+  // Cargar datos desde el backend
   useEffect(() => {
     const fetchProfiles = async () => {
       setLoading(true);
 
-      const data = await searchWorkers({
-        searchText,
-        selectedJobId,
-      });
+      try {
+        const data = await searchWorkers({
+          searchText,
+          selectedJobId,
+        });
 
-      //aca mapeo los perfiles para que tomen el formato q espera el front
-      const perfilesTransformados = data.map((item: any) => ({
-        id: item.id,
-        fullname: item.fullname,
-        score: item.score,
-        jobCategory: item.jobCategory || '',
-        imageProfile: item.imageProfile,
-      }));
+        // Mapear los perfiles para que tomen el formato que espera el front
+        const perfilesTransformados = data.map((item: any) => ({
+          id: item.id,
+          fullname: item.fullname,
+          score: item.score,
+          jobCategory: item.jobCategory || '',
+          imageProfile: item.imageProfile,
+        }));
 
-      setPerfiles(perfilesTransformados);
-      setLoading(false);
+        setPerfiles(perfilesTransformados);
+      } catch (error) {
+        console.error("Error al cargar perfiles:", error);
+        setPerfiles([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProfiles();
   }, [searchText, selectedJobId]);
+
+  const handleCategoryPress = (categoryId: number) => {
+    setSelectedJobId(categoryId === 0 ? null : categoryId);
+  };
+
+  const isCategorySelected = (categoryId: number) => {
+    return selectedJobId === categoryId || (categoryId === 0 && selectedJobId === null);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -126,16 +156,21 @@ const Search = () => {
               {jobCategories.map(cat => (
                 <Pressable
                   key={cat.id}
-                  onPress={() => setSelectedJobId(cat.id === 0 ? null : cat.id)}
+                  onPress={() => handleCategoryPress(cat.id)}
                   style={{
-                    backgroundColor: selectedJobId === cat.id || (cat.id === 0 && selectedJobId === null) ? '#fff' : '#ffffff22',
+                    backgroundColor: isCategorySelected(cat.id) ? '#fff' : '#ffffff22',
                     paddingHorizontal: scale(35),
                     paddingVertical: scale(4),
                     borderRadius: 20,
                     marginRight: 8,
                   }}
                 >
-                  <Text style={{ color: selectedJobId === cat.id || (cat.id === 0 && selectedJobId === null) ? '#000' : '#fff' }}>{cat.name}</Text>
+                  <Text style={{ 
+                    color: isCategorySelected(cat.id) ? '#000' : '#fff',
+                    fontWeight: isCategorySelected(cat.id) ? 'bold' : 'normal'
+                  }}>
+                    {cat.name}
+                  </Text>
                 </Pressable>
               ))}
             </ScrollView>
@@ -145,9 +180,14 @@ const Search = () => {
           {loading ? (
             <Loader />
           ) : perfiles.length === 0 ? (
-            <Text style={{ color: '#fff', textAlign: 'center', marginTop: 30, fontSize: 16 }}>
-              No se encontraron perfiles con los filtros seleccionados.
-            </Text>
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>
+                No se encontraron perfiles con los filtros seleccionados.
+              </Text>
+              <Text style={styles.noResultsSubtext}>
+                Intenta cambiar la categoría o el término de búsqueda.
+              </Text>
+            </View>
           ) : (
             <FlatList
               data={perfiles}
@@ -260,6 +300,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginRight: moderateScale(5),
     fontSize: moderateScale(14),
+  },
+  noResultsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  noResultsText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  noResultsSubtext: {
+    color: '#ccc',
+    textAlign: 'center',
+    fontSize: 14,
   },
 });
 

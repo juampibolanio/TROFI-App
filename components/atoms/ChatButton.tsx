@@ -1,36 +1,53 @@
-import { Roboto_300Light, Roboto_400Regular, Roboto_700Bold, useFonts } from '@expo-google-fonts/roboto';
 import React from 'react';
 import { Dimensions, View, Text, Image, StyleSheet, ImageSourcePropType, Pressable } from 'react-native';
 import { scale, verticalScale, moderateScale } from 'react-native-size-matters';
+import { router } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
 type Props = {
   profileImageSource: ImageSourcePropType;
   namePerson: string;
-  //recent: string;
-}
+  chatId: string;
+  senderId: string;
+  otherUserId: number;
+};
 
-const ChatButton: React.FC<Props> = ({ profileImageSource, namePerson, recent }) => {
-  return (
-    <Pressable style={({ pressed }) => [
-      {
-        transform: [{ scale: pressed ? 0.98 : 1 }],
+const ChatButton: React.FC<Props> = ({
+  profileImageSource,
+  namePerson,
+  chatId,
+  otherUserId,
+}) => {
+  const handlePress = () => {
+    router.push({
+      pathname: "/(main)/(tabs)/messages/conversation",
+      params: {
+        chatId,
+        otherUserId: otherUserId.toString(),
+        otherUserName: namePerson,
+        otherUserImage:
+          typeof profileImageSource === 'object' && 'uri' in profileImageSource
+            ? profileImageSource.uri
+            : '',
       },
-      styles.button,
-    ]} >
-      {/*fondo que cambia si es reciente o no*/}
-      {/*if (recent === 'true'){
-        <View style={styles.recentBackground}/>
-      } else {
-        <View style={styles.allBackground}/>
-      }*/}
-      {/* foto de perfil */}
+    });
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [
+        {
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
+        styles.button,
+      ]}
+    >
       <View style={styles.imageContainer}>
         <Image source={profileImageSource} style={styles.image} />
       </View>
 
-      {/* nombre del chat */}
       <View style={styles.textContainer}>
         <Text style={styles.name}>{namePerson}</Text>
       </View>
@@ -51,10 +68,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginLeft: 30,
     marginRight: 30,
-    marginBottom: 10
+    marginBottom: 10,
   },
-  recentBackground: {},
-  allBackground: {},
   imageContainer: {
     marginRight: scale(10),
   },
@@ -66,13 +81,12 @@ const styles = StyleSheet.create({
   textContainer: {
     justifyContent: 'center',
     flex: 1,
-    marginLeft: 10
+    marginLeft: 10,
   },
   name: {
     color: '#090909',
     fontSize: moderateScale(13),
-
   },
-})
+});
 
 export default ChatButton;

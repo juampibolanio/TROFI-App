@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import {
     StyleSheet,
     View,
@@ -7,103 +7,348 @@ import {
     TouchableOpacity,
     SafeAreaView,
     ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { moderateScale } from 'react-native-size-matters';
 import { router } from 'expo-router';
+import CustomAlert from '@/components/atoms/CustomAlert';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+
+interface FormData {
+    nombre: string;
+    email: string;
+    asunto: string;
+    mensaje: string;
+}
+
+interface FormErrors {
+    nombre?: string;
+    email?: string;
+    asunto?: string;
+    mensaje?: string;
+}
 
 const Contact = () => {
+    const user = useSelector((state: RootState) => state.user);
     const [focusedField, setFocusedField] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState<FormData>({
+        nombre: user.name ?? '',
+        email: user.email ?? '', 
+        asunto: '',
+        mensaje: '',
+    });
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+    const [showErrorAlert, setShowErrorAlert] = useState(false);
+
+    // Validación de email
+    const validateEmail = (email: string): boolean => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
+    // Validar formulario
+    const validateForm = (): boolean => {
+        const newErrors: FormErrors = {};
+
+        if (!formData.nombre.trim()) {
+            newErrors.nombre = 'El nombre es requerido';
+        } else if (formData.nombre.trim().length < 2) {
+            newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
+        }
+
+        if (!formData.email.trim()) {
+            newErrors.email = 'El email es requerido';
+        } else if (!validateEmail(formData.email.trim())) {
+            newErrors.email = 'Por favor ingresa un email válido';
+        }
+
+        if (!formData.asunto.trim()) {
+            newErrors.asunto = 'El asunto es requerido';
+        } else if (formData.asunto.trim().length < 5) {
+            newErrors.asunto = 'El asunto debe tener al menos 5 caracteres';
+        }
+
+        if (!formData.mensaje.trim()) {
+            newErrors.mensaje = 'El mensaje es requerido';
+        } else if (formData.mensaje.trim().length < 10) {
+            newErrors.mensaje = 'El mensaje debe tener al menos 10 caracteres';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Manejar cambios en los inputs
+    const handleInputChange = (field: keyof FormData, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+
+        // Limpiar error del campo cuando el usuario empiece a escribir
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: undefined }));
+        }
+    };
+
+    // Manejar envío del formulario
+    const handleSubmit = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            // Simular envío del formulario (aquí iría la llamada a tu API)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Simular respuesta exitosa (puedes cambiar esto por tu lógica real)
+            const success = Math.random() > 0.2; // 80% de éxito para demo
+
+            if (success) {
+                setShowSuccessAlert(true);
+                // Limpiar formulario
+                setFormData({
+                    nombre: '',
+                    email: '',
+                    asunto: '',
+                    mensaje: '',
+                });
+            } else {
+                setShowErrorAlert(true);
+            }
+        } catch (error) {
+            console.error('Error enviando mensaje:', error);
+            setShowErrorAlert(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Verificar si el formulario tiene datos
+    const hasFormData = Object.values(formData).some(value => value.trim().length > 0);
+
+    const closeSuccessAlert = () => {
+        setShowSuccessAlert(false);
+        router.back();
+    };
+
+    const closeErrorAlert = () => {
+        setShowErrorAlert(false);
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.container}>
-                    <View style={styles.iconContainer}>
-                        <Ionicons name="mail-outline" size={60} color="#ffffff" />
-                    </View>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+            >
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={styles.container}>
+                        {/* Header */}
+                        <View style={styles.header}>
+                            <View style={styles.iconContainer}>
+                                <Ionicons name="mail-outline" size={60} color="#ffffff" />
+                            </View>
+                            <Text style={styles.title}>¡Contáctanos!</Text>
+                            <Text style={styles.subtitle}>
+                                Estamos aquí para ayudarte. Envíanos tu mensaje y te responderemos pronto.
+                            </Text>
+                        </View>
 
-                    <Text style={styles.title}>¡Contáctanos!</Text>
+                        {/* Formulario */}
+                        <View style={styles.formContainer}>
+                            {/* Campo Nombre */}
+                            <View style={styles.fieldContainer}>
+                                <View
+                                    style={[
+                                        styles.inputContainer,
+                                        focusedField === 'nombre' && styles.inputContainerFocused,
+                                        errors.nombre && styles.inputContainerError,
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="person-outline"
+                                        size={20}
+                                        color={focusedField === 'nombre' ? '#FFFFFF' : '#B0BEC5'}
+                                        style={styles.inputIcon}
+                                    />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Nombre completo"
+                                        placeholderTextColor="#B0BEC5"
+                                        autoCapitalize="words"
+                                        value={formData.nombre}
+                                        onChangeText={(value) => handleInputChange('nombre', value)}
+                                        onFocus={() => setFocusedField('nombre')}
+                                        onBlur={() => setFocusedField('')}
+                                        maxLength={50}
+                                        selectionColor={'#fff'}
+                                    />
+                                </View>
+                                {errors.nombre && <Text style={styles.errorText}>{errors.nombre}</Text>}
+                            </View>
 
-                    {/* Campos del formulario */}
-                    <View
-                        style={[
-                            styles.inputContainer,
-                            focusedField === 'nombre' && styles.inputContainerFocused,
-                        ]}
-                    >
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Nombre"
-                            placeholderTextColor="#B0BEC5"
-                            autoCapitalize="words"
-                            onFocus={() => setFocusedField('nombre')}
-                            onBlur={() => setFocusedField('')}
-                        />
-                    </View>
+                            {/* Campo Email */}
+                            <View style={styles.fieldContainer}>
+                                <View
+                                    style={[
+                                        styles.inputContainer,
+                                        focusedField === 'email' && styles.inputContainerFocused,
+                                        errors.email && styles.inputContainerError,
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="mail-outline"
+                                        size={20}
+                                        color={focusedField === 'email' ? '#FFFFFF' : '#B0BEC5'}
+                                        style={styles.inputIcon}
+                                    />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Correo electrónico"
+                                        placeholderTextColor="#B0BEC5"
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        value={formData.email}
+                                        onChangeText={(value) => handleInputChange('email', value)}
+                                        onFocus={() => setFocusedField('email')}
+                                        onBlur={() => setFocusedField('')}
+                                        maxLength={100}
+                                        selectionColor={'#fff'}
+                                    />
+                                </View>
+                                {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                            </View>
 
-                    <View
-                        style={[
-                            styles.inputContainer,
-                            focusedField === 'email' && styles.inputContainerFocused,
-                        ]}
-                    >
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Email"
-                            placeholderTextColor="#B0BEC5"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            onFocus={() => setFocusedField('email')}
-                            onBlur={() => setFocusedField('')}
-                        />
-                    </View>
+                            {/* Campo Asunto */}
+                            <View style={styles.fieldContainer}>
+                                <View
+                                    style={[
+                                        styles.inputContainer,
+                                        focusedField === 'asunto' && styles.inputContainerFocused,
+                                        errors.asunto && styles.inputContainerError,
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="chatbubble-outline"
+                                        size={20}
+                                        color={focusedField === 'asunto' ? '#FFFFFF' : '#B0BEC5'}
+                                        style={styles.inputIcon}
+                                    />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Asunto del mensaje"
+                                        placeholderTextColor="#B0BEC5"
+                                        autoCapitalize="sentences"
+                                        value={formData.asunto}
+                                        onChangeText={(value) => handleInputChange('asunto', value)}
+                                        onFocus={() => setFocusedField('asunto')}
+                                        onBlur={() => setFocusedField('')}
+                                        maxLength={80}
+                                        selectionColor={'#fff'}
+                                    />
+                                </View>
+                                {errors.asunto && <Text style={styles.errorText}>{errors.asunto}</Text>}
+                            </View>
 
-                    <View
-                        style={[
-                            styles.inputContainer,
-                            focusedField === 'asunto' && styles.inputContainerFocused,
-                        ]}
-                    >
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Asunto"
-                            placeholderTextColor="#B0BEC5"
-                            autoCapitalize="words"
-                            onFocus={() => setFocusedField('asunto')}
-                            onBlur={() => setFocusedField('')}
-                        />
-                    </View>
+                            {/* Campo Mensaje */}
+                            <View style={styles.fieldContainer}>
+                                <View
+                                    style={[
+                                        styles.largeInputContainer,
+                                        focusedField === 'mensaje' && styles.inputContainerFocused,
+                                        errors.mensaje && styles.inputContainerError,
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name="document-text-outline"
+                                        size={20}
+                                        color={focusedField === 'mensaje' ? '#FFFFFF' : '#B0BEC5'}
+                                        style={styles.textAreaIcon}
+                                    />
+                                    <TextInput
+                                        style={styles.largeInput}
+                                        placeholder="Escribe tu mensaje aquí..."
+                                        placeholderTextColor="#B0BEC5"
+                                        multiline
+                                        textAlignVertical="top"
+                                        autoCapitalize="sentences"
+                                        value={formData.mensaje}
+                                        onChangeText={(value) => handleInputChange('mensaje', value)}
+                                        onFocus={() => setFocusedField('mensaje')}
+                                        onBlur={() => setFocusedField('')}
+                                        maxLength={500}
+                                        selectionColor={'#000000'}
+                                    />
+                                </View>
+                                {errors.mensaje && <Text style={styles.errorText}>{errors.mensaje}</Text>}
+                                <Text style={styles.characterCount}>
+                                    {formData.mensaje.length}/500 caracteres
+                                </Text>
+                            </View>
+                        </View>
 
-                    <View
-                        style={[
-                            styles.largeInputContainer,
-                            focusedField === 'mensaje' && styles.inputContainerFocused,
-                        ]}
-                    >
-                        <TextInput
-                            style={styles.largeInput}
-                            placeholder="Escribe tu mensaje aquí..."
-                            placeholderTextColor="#B0BEC5"
-                            multiline
-                            textAlignVertical="top"
-                            autoCapitalize="sentences"
-                            onFocus={() => setFocusedField('mensaje')}
-                            onBlur={() => setFocusedField('')}
-                        />
-                    </View>
+                        {/* Botones de acción */}
+                        <View style={styles.buttonGroup}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => router.back()}
+                                disabled={isLoading}
+                            >
+                                <Ionicons name="close-outline" size={20} color="#FFFFFF" />
+                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                            </TouchableOpacity>
 
-                    {/* Botones de acción */}
-                    <View style={styles.buttonGroup}>
-                        <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-                            <Text style={styles.cancelButtonText}>Cancelar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.submitButton}>
-                            <Text style={styles.submitButtonText}>Enviar</Text>
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.submitButton,
+                                    (!hasFormData || isLoading) && styles.submitButtonDisabled
+                                ]}
+                                onPress={handleSubmit}
+                                disabled={!hasFormData || isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color="#24475E" />
+                                ) : (
+                                    <>
+                                        <Ionicons name="send-outline" size={20} color="#24475E" />
+                                        <Text style={styles.submitButtonText}>Enviar</Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </KeyboardAvoidingView>
+
+            {/* Alertas */}
+            <CustomAlert
+                visible={showSuccessAlert}
+                title="¡Mensaje enviado!"
+                message="Tu mensaje ha sido enviado correctamente. Te responderemos pronto."
+                type="success"
+                confirmText="Entendido"
+                onConfirm={closeSuccessAlert}
+            />
+
+            <CustomAlert
+                visible={showErrorAlert}
+                title="Error al enviar"
+                message="No se pudo enviar tu mensaje. Por favor, verifica tu conexión e inténtalo nuevamente."
+                type="error"
+                confirmText="Reintentar"
+                onConfirm={closeErrorAlert}
+            />
         </SafeAreaView>
     );
 };
@@ -115,64 +360,115 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        padding: moderateScale(20),
         backgroundColor: '#24475E',
+    },
+    header: {
+        alignItems: 'center',
         paddingTop: moderateScale(30),
+        paddingHorizontal: moderateScale(20),
+        paddingBottom: moderateScale(20),
     },
     iconContainer: {
-        alignItems: 'center',
-        marginBottom: moderateScale(20),
+        marginBottom: moderateScale(15),
     },
     title: {
-        fontSize: moderateScale(24),
+        fontSize: moderateScale(28),
         fontWeight: 'bold',
         color: '#FFFFFF',
-        marginBottom: moderateScale(30),
+        marginBottom: moderateScale(10),
         textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: moderateScale(16),
+        color: '#B0BEC5',
+        textAlign: 'center',
+        lineHeight: moderateScale(22),
+    },
+    formContainer: {
+        flex: 1,
+        paddingHorizontal: moderateScale(20),
+    },
+    fieldContainer: {
+        marginBottom: moderateScale(20),
     },
     inputContainer: {
         backgroundColor: '#37698A',
-        borderRadius: moderateScale(10),
-        marginBottom: moderateScale(15),
+        borderRadius: moderateScale(12),
         paddingHorizontal: moderateScale(15),
-        borderWidth: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 2,
         borderColor: 'transparent',
     },
     largeInputContainer: {
         backgroundColor: '#37698A',
-        borderRadius: moderateScale(15),
-        marginBottom: moderateScale(20),
+        borderRadius: moderateScale(12),
         paddingHorizontal: moderateScale(15),
-        borderWidth: 0,
+        paddingTop: moderateScale(15),
+        borderWidth: 2,
         borderColor: 'transparent',
+        minHeight: moderateScale(120),
     },
     inputContainerFocused: {
         borderColor: '#FFFFFF',
-        borderWidth: 2,
+        backgroundColor: '#3A7096',
+    },
+    inputContainerError: {
+        borderColor: '#FF6B6B',
+    },
+    inputIcon: {
+        marginRight: moderateScale(12),
+    },
+    textAreaIcon: {
+        position: 'absolute',
+        top: moderateScale(15),
+        left: moderateScale(15),
     },
     input: {
-        height: moderateScale(45),
+        flex: 1,
+        height: moderateScale(50),
         color: '#FFFFFF',
+        fontSize: moderateScale(16),
     },
     largeInput: {
-        height: moderateScale(120),
+        flex: 1,
         color: '#FFFFFF',
+        fontSize: moderateScale(16),
         textAlignVertical: 'top',
+        paddingLeft: moderateScale(32),
+        minHeight: moderateScale(90),
+    },
+    errorText: {
+        color: '#FF6B6B',
+        fontSize: moderateScale(12),
+        marginTop: moderateScale(5),
+        marginLeft: moderateScale(5),
+    },
+    characterCount: {
+        color: '#B0BEC5',
+        fontSize: moderateScale(12),
+        textAlign: 'right',
+        marginTop: moderateScale(5),
     },
     buttonGroup: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        paddingHorizontal: moderateScale(20),
+        paddingVertical: moderateScale(30),
+        gap: moderateScale(15),
     },
     cancelButton: {
         backgroundColor: 'transparent',
-        borderWidth: 1,
+        borderWidth: 2,
         borderColor: '#FFFFFF',
         borderRadius: moderateScale(25),
-        paddingVertical: moderateScale(12),
-        paddingHorizontal: moderateScale(30),
+        paddingVertical: moderateScale(15),
+        paddingHorizontal: moderateScale(20),
         alignItems: 'center',
         flex: 1,
-        marginRight: moderateScale(10),
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: moderateScale(8),
     },
     cancelButtonText: {
         color: '#FFFFFF',
@@ -182,11 +478,17 @@ const styles = StyleSheet.create({
     submitButton: {
         backgroundColor: '#FFFFFF',
         borderRadius: moderateScale(25),
-        paddingVertical: moderateScale(12),
-        paddingHorizontal: moderateScale(30),
+        paddingVertical: moderateScale(15),
+        paddingHorizontal: moderateScale(20),
         alignItems: 'center',
         flex: 1,
-        marginLeft: moderateScale(10),
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: moderateScale(8),
+    },
+    submitButtonDisabled: {
+        backgroundColor: '#B0BEC5',
+        opacity: 0.6,
     },
     submitButtonText: {
         color: '#24475E',

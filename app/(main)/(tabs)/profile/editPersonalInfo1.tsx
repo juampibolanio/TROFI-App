@@ -1,140 +1,279 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ScrollView, SafeAreaView, ImageBackground, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-
-type FormFields = {
-  nombre: string;
-  apellido: string;
-  correo: string;
-  correo2: string;
-  password: string;
-  password2: string;
-};
+import imagePath from '@/constants/imagePath';
+import { updatePhoneNumber, updateUserName } from '@/services/userService';
+import { useDispatch } from 'react-redux';
+import { setUserProfile } from '@/redux/slices/userSlice';
+import CustomAlert from '@/components/atoms/CustomAlert'; // Ajusta la ruta según tu estructura
+import Loader from '@/components/atoms/Loader'; // Ajusta la ruta según tu estructura
+import { moderateScale } from 'react-native-size-matters';
 
 const EditPersonalInfo1 = () => {
   const router = useRouter();
-
-  const [form, setForm] = useState<FormFields>({
-    nombre: '',
-    apellido: '',
-    correo: '',
-    correo2: '',
-    password: '',
-    password2: '',
+  const dispatch = useDispatch();
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [celular, setCelular] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Estados para el alert
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: '',
+    message: '',
+    type: 'info' as 'success' | 'error' | 'warning' | 'info',
+    showCancel: false,
+    onConfirm: () => {},
+    onCancel: undefined as (() => void) | undefined,
   });
 
-  const handleClear = (field: keyof FormFields) => {
-    setForm((prev) => ({ ...prev, [field]: '' }));
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
   };
+
+  const hideAlert = () => {
+    setAlertVisible(false);
+  };
+
+  const handleClear = (setter: React.Dispatch<React.SetStateAction<string>>) => {
+    setter('');
+  };
+
+  const validateInputs = () => {
+    if (!nombre.trim()) {
+      showAlert({
+        title: 'Campo requerido',
+        message: 'Por favor ingresa tu nombre',
+        type: 'warning',
+        showCancel: false,
+        onConfirm: hideAlert,
+        onCancel: undefined,
+      });
+      return false;
+    }
+
+    if (!apellido.trim()) {
+      showAlert({
+        title: 'Campo requerido',
+        message: 'Por favor ingresa tu apellido',
+        type: 'warning',
+        showCancel: false,
+        onConfirm: hideAlert,
+        onCancel: undefined,
+      });
+      return false;
+    }
+
+    if (!celular.trim() || celular.trim().length < 6) {
+      showAlert({
+        title: 'Número inválido',
+        message: 'Por favor ingresa un número de celular válido (mínimo 6 dígitos)',
+        type: 'warning',
+        showCancel: false,
+        onConfirm: hideAlert,
+        onCancel: undefined,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validateInputs()) return;
+
+    const fullName = `${nombre.trim()} ${apellido.trim()}`;
+    
+    showAlert({
+      title: 'Confirmar cambios',
+      message: '¿Estás seguro de que deseas actualizar tu información personal?',
+      type: 'info',
+      showCancel: true,
+      onConfirm: async () => {
+        hideAlert();
+        setIsLoading(true);
+        
+        try {
+          await updateUserName(fullName);
+          await updatePhoneNumber(celular);
+
+          dispatch(setUserProfile({
+            name: fullName,
+            phoneNumber: celular,
+          }));
+
+          setIsLoading(false);
+          showAlert({
+            title: '¡Éxito!',
+            message: 'Tus datos han sido actualizados correctamente',
+            type: 'success',
+            showCancel: false,
+            onConfirm: () => {
+              hideAlert();
+              router.back();
+            },
+            onCancel: undefined,
+          });
+        } catch (error) {
+          setIsLoading(false);
+          showAlert({
+            title: 'Error',
+            message: 'No se pudieron actualizar los datos. Por favor intenta nuevamente.',
+            type: 'error',
+            showCancel: false,
+            onConfirm: hideAlert,
+            onCancel: undefined,
+          });
+        }
+      },
+      onCancel: hideAlert,
+    });
+  };
+
+  const handleCancel = () => {
+    if (nombre.trim() || apellido.trim() || celular.trim()) {
+      showAlert({
+        title: 'Confirmar salida',
+        message: 'Tienes cambios sin guardar. ¿Estás seguro de que deseas salir?',
+        type: 'warning',
+        showCancel: true,
+        onConfirm: () => {
+          hideAlert();
+          router.back();
+        },
+        onCancel: hideAlert,
+      });
+    } else {
+      router.back();
+    }
+  };
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#0E3549" barStyle="light-content" />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
-        {/* Icono superior */}
-        <View style={styles.headerIcon}>
-          <Ionicons name="home" size={32} color="white" />
-        </View>
+      <ImageBackground style={styles.overlay} source={imagePath.backgroundOnBoarding}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
+          <View style={styles.headerIcon}>
+            <Ionicons name="home" size={32} color="white" />
+          </View>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Realice las modificaciones y</Text>
-          <Text style={styles.sectionTitle}>guarde los cambios</Text>
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Modificar nombre y teléfono</Text>
 
-          {/* Inputs */}
-          {[
-            { field: 'nombre', placeholder: 'Ingrese su nombre' },
-            { field: 'apellido', placeholder: 'Ingrese su apellido' },
-            { field: 'correo', placeholder: 'Ingrese su nuevo correo electrónico' },
-            { field: 'correo2', placeholder: 'Ingrese nuevamente su correo' },
-            { field: 'password', placeholder: 'Ingrese nueva contraseña', secure: true },
-            { field: 'password2', placeholder: 'Repita la contraseña', secure: true },
-          ].map(({ field, placeholder, secure }) => (
-            <View style={styles.inputGroup} key={field}>
+            <View style={styles.inputGroup}>
               <TextInput
                 style={styles.input}
-                placeholder={placeholder}
+                placeholder="Nombre"
                 placeholderTextColor="#CFD8DC"
-                value={form[field as keyof FormFields]}
-                secureTextEntry={secure}
-                keyboardType={
-                  placeholder.toLowerCase().includes('correo') ? 'email-address' : 'default'
-                }
-                onChangeText={(text) =>
-                  setForm((prev) => ({ ...prev, [field as keyof FormFields]: text }))
-                }
+                value={nombre}
+                onChangeText={setNombre}
               />
-              {form[field as keyof FormFields] !== '' && (
-                <TouchableOpacity onPress={() => handleClear(field as keyof FormFields)} style={styles.clearIcon}>
+              {nombre !== '' && (
+                <TouchableOpacity onPress={() => handleClear(setNombre)} style={styles.clearIcon}>
                   <Ionicons name="close" size={18} color="#CFD8DC" />
                 </TouchableOpacity>
               )}
             </View>
-          ))}
 
-          {/* Género */}
-          <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Seleccione su género</Text>
-          <View style={styles.genderContainer}>
-            {['Hombre', 'Mujer', 'Prefiero no contestar'].map((label, index) => (
-              <TouchableOpacity key={index} style={styles.radioButton}>
-                <View style={styles.radioCircle} />
-                <Text style={styles.radioText}>{label}</Text>
-              </TouchableOpacity>
-            ))}
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Apellido"
+                placeholderTextColor="#CFD8DC"
+                value={apellido}
+                onChangeText={setApellido}
+              />
+              {apellido !== '' && (
+                <TouchableOpacity onPress={() => handleClear(setApellido)} style={styles.clearIcon}>
+                  <Ionicons name="close" size={18} color="#CFD8DC" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Número de celular"
+                placeholderTextColor="#CFD8DC"
+                keyboardType="phone-pad"
+                value={celular}
+                onChangeText={setCelular}
+              />
+              {celular !== '' && (
+                <TouchableOpacity onPress={() => handleClear(setCelular)} style={styles.clearIcon}>
+                  <Ionicons name="close" size={18} color="#CFD8DC" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Guardar y actualizar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveButton, { marginTop: 10 }]}
+              onPress={() => router.push('/(main)/(tabs)/profile/editPersonalInfo2')}
+            >
+              <Text style={[styles.saveButtonText, { color: '#0E3549' }]}>Editar otros datos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
           </View>
+        </ScrollView>
+      </ImageBackground>
 
-          {/* Ver más datos */}
-          <TouchableOpacity style={styles.viewMoreButton} onPress={router.push('/(main)/(tabs)/profile/editPersonalInfo2')}>
-            <Text style={styles.viewMoreButtonText}>Ver más datos</Text>
-          </TouchableOpacity>
-
-          {/* Guardar y cancelar */}
-          <TouchableOpacity style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Guardar y actualizar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-            <Text style={styles.cancelButtonText}>Cancelar</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={alertConfig.onCancel}
+        confirmText="Aceptar"
+        cancelText="Cancelar"
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#0E3549',
+  safeArea: { 
+    flex: 1, 
+    backgroundColor: '#0E3549' 
   },
-  scrollView: {
-    flex: 1,
+  overlay: { 
+    flex: 1 
   },
-  container: {
-    paddingBottom: 30,
+  scrollView: { 
+    flex: 1 
   },
-  headerIcon: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 10,
+  container: { 
+    paddingBottom: 30 
   },
-  card: {
-    marginHorizontal: 20,
-    marginTop: 10,
+  headerIcon: { 
+    alignItems: 'center', 
+    marginTop: 20, 
+    marginBottom: 10 
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 5,
+  card: { 
+    marginHorizontal: 20, 
+    marginTop: 10 
+  },
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: 'white', 
+    marginBottom: 10 
   },
   inputGroup: {
     marginTop: 15,
@@ -143,61 +282,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  input: {
-    flex: 1,
-    paddingVertical: 10,
-    color: 'white',
-    fontSize: 14,
+  input: { 
+    flex: 1, 
+    paddingVertical: 10, 
+    color: 'white', 
+    fontSize: 14 
   },
-  clearIcon: {
-    padding: 5,
-  },
-  genderContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#ECEFF1',
-    borderRadius: 20,
-    marginTop: 10,
-    paddingVertical: 10,
-  },
-  radioButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  radioCircle: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#0E3549',
-    marginRight: 6,
-  },
-  radioText: {
-    color: '#0E3549',
-    fontWeight: '600',
-  },
-  viewMoreButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 25,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 25,
-  },
-  viewMoreButtonText: {
-    color: '#0E3549',
-    fontWeight: 'bold',
-    fontSize: 16,
+  clearIcon: { 
+    padding: 5 
   },
   saveButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 25,
     padding: 15,
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 25,
   },
-  saveButtonText: {
-    color: '#0E3549',
-    fontWeight: 'bold',
-    fontSize: 16,
+  saveButtonText: { 
+    color: '#0E3549', 
+    fontWeight: 'bold', 
+    fontSize: 16 
   },
   cancelButton: {
     borderWidth: 1,
@@ -207,10 +311,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  cancelButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+  cancelButtonText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 16 
   },
 });
 

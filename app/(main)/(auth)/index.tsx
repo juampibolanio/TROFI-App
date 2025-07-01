@@ -26,7 +26,7 @@ import { setCredentials } from '@/redux/slices/authSlice';
 import { storeData } from '@/utils/storage';
 import { userProfileRequest } from '@/services/userService';
 import { setUserProfile } from '@/redux/slices/userSlice';
-import CustomAlert from '@/components/atoms/CustomAlert'; 
+import CustomAlert from '@/components/atoms/CustomAlert';
 
 const Auth = () => {
 
@@ -74,7 +74,7 @@ const Auth = () => {
     //procesar solicitud de login
     const handleLogin = async () => {
         console.log("se ejecuto")
-        
+
         // Validaciones básicas
         if (!email.trim()) {
             showAlert('Campo requerido', 'Por favor ingrese su correo electrónico', 'warning');
@@ -123,7 +123,7 @@ const Auth = () => {
 
             // Mostrar mensaje de éxito antes de redirigir
             showAlert('¡Bienvenido!', 'Inicio de sesión exitoso', 'success');
-            
+
             //delay para que se vea el mensaje de éxito
             setTimeout(() => {
                 closeAlert();
@@ -179,12 +179,14 @@ const Auth = () => {
                                     />
                                 </View>
 
-                                <View style={styles.rememberContainer}>
-                                    <Text style={styles.rememberText}>Recuérdame</Text>
+                                <Pressable
+                                    style={styles.rememberContainer}
+                                    onPress={() => { router.push('/(main)/(auth)/passwordRecoveryTwo') }}
+                                >
                                     <Text style={styles.forgotText}>
                                         ¿Olvidaste tu contraseña?
                                     </Text>
-                                </View>
+                                </Pressable>
 
                                 <View style={styles.bottomContainer}>
                                     <BottomComponent title="Iniciar sesión" onPress={handleLogin} />
@@ -317,7 +319,7 @@ const styles = StyleSheet.create({
     rememberContainer: {
         flexDirection: 'row',
         marginTop: verticalScale(50),
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: moderateScale(25)
     },
     rememberText: {
