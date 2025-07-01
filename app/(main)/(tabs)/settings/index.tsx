@@ -28,35 +28,33 @@ const Settings = () => {
 
     const [fontsLoaded] = useFonts(fonts);
 
-    // Función para mostrar el modal de confirmación de logout
     const handleLogoutPress = () => {
         setShowLogoutAlert(true);
     };
 
-    // Función para confirmar el logout
     const confirmLogout = async () => {
         setShowLogoutAlert(false);
         try {
             await logoutRequest();
 
-            dispatch(logout()); // limpia Redux y AsyncStorage
-            dispatch(clearUserProfile()); // limpia perfil
-            router.replace('/(main)/(auth)'); // redirige al login
+            dispatch(logout());
+            dispatch(clearUserProfile());
+            router.replace('/(main)/(auth)');
         } catch (e) {
             console.error('Error al cerrar sesión:', e);
             setShowErrorAlert(true);
         }
     };
 
-    // Función para cancelar el logout
     const cancelLogout = () => {
         setShowLogoutAlert(false);
     };
 
-    // Función para cerrar el alert de error
     const closeErrorAlert = () => {
         setShowErrorAlert(false);
     };
+
+    if (!fontsLoaded) return null;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -66,34 +64,30 @@ const Settings = () => {
                 style={styles.overlay}
             >
 
-                {/* HEADER */}
                 <View style={styles.header}>
                     <Image source={imagePath.icon} style={styles.iconStyle} resizeMode='contain' />
                 </View>
 
-                {/* BODY */}
                 <View style={styles.body}>
                     <SettingsButton title="Contacto" iconName="mail-open-sharp" route="/settings/contact" />
                     <SettingsButton title="Preguntas frecuentes" iconName="help" route="/settings/frequentlyQuestions" />
-                    <SettingsButton title="Acerca de TROFI" iconName="information-circle" route="/settings/aboutTrofi" />
                     <SettingsButton title="Reportar un bug" iconName="bug-outline" route="/settings/reportBug" />
                     <SettingsButton title="Términos y condiciones" iconName="document-text-outline" route="/settings/termsAndConditions" />
+                    <SettingsButton title="Acerca de TROFI" iconName="information-circle" route="/settings/aboutTrofi" />
                 </View>
 
-                {/* FOOTER */}
                 <View style={styles.footer}>
                     <Pressable style={({ pressed }) => [
                         styles.logoutButton,
                         pressed && { opacity: 0.8 },
                     ]} onPress={handleLogoutPress}>
-                        <Ionicons name="log-out-outline" size={24} color="black" />
+                        <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
                         <Text style={styles.logoutButtonText}>
                             Cerrar sesión
                         </Text>
                     </Pressable>
                 </View>
 
-                {/* MODALES DE CONFIRMACIÓN */}
                 <CustomAlert
                     visible={showLogoutAlert}
                     type="warning"
@@ -148,10 +142,9 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end',
         alignItems: 'center',
-
     },
     logoutButton: {
-        backgroundColor: '#D9D9D9',
+        backgroundColor: '#0E3549', // fondo boton cerrarsesion -> azul oscuro
         paddingHorizontal: moderateScale(25),
         paddingVertical: moderateScale(15),
         borderRadius: verticalScale(30),
@@ -162,7 +155,7 @@ const styles = StyleSheet.create({
     logoutButtonText: {
         fontSize: moderateScale(13),
         fontWeight: 'bold',
-        color: '#000000'
+        color: '#FFFFFF', // texto blanco
     }
 });
 

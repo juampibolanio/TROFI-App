@@ -47,7 +47,7 @@ const Auth = () => {
 
     //ir a la pantalla de registro.
     let navigateToRegister = () => {
-        router.push("/(auth)/register");
+        router.push("/(main)/(auth)/register"); // error fixeado
     };
 
     //ir a la pantalla home de la app
