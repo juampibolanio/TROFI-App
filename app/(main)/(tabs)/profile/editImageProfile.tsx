@@ -51,7 +51,7 @@ const EditImageProfile = () => {
 
     const handleSelectImage = async () => {
         try {
-            setIsUploadingImage(true); // Mostrar loader
+            setIsUploadingImage(true);
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -71,7 +71,7 @@ const EditImageProfile = () => {
             console.error('Error seleccionando imagen:', error);
             showAlert("Error", "No se pudo subir la imagen. Intenta nuevamente.", 'error');
         } finally {
-            setIsUploadingImage(false); // Ocultar loader
+            setIsUploadingImage(false);
         }
     };
 
@@ -82,7 +82,7 @@ const EditImageProfile = () => {
                 return;
             }
 
-            setIsSavingImage(true); // Mostrar loader
+            setIsSavingImage(true);
 
             // actualizar el backend
             await updateUserProfileImage(selectedImage);
@@ -106,16 +106,11 @@ const EditImageProfile = () => {
         }
     };
 
-    // Si está cargando, mostrar el loader
-    if (isUploadingImage || isSavingImage) {
-        return <Loader />;
-    }
-
     return (
         <>
             <SafeAreaView style={styles.container}>
                 <ImageBackground style={styles.overlay} source={imagePath.editImageProfileBackground} resizeMode="cover">
-                    <ScrollView 
+                    <ScrollView
                         contentContainerStyle={styles.scrollContent}
                         showsVerticalScrollIndicator={false}
                     >
@@ -162,6 +157,13 @@ const EditImageProfile = () => {
                     </ScrollView>
                 </ImageBackground>
             </SafeAreaView>
+
+            {/* LOADER OVERLAY */}
+            {(isUploadingImage || isSavingImage) && (
+                <View style={styles.loaderOverlay}>
+                    <Loader />
+                </View>
+            )}
 
             {/* ALERTA */}
             <CustomAlert
@@ -221,6 +223,15 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end',
         minHeight: moderateScale(200),
+    },
+    loaderOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });
 

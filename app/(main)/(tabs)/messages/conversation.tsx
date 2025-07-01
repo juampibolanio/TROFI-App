@@ -48,11 +48,21 @@ const Conversation = () => {
 
   const currentUserId = useSelector((state: RootState) => state.user.id);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const goBack = () => {
     router.back();
+  };
+
+  // Función para navegar al perfil del usuario
+  const navigateToUserProfile = () => {
+    if (otherUserId) {
+      router.push({
+        pathname: "/(main)/(tabs)/search/[id]",
+        params: { id: otherUserId }
+      });
+    }
   };
 
   //configuración del chat
@@ -71,7 +81,7 @@ const Conversation = () => {
       }));
       msgs.sort((a, b) => a.timestamp - b.timestamp);
       setMessages(msgs);
-      setIsLoading(false); 
+      setIsLoading(false);
 
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -97,7 +107,11 @@ const Conversation = () => {
             style={styles.headerImage}
             defaultSource={imagePath.defaultUserImage}
           />
-          <Text style={styles.headerName}>{otherUserName || 'Usuario'}</Text>
+
+          {/* Hacer el nombre clickeable */}
+          <Pressable onPress={navigateToUserProfile} style={styles.nameContainer}>
+            <Text style={styles.headerName}>{otherUserName || 'Usuario'}</Text>
+          </Pressable>
         </View>
 
         {/* Mostrar loader mientras cargan los mensajes */}
@@ -190,11 +204,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
     backgroundColor: '#f0f0f0',
   },
+  nameContainer: {
+    flex: 1,
+  },
   headerName: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#0E3549",
-    flex: 1,
   },
   messagesScrollView: {
     flex: 1,

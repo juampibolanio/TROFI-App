@@ -16,23 +16,23 @@ const HeaderTrofi = () => {
         backgroundColor: '#D9D9D9',
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         paddingHorizontal: 16,
       }}
     >
-
+      {/* 
       <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/settings')}>
         <Ionicons name="settings-outline" size={24} color="#0E3549" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
 
-      <Text style={{ fontSize: 24, color: '#1C1C1C', fontFamily: 'Bauhaus93' }}>
+      <Text style={{ fontSize: 24, color: '#1C1C1C', fontFamily: 'Bauhaus93', textAlign: 'center' }}>
         TROFI
       </Text>
-
+      {/*
       <TouchableOpacity onPress={() => router.push('/(main)/(tabs)/profile')}>
         <Ionicons name="person-circle-outline" size={24} color="#0E3549" />
-      </TouchableOpacity>
+      </TouchableOpacity>*/}
     </View>
   );
 };
