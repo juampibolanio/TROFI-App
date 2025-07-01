@@ -18,13 +18,14 @@ import { RootState } from '@/redux/store';
 import { deletePhoto, uploadPhoto } from '@/services/userService';
 import { addUserPhoto, removeUserPhoto } from '@/redux/slices/userSlice';
 import { uploadProfileImage } from '@/services/imageService';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import fonts from '@/constants/fonts';
 import { useFonts } from '@expo-google-fonts/roboto';
 import CustomAlert from '@/components/atoms/CustomAlert';
+import Loader from '@/components/atoms/Loader';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -41,6 +42,15 @@ const MyGallery = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  const [isGalleryReady, setIsGalleryReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsGalleryReady(true);
+    }, 500); // Espera de 0.5 segundos
+
+    return () => clearTimeout(timer);
+  }, []);
   // Estados para CustomAlert
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
@@ -276,29 +286,40 @@ const MyGallery = () => {
           )}
 
           <View style={styles.imageContainer}>
-            {Array.isArray(jobImages) && jobImages.length > 0 ? (
-              jobImages.map((photo) => (
-                <TouchableOpacity
-                  key={photo.id}
-                  onLongPress={() => !selectionMode && handleDeletePhoto(photo.id)}
-                  onPress={() => handleImagePress(photo.url, photo.id)}
-                  style={[
-                    styles.imageWrapper,
-                    selectionMode && selectedPhotos.includes(photo.id) && styles.imageSelected
-                  ]}
-                >
-                  <Image source={{ uri: photo.url }} style={styles.image} />
-                  {selectionMode && selectedPhotos.includes(photo.id) && (
-                    <Ionicons name="checkmark-circle" size={24} color="#D9D9D9" style={styles.checkIcon} />
-                  )}
-                </TouchableOpacity>
-              ))
+            {!isGalleryReady ? (
+              <Loader />
+            ) : Array.isArray(jobImages) && jobImages.length > 0 ? (
+              jobImages.map((photo) => {
+                if (!photo?.url || typeof photo.url !== 'string') return null;
+
+                return (
+                  <TouchableOpacity
+                    key={photo.id}
+                    onLongPress={() => !selectionMode && handleDeletePhoto(photo.id)}
+                    onPress={() => handleImagePress(photo.url, photo.id)}
+                    style={[
+                      styles.imageWrapper,
+                      selectionMode && selectedPhotos.includes(photo.id) && styles.imageSelected
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: photo.url }}
+                      style={styles.image}
+                      defaultSource={imagePath.defaultUserImage}
+                    />
+                    {selectionMode && selectedPhotos.includes(photo.id) && (
+                      <Ionicons name="checkmark-circle" size={24} color="#D9D9D9" style={styles.checkIcon} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })
             ) : (
               <Text style={styles.textNoImage}>
                 Aún no has subido fotos.
               </Text>
             )}
           </View>
+
 
           {/* FOOTER - Botones de acción */}
           <View style={styles.footer}>

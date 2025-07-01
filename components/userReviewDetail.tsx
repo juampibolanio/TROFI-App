@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
         width: '100%',
         minHeight: moderateScale(130),
         flexDirection: 'row',
-        paddingVertical: moderateScale(20),
+        paddingVertical: moderateScale(15),
         borderRadius: moderateScale(35),
         justifyContent: 'flex-start',
         backgroundColor: '#D9D9D9',

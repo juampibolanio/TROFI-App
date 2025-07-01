@@ -12,6 +12,7 @@ import {
   ScrollView,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import imagePath from '@/constants/imagePath';
@@ -27,6 +28,23 @@ import { storeData } from '@/utils/storage';
 import { setUserProfile } from '@/redux/slices/userSlice';
 import CustomAlert from '@/components/atoms/CustomAlert';
 
+// Componente Loader
+const Loader = () => {
+  return (
+    <View style={loaderStyles.container}>
+      <ActivityIndicator size="large" color={"#ffffff"} />
+    </View>
+  )
+}
+
+const loaderStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
+})
+
 const RegisterScreen = () => {
   const dispatch = useDispatch();
   const [fontsLoaded] = useFonts(fonts);
@@ -36,6 +54,7 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // Estado para el loader
 
   // Estados para el CustomAlert
   const [alertVisible, setAlertVisible] = useState(false);
@@ -47,7 +66,7 @@ const RegisterScreen = () => {
   });
 
   const navigateToLogin = () => {
-    router.replace("/(auth)");
+    router.replace("/(main)/(auth)");
   };
 
   const navigateToOnboarding = () => {
@@ -88,6 +107,8 @@ const RegisterScreen = () => {
 
   const handleRegister = async () => {
     try {
+      setIsLoading(true); // Activar loader
+
       // Validación de campos vacíos
       if (!firstName.trim()) {
         showAlert("Campo requerido", "Por favor, ingresa tu nombre.", 'warning');
@@ -204,10 +225,27 @@ const RegisterScreen = () => {
         showAlert("Error de conexión", "No se pudo registrar el usuario. Por favor, verifica tu conexión a internet e intenta nuevamente.", 'error');
       console.log(e);
       }
+    } finally {
+      setIsLoading(false); // Desactivar loader siempre al final
     }
   };
 
   if (!fontsLoaded) return null;
+
+  // Si está cargando, mostrar el loader
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ImageBackground
+          style={styles.overlay}
+          source={imagePath.backgroundOnBoarding}
+          resizeMode='cover'
+        >
+          <Loader />
+        </ImageBackground>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

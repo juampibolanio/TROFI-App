@@ -17,9 +17,13 @@ import imagePath from '@/constants/imagePath';
 const Perfil = () => {
   const user = useSelector((state: RootState) => state.user);
 
+  const navigateToCompleteWork = () => {
+    router.push('/(main)/(onBoarding)/completeJobProfile');
+  }
+
   const navigateToEditProfile = () => {
-    router.push('/profile/editProfile');
-  };
+    router.push('/(main)/(tabs)/profile/editProfile');
+  }
 
   const navigateToMyReviews = () => {
     router.push('/profile/reviews');
@@ -114,7 +118,7 @@ const Perfil = () => {
               <Text style={styles.workerProfileText}>
                 ¿Querés aparecer como trabajador? Completá tu perfil laboral.
               </Text>
-              <Pressable style={({ pressed }) => [styles.workerProfileButton, pressed && { opacity: 0.5 }]} onPress={navigateToEditProfile}>
+              <Pressable style={({ pressed }) => [styles.workerProfileButton, pressed && { opacity: 0.5 }]} onPress={navigateToCompleteWork}>
                 <Text style={styles.workerProfileButtonText}>Completar perfil laboral</Text>
               </Pressable>
             </View>
@@ -245,7 +249,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     fontFamily: 'RobotoLight',
     fontSize: moderateScale(14),
-    textAlign: 'justify'
+    textAlign: 'left'
   },
 
   score: {
@@ -304,7 +308,7 @@ const styles = StyleSheet.create({
 
   workerProfileSection: {
     marginHorizontal: moderateScale(20),
-    marginTop: moderateScale(20)
+    marginBottom: moderateScale(15)
   },
 
   workerProfileCard: {
@@ -350,7 +354,7 @@ const styles = StyleSheet.create({
 
   workerProfileButton: {
     backgroundColor: '#0E3549',
-    paddingHorizontal: moderateScale(20),
+    paddingHorizontal: moderateScale(10),
     paddingVertical: moderateScale(12),
     borderRadius: moderateScale(25),
     alignSelf: 'center',
@@ -358,13 +362,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#0E3549',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
 
   workerProfileButtonText: {
