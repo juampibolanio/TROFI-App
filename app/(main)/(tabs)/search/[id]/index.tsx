@@ -23,6 +23,10 @@ const UserDetail = () => {
         router.push({ pathname: "/(main)/(tabs)/search/[id]/reviewDetail", params: { id: perfil.id, name: perfil.fullname, imageProfile: perfil.imageProfile } })
     }
 
+    const goBack = () => {
+        router.back();
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -59,6 +63,16 @@ const UserDetail = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ImageBackground source={imagePath.backgroundUDetails} style={styles.overlay} resizeMode='cover'>
+
+                {/* BACK ARROW */}
+                <View style={styles.backArrowContainer}>
+                    <Pressable
+                        style={({ pressed }) => [styles.backArrow, pressed && { opacity: 0.5 }]}
+                        onPress={goBack}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                    </Pressable>
+                </View>
 
                 {/* HEADER */}
                 <View style={styles.header}>
@@ -131,6 +145,20 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 
+    /* ----------------------------------- BACK ARROW -----------------------------------*/
+    backArrowContainer: {
+        position: 'absolute',
+        top: moderateScale(10),
+        left: moderateScale(15),
+        zIndex: 1,
+    },
+
+    backArrow: {
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        borderRadius: moderateScale(20),
+        padding: moderateScale(8),
+    },
+
     /* ----------------------------------- HEADER -----------------------------------*/
 
     header: {
@@ -138,6 +166,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         padding: moderateScale(20),
+        paddingTop: moderateScale(50),
     },
 
     imagen: {

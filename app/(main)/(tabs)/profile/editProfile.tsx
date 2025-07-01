@@ -28,7 +28,6 @@ const editProfile = () => {
     const user = useSelector((state: RootState) => state.user);
     const [fontsLoaded] = useFonts(fonts);
 
-    // Estados para controlar los diferentes alerts
     const [personalAlert, setPersonalAlert] = useState(false);
     const [laboralAlert, setLaboralAlert] = useState(false);
     const [logoutAlert, setLogoutAlert] = useState(false);
@@ -38,7 +37,6 @@ const editProfile = () => {
         router.push("/profile/editImageProfile");
     };
 
-    // Handlers para los alerts
     const handlePersonalInfoConfirm = () => {
         setPersonalAlert(false);
         router.push('/(main)/(tabs)/profile/editPersonalInfo1');
@@ -49,34 +47,34 @@ const editProfile = () => {
         router.push('/(main)/(tabs)/profile/editWorkInfo');
     };
 
-    // Función para mostrar el modal de confirmación de logout
     const handleLogoutPress = () => {
         setLogoutAlert(true);
     };
 
-    // Función para confirmar el logout (usando la lógica de Settings)
     const handleLogoutConfirm = async () => {
         setLogoutAlert(false);
         try {
             await logoutRequest();
-
-            dispatch(logout()); // limpia Redux y AsyncStorage
-            dispatch(clearUserProfile()); // limpia perfil
-            router.replace('/(main)/(auth)'); // redirige al login
+            dispatch(logout());
+            dispatch(clearUserProfile());
+            router.replace('/(main)/(auth)');
         } catch (e) {
             console.error('Error al cerrar sesión:', e);
             setLogoutErrorAlert(true);
         }
     };
 
-    // Función para cancelar el logout
     const handleLogoutCancel = () => {
         setLogoutAlert(false);
     };
 
-    // Función para cerrar el alert de error de logout
     const closeLogoutErrorAlert = () => {
         setLogoutErrorAlert(false);
+    };
+
+    // Función para volver hacia atrás
+    const goBack = () => {
+        router.back();
     };
 
     return (
@@ -84,7 +82,17 @@ const editProfile = () => {
             <ImageBackground
                 style={styles.overlay}
                 source={imagePath.editProfileBackground}
-                resizeMode="cover">
+                resizeMode="cover"
+            >
+                {/* BACK ARROW */}
+                <View style={styles.backArrowContainer}>
+                    <Pressable
+                        style={({ pressed }) => [styles.backArrow, pressed && { opacity: 0.5 }]}
+                        onPress={goBack}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                    </Pressable>
+                </View>
 
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
@@ -110,7 +118,8 @@ const editProfile = () => {
                             />
                             <Pressable
                                 style={styles.editButton}
-                                onPress={navigateToEditImageProfile}>
+                                onPress={navigateToEditImageProfile}
+                            >
                                 <Ionicons
                                     name="pencil"
                                     size={14}
@@ -125,7 +134,7 @@ const editProfile = () => {
                         </Text>
                     </View>
 
-                    {/* BODY - Botones principales */}
+                    {/* BODY */}
                     <View style={styles.mainButtonsContainer}>
                         <ButtonComponent
                             title="Editar información personal"
@@ -138,9 +147,10 @@ const editProfile = () => {
                             iconName="briefcase-outline"
                             onPress={() => setLaboralAlert(true)}
                         />
+
                     </View>
 
-                    {/* FOOTER - Botón de cerrar sesión */}
+                    {/* FOOTER */}
                     <View style={styles.logoutContainer}>
                         <ButtonComponent
                             title="Cerrar sesión"
@@ -151,11 +161,11 @@ const editProfile = () => {
                 </ScrollView>
             </ImageBackground>
 
-            {/* ALERT INFORMACIÓN PERSONAL */}
+            {/* ALERTS */}
             <CustomAlert
                 visible={personalAlert}
                 title="Editar información personal"
-                message="Para editar tu información personal deberás proporcionar datos adicionales."
+                message="¿Deseas editar tu información personal? Se actualizarán los datos de tu perfil"
                 type="info"
                 showCancel={true}
                 confirmText="Confirmar"
@@ -164,20 +174,33 @@ const editProfile = () => {
                 onCancel={() => setPersonalAlert(false)}
             />
 
-            {/* ALERT INFORMACIÓN LABORAL */}
             <CustomAlert
                 visible={laboralAlert}
-                title="Editar información laboral"
-                message="Para editar tu información laboral deberás proporcionar datos adicionales."
-                type="info"
+                title={
+                    user.isWorkerProfileComplete
+                        ? "Editar información laboral"
+                        : "Perfil de trabajador incompleto"
+                }
+                message={
+                    user.isWorkerProfileComplete
+                        ? "¿Deseás editar tu información laboral? Se actualizarán los datos visibles en tu perfil de trabajador."
+                        : "Aún no completaste tu perfil laboral. Para figurar como trabajador y recibir ofertas, debés completarlo."
+                }
+                type={user.isWorkerProfileComplete ? "info" : "warning"}
                 showCancel={true}
-                confirmText="Confirmar"
+                confirmText={user.isWorkerProfileComplete ? "Sí, editar" : "Completar ahora"}
                 cancelText="Cancelar"
-                onConfirm={handleLaboralInfoConfirm}
+                onConfirm={() => {
+                    setLaboralAlert(false);
+                    if (user.isWorkerProfileComplete) {
+                        router.push('/(main)/(tabs)/profile/editWorkInfo');
+                    } else {
+                        router.push('/(main)/(onBoarding)/completeJobProfile');
+                    }
+                }}
                 onCancel={() => setLaboralAlert(false)}
             />
 
-            {/* ALERT CERRAR SESIÓN */}
             <CustomAlert
                 visible={logoutAlert}
                 title="Cerrar sesión"
@@ -190,7 +213,6 @@ const editProfile = () => {
                 onCancel={handleLogoutCancel}
             />
 
-            {/* ALERT ERROR DE LOGOUT */}
             <CustomAlert
                 visible={logoutErrorAlert}
                 title="Error"
@@ -216,9 +238,24 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingBottom: moderateScale(20),
     },
+
+    /* ----------------------------------- BACK ARROW -----------------------------------*/
+    backArrowContainer: {
+        position: 'absolute',
+        top: moderateScale(10),
+        left: moderateScale(15),
+        zIndex: 1,
+    },
+
+    backArrow: {
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        borderRadius: moderateScale(20),
+        padding: moderateScale(8),
+    },
+
     header: {
         alignItems: 'center',
-        paddingTop: moderateScale(20),
+        paddingTop: moderateScale(50), 
         paddingHorizontal: moderateScale(20),
         gap: moderateScale(16),
     },
