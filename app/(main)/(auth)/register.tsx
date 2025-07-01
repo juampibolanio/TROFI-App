@@ -202,6 +202,7 @@ const RegisterScreen = () => {
         }
       } else {
         showAlert("Error de conexión", "No se pudo registrar el usuario. Por favor, verifica tu conexión a internet e intenta nuevamente.", 'error');
+      console.log(e);
       }
     }
   };
