@@ -5,11 +5,11 @@ import imagePath from '@/constants/imagePath';
 import { getUserReviews } from '@/services/reviewService';
 import { useFonts } from '@expo-google-fonts/roboto';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react'
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react'
 import { View, StyleSheet, ImageBackground, ScrollView, Pressable, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { moderateScale} from 'react-native-size-matters';
+import { moderateScale } from 'react-native-size-matters';
 
 const reviewDetail = () => {
     const { id, name, imageProfile } = useLocalSearchParams();
@@ -19,22 +19,24 @@ const reviewDetail = () => {
     const [loading, setLoading] = useState(true);
 
 
-    useEffect(() => {
+    useFocusEffect(
+        useCallback(() => {
+            const fetchReviews = async () => {
+                setLoading(true);
+                try {
+                    const data = await getUserReviews(userId);
+                    setReviews(data || []);
+                } catch (e) {
+                    console.error('Error al obtener las reseñas', e);
+                } finally {
+                    setLoading(false);
+                }
+            };
 
-        const fetchReviews = async () => {
-            try {
-                const data = await getUserReviews(userId);
-                console.log(data);
-                setReviews(data || []);
-            } catch (e) {
-                console.error('Error al obtener las reseñas', e)
-            } finally {
-                setLoading(false);
-            }
-        };
+            fetchReviews();
+        }, [userId])
+    );
 
-        fetchReviews();
-    }, [userId]);
 
 
     return (

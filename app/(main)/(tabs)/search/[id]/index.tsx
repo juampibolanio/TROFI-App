@@ -8,6 +8,8 @@ import { useFonts } from '@expo-google-fonts/roboto';
 import fonts from '@/constants/fonts';
 import Loader from '@/components/atoms/Loader';
 import { getUserById } from '@/services/userService';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 const UserDetail = () => {
     const { id } = useLocalSearchParams();
@@ -15,12 +17,39 @@ const UserDetail = () => {
     const [perfil, setPerfil] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const currentUserId = useSelector((state: RootState) => state.user.id);
+
     const navigateToUserGalery = () => {
         router.push({ pathname: "/(main)/(tabs)/search/[id]/userGalery", params: { id: perfil.id, name: perfil.fullname } })
     }
 
     const navigateToReviewDetail = () => {
         router.push({ pathname: "/(main)/(tabs)/search/[id]/reviewDetail", params: { id: perfil.id, name: perfil.fullname, imageProfile: perfil.imageProfile } })
+    }
+
+    // función para navegar al chat
+    const navigateToChat = () => {
+        if (!currentUserId || !perfil) return;
+
+        // Crear el chatId 
+        const chatId = currentUserId < perfil.id
+            ? `${currentUserId}_${perfil.id}`
+            : `${perfil.id}_${currentUserId}`;
+
+        // Navegar a la conversación con todos los parámetros necesarios
+        router.push({
+            pathname: "/(main)/(tabs)/messages/conversation",
+            params: {
+                chatId: chatId,
+                otherUserId: perfil.id.toString(),
+                otherUserName: perfil.fullname,
+                otherUserImage: perfil.imageProfile || ''
+            }
+        });
+    }
+
+    const goBack = () => {
+        router.back();
     }
 
     useEffect(() => {
@@ -60,6 +89,16 @@ const UserDetail = () => {
         <SafeAreaView style={styles.container}>
             <ImageBackground source={imagePath.backgroundUDetails} style={styles.overlay} resizeMode='cover'>
 
+                {/* BACK ARROW */}
+                <View style={styles.backArrowContainer}>
+                    <Pressable
+                        style={({ pressed }) => [styles.backArrow, pressed && { opacity: 0.5 }]}
+                        onPress={goBack}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                    </Pressable>
+                </View>
+
                 {/* HEADER */}
                 <View style={styles.header}>
                     <Image source={{ uri: perfil.imageProfile }} style={styles.imagen} />
@@ -70,7 +109,14 @@ const UserDetail = () => {
                             <Text style={styles.ubication}>{perfil.location}</Text>
                         </View>
                         <Text style={styles.jobDescription}>{perfil.jobDescription}</Text>
-                        <Pressable style={styles.sendMessageBottom}>
+
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.sendMessageBottom,
+                                pressed && { opacity: 0.8 },
+                            ]}
+                            onPress={navigateToChat}
+                        >
                             <Ionicons name='send' size={15} color={'#0E3549'} />
                             <Text style={styles.sendText}>Enviar mensaje</Text>
                         </Pressable>
@@ -131,6 +177,20 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 
+    /* ----------------------------------- BACK ARROW -----------------------------------*/
+    backArrowContainer: {
+        position: 'absolute',
+        top: moderateScale(10),
+        left: moderateScale(15),
+        zIndex: 1,
+    },
+
+    backArrow: {
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        borderRadius: moderateScale(20),
+        padding: moderateScale(8),
+    },
+
     /* ----------------------------------- HEADER -----------------------------------*/
 
     header: {
@@ -138,6 +198,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         padding: moderateScale(20),
+        paddingTop: moderateScale(50),
     },
 
     imagen: {
@@ -180,7 +241,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: moderateScale(13),
         borderRadius: moderateScale(15),
         marginTop: moderateScale(5),
-        alignSelf: 'flex-start',
+        alignSelf: 'flex-end',
         gap: moderateScale(6)
 
     },

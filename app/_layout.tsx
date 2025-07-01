@@ -1,10 +1,20 @@
-import { StatusBar } from 'react-native'
+// app/_layout.tsx
+
+import { StatusBar } from 'react-native';
 import { Provider } from 'react-redux';
 import { store } from '../redux/store';
 import AppLoader from '@/components/AppLoader';
 import { Stack } from 'expo-router';
 
-//este root navigation es el que carga a la app
+export const linking = {
+  prefixes: ['myapp://'], 
+  config: {
+    screens: {
+      'reset-password': 'reset-password',
+    },
+  },
+};
+
 const RootNavigation = () => {
   return (
     <>
@@ -14,7 +24,7 @@ const RootNavigation = () => {
         <AppLoader />
       </Provider>
     </>
-  )
+  );
 };
 
 export default RootNavigation;

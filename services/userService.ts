@@ -24,7 +24,7 @@ export const getUserById = async (id: number) => {
 export const getUserPhotos = async (id: number): Promise<string[]> => {
     try {
         const response = await api.get(`/api/user/photos/${id}`);
-        return response.data; 
+        return response.data;
     } catch (error) {
         console.error('Error al obtener las fotos del usuario:', error);
         return [];
@@ -120,4 +120,72 @@ export const saveUserWorkerProfile = async (data: {
 }) => {
     const response = await api.put('/api/user/workerProfile', data);
     return response.data;
+};
+
+// actualizar id del oficio
+export const updateJob = async (id_job: number) => {
+    try {
+        const response = await api.put('/api/user/update-job', { id_job });
+        console.log(response.data)
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        console.log('error al actualizar la id del oficio')
+    }
+};
+
+// actualizar descripción del trabajo
+export const updateJobDescription = async (job_description: string) => {
+    try {
+        const response = await api.put('/api/user/update-job_description', { job_description });
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        console.log('error al actualizar la descripcion del trabajo')
+    }
+};
+
+
+// Actualizar nombre
+export const updateUserName = async (name: string) => {
+    try {
+        const response = await api.put('/api/user/update-name', { name });
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar el nombre:', error);
+        throw error;
+    }
+};
+
+// Actualizar número de teléfono
+export const updatePhoneNumber = async (phoneNumber: string) => {
+    try {
+        const response = await api.put('/api/user/update-phone', { phoneNumber });
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar el número de teléfono:', error);
+        throw error;
+    }
+};
+
+// Actualizar descripción personal
+export const updateUserDescription = async (userDescription: string) => {
+    try {
+        const response = await api.put('/api/user/update-userDescription', { userDescription });
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar la descripción personal:', error);
+        throw error;
+    }
+};
+
+// Actualizar ubicación
+export const updateLocation = async (location: string) => {
+    try {
+        const response = await api.put('/api/user/update-location', { location });
+        return response.data;
+    } catch (error) {
+        console.error('Error al actualizar la ubicación:', error);
+        throw error;
+    }
 };

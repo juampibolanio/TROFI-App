@@ -6,57 +6,117 @@ import {
   StyleSheet,
   ScrollView,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
-import ChatButton from "@/components/chatButton";
 import SearchBar from "@/components/searchBar";
 import imagePath from "@/constants/imagePath";
 import { moderateScale } from "react-native-size-matters";
 
 import { ref, onValue } from "firebase/database";
 import { database } from "@/constants/firebaseConfig";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { getUserById } from "@/services/userService";
+import ChatButton from "@/components/atoms/ChatButton";
 
 type Chat = {
   chatId: string;
   namePerson: string;
-  profileImageSource: any; // ajusta según tu tipado de imagen
+  profileImageSource: { uri: string };
+  otherUserId: number;
 };
 
-const currentUserId = "2"; // cambiar por el usuario real
+const Loader = () => {
+  return (
+    <View style={loaderStyles.container}>
+      <ActivityIndicator size="large" color={"#ffffff"} />
+    </View>
+  )
+}
+
+const loaderStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
+});
 
 const Messages = () => {
+  const currentUserId = useSelector((state: RootState) => state.user.id);
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
+  const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
 
   useEffect(() => {
-    const chatsRef = ref(database, "chats");
-    const unsubscribe = onValue(chatsRef, (snapshot) => {
-      const chatsData = snapshot.val() || {};
-      const chatArray: Chat[] = [];
+    if (!currentUserId) return;
 
-      Object.keys(chatsData).forEach((chatId) => {
-        // Por ejemplo, si el id es '1_2' y currentUserId = '2', chequeamos si contiene '2'
-        if (chatId.includes(currentUserId)) {
-          chatArray.push({
-            chatId,
-            namePerson: "Id 2", // Podrías armar el nombre con lógica propia
-            profileImageSource: imagePath.logo, // o lógica para la imagen
-          });
+    const chatsRef = ref(database, "chats");
+
+    const unsubscribe = onValue(chatsRef, async (snapshot) => {
+      const chatsData = snapshot.val() || {};
+      const chatEntries = Object.keys(chatsData);
+      const userChats: Chat[] = [];
+
+      const promises = chatEntries.map(async (chatId) => {
+        if (chatId.includes(currentUserId.toString())) {
+          const [id1, id2] = chatId.split("_");
+          const otherUserId = id1 === currentUserId.toString() ? parseInt(id2) : parseInt(id1);
+
+          try {
+            const otherUser = await getUserById(otherUserId);
+
+            userChats.push({
+              chatId,
+              namePerson: otherUser.fullname,
+              profileImageSource: { uri: otherUser.imageProfile || imagePath.logo },
+              otherUserId: otherUser.id,
+            });
+          } catch (error) {
+            console.log("Error al obtener usuario por ID:", error);
+          }
         }
       });
 
-      setChats(chatArray);
+      await Promise.all(promises);
+      setChats(userChats);
+      setFilteredChats(userChats);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUserId]);
+
+  // Función para filtrar chats
+  const handleSearch = (text: string) => {
+    setSearchText(text);
+    if (text.trim() === "") {
+      setFilteredChats(chats);
+    } else {
+      const filtered = chats.filter(chat =>
+        chat.namePerson.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredChats(filtered);
+    }
+  };
+
+  // esto actualiza filteredChats cuando chats cambie
+  useEffect(() => {
+    if (searchText.trim() === "") {
+      setFilteredChats(chats);
+    } else {
+      const filtered = chats.filter(chat =>
+        chat.namePerson.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredChats(filtered);
+    }
+  }, [chats, searchText]);
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={{ color: "#fff", textAlign: "center", marginTop: 50 }}>
-          Cargando chats...
-        </Text>
+        <Loader />
       </SafeAreaView>
     );
   }
@@ -71,20 +131,33 @@ const Messages = () => {
         >
           <View style={styles.container2}>
             <View style={styles.search}>
-              <SearchBar placeHolder="Buscar" />
+              <SearchBar 
+                placeHolder="Buscar" 
+                value={searchText}
+                onChangeText={handleSearch}
+              />
             </View>
 
-            {chats.length === 0 && (
+            {filteredChats.length === 0 && searchText.trim() !== "" && (
+              <Text style={[styles.text, { textAlign: "center" }]}>
+                No se encontraron chats con "{searchText}".
+              </Text>
+            )}
+
+            {filteredChats.length === 0 && searchText.trim() === "" && (
               <Text style={[styles.text, { textAlign: "center" }]}>
                 No tenés chats todavía.
               </Text>
             )}
 
-            {chats.map(({ chatId, namePerson, profileImageSource }) => (
+            {filteredChats.map(({ chatId, namePerson, profileImageSource, otherUserId }) => (
               <ChatButton
                 key={chatId}
-                profileImageSource={profileImageSource}
+                chatId={chatId}
                 namePerson={namePerson}
+                profileImageSource={profileImageSource}
+                otherUserId={otherUserId}
+                senderId={currentUserId?.toString() ?? ""}
               />
             ))}
           </View>
