@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { store } from '../redux/store';
 
-const API_BASE_URL = 'http://192.168.0.17:8000'  
+const API_BASE_URL = 'http://10.0.2.2:5001/trofi-app-4e947/us-central1'  
 
 //url del backend y encabezado
 const api = axios.create({

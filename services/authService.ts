@@ -1,65 +1,88 @@
-import api from './api';
+import api from "./api";
 
-// Petición al backend para loguear un usuario.
+/**
+ * LOGIN
+ */
 export const loginRequest = async (email: string, password: string) => {
-    const response = await api.post('/api/login', {
-        email,
-        password
-    });
+    const response = await api.post("/auth/login", { email, password });
 
-    const { access_token, user } = response.data;
+    const {
+        idToken,
+        profile,
+        uid,
+        email: userEmail,
+        refreshToken,
+        expiresIn,
+    } = response.data.data;
 
     return {
-        token: access_token,
-        user
+        token: idToken,
+        refreshToken,
+        expiresIn,
+        user: {
+            uid,
+            email: userEmail,
+            profile,
+        },
     };
 };
 
-// Petición al backend para registrar un usuario.
+/**
+ * REGISTER
+ */
 export const registerRequest = async (formData: {
     name: string;
     email: string;
     password: string;
     phoneNumber: string;
 }) => {
-    const response = await api.post('/api/register', formData);
+    const response = await api.post("/auth/register", formData);
 
-    console.log(response);
-    const { access_token, data } = response.data;
+    const { user } = response.data.data;
 
     return {
-        token: access_token,
-        user: data,
+        user,
     };
 };
 
-//petición al backend para hacer logout
+/**
+ * ME
+ */
+export const meRequest = async () => {
+    const response = await api.get("/auth/me");
+    return response.data.data.profile;
+};
+
+/**
+ * LOGOUT
+ */
 export const logoutRequest = async () => {
     try {
-        const response = await api.get('/api/logout');
-        console.log(response)
-    } catch (e) {
-        console.error(e)
+        await api.get("/auth/logout");
+    } catch (error) {
+        console.error("Logout error:", error);
     }
 };
 
-//peticion para recuperar contraseña
-export const resetPassword = async ({
-    email,
-    token,
-    password,
-    password_confirmation,
-}: {
-    email: string;
-    token: string;
-    password: string;
-    password_confirmation: string;
-}) => {
-    const response = await api.post('/api/reset-password', {
-        email,
-        token,
-        password,
-        password_confirmation,
+/**
+ * FORGOT PASSWORD
+ */
+export const forgotPasswordRequest = async (email: string) => {
+    const response = await api.post("/auth/forgot-password", { email });
+    return response.data.data;
+};
+
+/**
+ * RESET PASSWORD
+ */
+export const resetPasswordRequest = async (
+    oobCode: string,
+    newPassword: string
+) => {
+    const response = await api.post("/auth/reset-password", {
+        oobCode,
+        newPassword,
     });
-    return response.data;
+
+    return response.data.data;
 };
