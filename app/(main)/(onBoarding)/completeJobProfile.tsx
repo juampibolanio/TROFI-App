@@ -25,9 +25,9 @@ import { router } from "expo-router";
 import { saveUserWorkerProfile } from "@/services/userService";
 import { fetchJobCategories } from "@/services/jobService";
 import { uploadProfileImage } from "@/services/imageService";
-import CustomAlert from "@/components/atoms/CustomAlert"; 
+import CustomAlert from "@/components/atoms/CustomAlert";
 
-const completeJobProfile = () => {
+const CompleteJobProfile = () => {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
     const [fontsLoaded] = useFonts(fonts);
@@ -47,11 +47,11 @@ const completeJobProfile = () => {
         showCancel: false,
         confirmText: 'Aceptar',
         cancelText: 'Cancelar',
-        onConfirm: () => {},
+        onConfirm: () => { },
         onCancel: undefined as (() => void) | undefined
     });
 
-    // Función  para mostrar alertas
+    // Función para mostrar alertas
     const showAlert = (config: Partial<typeof alertConfig>) => {
         setAlertConfig({
             visible: true,
@@ -72,7 +72,7 @@ const completeJobProfile = () => {
             try {
                 const jobs = await fetchJobCategories();
                 setJobs(jobs);
-                
+
                 if (jobs.length === 0) {
                     showAlert({
                         type: 'warning',
@@ -193,6 +193,18 @@ const completeJobProfile = () => {
     const handleSaveJobProfile = async () => {
         if (!validateForm()) return;
 
+        // Obtener UID del usuario
+        const uid = user.uid;
+        
+        if (!uid) {
+            showAlert({
+                type: 'error',
+                title: 'Error de sesión',
+                message: 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.'
+            });
+            return;
+        }
+
         // Mostrar confirmación antes de guardar
         showAlert({
             type: 'info',
@@ -204,29 +216,14 @@ const completeJobProfile = () => {
             onConfirm: async () => {
                 setIsLoading(true);
                 try {
-                    // Objeto para guardar en Redux y AsyncStorage
-                    const workerProfileData = {
+                    // Objeto para enviar al backend
+                    const apiPayload = {
                         dni: user.dni ?? "",
                         userDescription: user.userDescription ?? "",
                         imageProfile: user.imageProfile ?? "",
                         location: user.location ?? "",
-                        jobId: idJob,
-                        jobDescripction: jobDescription,
-                        jobImages: jobImages.map((uri, index) => ({
-                            id: index,
-                            url: uri,
-                        })),
-                        isWorker: true,
-                    };
-
-                    // Objeto para enviar al backend
-                    const apiPayload = {
-                        dni: workerProfileData.dni,
-                        userDescription: workerProfileData.userDescription,
-                        imageProfile: workerProfileData.imageProfile,
-                        location: workerProfileData.location,
-                        id_job: workerProfileData.jobId as number,
-                        job_description: workerProfileData.jobDescripction,
+                        id_job: idJob as number,
+                        job_description: jobDescription,
                         job_images: jobImages.map((uri, index) => ({
                             id: index,
                             url: uri,
@@ -234,7 +231,28 @@ const completeJobProfile = () => {
                         is_worker: true,
                     };
 
-                    await saveUserWorkerProfile(apiPayload);
+                    // Enviar al backend con UID
+                    await saveUserWorkerProfile(uid, apiPayload);
+
+                    // Objeto para guardar en Redux y AsyncStorage
+                    const workerProfileData = {
+                        uid: user.uid,
+                        name: user.name,
+                        email: user.email,
+                        phoneNumber: user.phoneNumber,
+                        dni: user.dni ?? "",
+                        userDescription: user.userDescription ?? "",
+                        imageProfile: user.imageProfile ?? "",
+                        location: user.location ?? "",
+                        id_job: idJob,
+                        job_description: jobDescription,
+                        job_images: jobImages.map((uri, index) => ({
+                            id: index,
+                            url: uri,
+                        })),
+                        is_worker: true,
+                    };
+
                     dispatch(setUserProfile(workerProfileData));
                     await storeData("user", workerProfileData);
 
@@ -250,12 +268,15 @@ const completeJobProfile = () => {
                         }
                     });
 
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Error guardando perfil:', error);
+                    const errorMessage = error?.response?.data?.message || 
+                        'No se pudo guardar el perfil laboral. Verifique su conexión e inténtelo nuevamente.';
+                    
                     showAlert({
                         type: 'error',
                         title: 'Error al guardar',
-                        message: 'No se pudo guardar el perfil laboral. Verifique su conexión e inténtelo nuevamente.'
+                        message: errorMessage
                     });
                 } finally {
                     setIsLoading(false);
@@ -317,7 +338,7 @@ const completeJobProfile = () => {
                             <View style={styles.underline} />
                             {jobDescription.length > 0 && (
                                 <Text style={styles.characterCount}>
-                                    {jobDescription.length}/100 caracteres
+                                    {jobDescription.length}/500 caracteres
                                 </Text>
                             )}
                         </View>
@@ -325,8 +346,8 @@ const completeJobProfile = () => {
                         {/* IMÁGENES */}
                         <View style={styles.fieldContainer}>
                             <View style={styles.imageHeader}>
-                                <Pressable 
-                                    style={[styles.buttonSecondary, isLoading && styles.disabledButton]} 
+                                <Pressable
+                                    style={[styles.buttonSecondary, isLoading && styles.disabledButton]}
                                     onPress={handleSelectImage}
                                     disabled={isLoading}
                                 >
@@ -338,14 +359,14 @@ const completeJobProfile = () => {
                                     {jobImages.length}/5 imágenes
                                 </Text>
                             </View>
-                            
+
                             {jobImages.length > 0 && (
                                 <View style={styles.imagesContainer}>
                                     {jobImages.map((uri, index) => (
                                         <View key={index} style={styles.imageItem}>
                                             <Image source={{ uri }} style={styles.jobImage} />
-                                            <Pressable 
-                                                style={styles.closeIcon} 
+                                            <Pressable
+                                                style={styles.closeIcon}
                                                 onPress={() => handleRemoveImage(index)}
                                             >
                                                 <Ionicons name="close-circle" size={20} color="#f00" />
@@ -358,8 +379,8 @@ const completeJobProfile = () => {
                     </View>
 
                     <View style={styles.footer}>
-                        <Pressable 
-                            style={[styles.button, isLoading && styles.disabledButton]} 
+                        <Pressable
+                            style={[styles.button, isLoading && styles.disabledButton]}
                             onPress={handleSaveJobProfile}
                             disabled={isLoading}
                         >
@@ -387,7 +408,7 @@ const completeJobProfile = () => {
     );
 };
 
-export default completeJobProfile;
+export default CompleteJobProfile;
 
 // ----------------- ESTILOS ----------------------
 
@@ -465,8 +486,8 @@ const styles = StyleSheet.create({
         fontSize: moderateScale(12),
     },
     imagesContainer: {
-        flexDirection: "row", 
-        flexWrap: "wrap", 
+        flexDirection: "row",
+        flexWrap: "wrap",
         gap: moderateScale(10),
     },
     imageItem: {

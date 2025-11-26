@@ -23,7 +23,7 @@ import { RootState } from '@/redux/store';
 import { setUserProfile } from '@/redux/slices/userSlice';
 import { storeData } from '@/utils/storage';
 
-const editEmploymentInfo = () => {
+const EditEmploymentInfo = () => {
     const user = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch();
 
@@ -33,7 +33,6 @@ const editEmploymentInfo = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingJobs, setIsLoadingJobs] = useState(true);
 
-    // Estados para CustomAlert
     const [alertConfig, setAlertConfig] = useState({
         visible: false,
         title: '',
@@ -53,9 +52,9 @@ const editEmploymentInfo = () => {
                 const fetchedJobs = await fetchJobCategories();
                 setJobs(fetchedJobs);
 
-                // Establecer valores iniciales desde Redux
-                if (user.jobId) setSelectedJobId(user.jobId);
-                if (user.jobDescripction) setJobDescription(user.jobDescripction);
+                // Establecer valores iniciales desde Redux usando nombres correctos
+                if (user.id_job) setSelectedJobId(user.id_job);
+                if (user.job_description) setJobDescription(user.job_description);
             } catch (e) {
                 console.error("Error cargando los trabajos", e);
                 showAlert({
@@ -94,21 +93,38 @@ const editEmploymentInfo = () => {
             return;
         }
 
+        // Obtener UID
+        const uid = user.uid;
+        
+        if (!uid) {
+            showAlert({
+                title: 'Error de sesión',
+                message: 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.',
+                type: 'error',
+                onConfirm: () => {
+                    hideAlert();
+                    router.replace('/(main)/(auth)');
+                }
+            });
+            return;
+        }
+
         setIsLoading(true);
         try {
-            await updateJob(selectedJobId);
-            await updateJobDescription(jobDescription.trim());
+            // Pasar UID a las funciones
+            await updateJob(uid, selectedJobId);
+            await updateJobDescription(uid, jobDescription.trim());
 
-            // Actualizar Redux
+            // Actualizar Redux con nombres correctos
             dispatch(setUserProfile({
-                jobId: selectedJobId,
-                jobDescripction: jobDescription.trim(),
+                id_job: selectedJobId,
+                job_description: jobDescription.trim(),
             }));
 
-            await storeData('userData', {
+            await storeData('user', {
                 ...user,
-                jobId: selectedJobId,
-                jobDescripction: jobDescription.trim(),
+                id_job: selectedJobId,
+                job_description: jobDescription.trim(),
             });
 
             showAlert({
@@ -149,7 +165,6 @@ const editEmploymentInfo = () => {
         });
     };
 
-    // Mostrar loader simple mientras cargan los trabajos (igual que en Search)
     if (isLoadingJobs) {
         return <Loader />;
     }
@@ -217,11 +232,9 @@ const editEmploymentInfo = () => {
                     />
                 </View>
 
-                {/* Loader simple cuando está guardando (igual que en Search) */}
                 {isLoading && <Loader />}
             </ImageBackground>
 
-            {/* Custom Alert */}
             <CustomAlert
                 visible={alertConfig.visible}
                 title={alertConfig.title}
@@ -297,4 +310,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default editEmploymentInfo;
+export default EditEmploymentInfo;

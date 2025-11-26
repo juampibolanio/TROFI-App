@@ -28,7 +28,6 @@ const EditPersonalInfo2 = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  // Estados para CustomAlert
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     title: '',
@@ -44,7 +43,6 @@ const EditPersonalInfo2 = () => {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        // Simular carga inicial y establecer valores desde Redux
         setTimeout(() => {
           if (user.location) {
             const [userLocalidad, userProvincia] = user.location.split(', ');
@@ -137,10 +135,27 @@ const EditPersonalInfo2 = () => {
   const handleSave = async () => {
     if (!validateForm()) return;
 
+    // Obtener UID
+    const uid = user.uid;
+    
+    if (!uid) {
+      showAlert({
+        title: 'Error de sesión',
+        message: 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.',
+        type: 'error',
+        onConfirm: () => {
+          hideAlert();
+          router.replace('/(main)/(auth)');
+        }
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await updateLocation(location);
-      await updateUserDescription(descripcion);
+      // 🔹 Enviar UID en body para cumplir con Joi
+      await updateLocation(uid, location);
+      await updateUserDescription(uid, descripcion);
 
       dispatch(setUserProfile({
         location,
@@ -170,7 +185,6 @@ const EditPersonalInfo2 = () => {
   };
 
   const handleCancel = () => {
-    // Verificar si hay cambios
     const hasChanges = (
       location !== (user.location || '') ||
       descripcion !== (user.userDescription || '')
@@ -195,7 +209,6 @@ const EditPersonalInfo2 = () => {
     }
   };
 
-  // Mostrar loader inicial simple
   if (isInitialLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -316,7 +329,6 @@ const EditPersonalInfo2 = () => {
           </View>
         </ScrollView>
 
-        {/* Loader overlay simple cuando está guardando */}
         {isLoading && (
           <View style={styles.loadingOverlay}>
             <Loader />
@@ -324,7 +336,6 @@ const EditPersonalInfo2 = () => {
         )}
       </ImageBackground>
 
-      {/* Custom Alert */}
       <CustomAlert
         visible={alertConfig.visible}
         title={alertConfig.title}
@@ -393,10 +404,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 25,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
@@ -433,32 +441,17 @@ const styles = StyleSheet.create({
   disabledCancelButtonText: {
     color: '#6c757d',
   },
-  
-  // Loader overlay simple
   loadingOverlay: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(14, 53, 73, 0.8)',
   },
 });
 
 const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    color: '#fff',
-    paddingVertical: 6,
-    fontSize: 14,
-  },
-  inputAndroid: {
-    color: '#fff',
-    paddingVertical: 6,
-    fontSize: 14,
-  },
-  placeholder: {
-    color: '#CFD8DC',
-  },
+  inputIOS: { color: '#fff', paddingVertical: 6, fontSize: 14 },
+  inputAndroid: { color: '#fff', paddingVertical: 6, fontSize: 14 },
+  placeholder: { color: '#CFD8DC' },
 });
 
 export default EditPersonalInfo2;

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import imagePath from '@/constants/imagePath';
-import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
+import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { useFonts } from '@expo-google-fonts/roboto';
 import BottomComponent from '@/components/atoms/BottomComponent';
 import { router } from 'expo-router';
@@ -24,19 +24,15 @@ import { useDispatch } from 'react-redux';
 import { loginRequest } from '@/services/authService';
 import { setCredentials } from '@/redux/slices/authSlice';
 import { storeData } from '@/utils/storage';
-import { userProfileRequest } from '@/services/userService';
 import { setUserProfile } from '@/redux/slices/userSlice';
 import CustomAlert from '@/components/atoms/CustomAlert';
 
 const Auth = () => {
-
     const [fontsLoaded] = useFonts(fonts);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isRemembered, setIsRemembered] = useState(false);
     const dispatch = useDispatch();
 
-    // Estados para el CustomAlert
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertConfig, setAlertConfig] = useState({
         title: '',
@@ -45,17 +41,14 @@ const Auth = () => {
         showCancel: false
     });
 
-    //ir a la pantalla de registro.
-    let navigateToRegister = () => {
-        router.push("/(main)/(auth)/register"); // error fixeado
+    const navigateToRegister = () => {
+        router.push("/(main)/(auth)/register");
     };
 
-    //ir a la pantalla home de la app
-    let navigateToHome = () => {
+    const navigateToHome = () => {
         router.push('/(main)/(tabs)/featured');
     }
 
-    // Función para mostrar alert
     const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
         setAlertConfig({
             title,
@@ -66,15 +59,11 @@ const Auth = () => {
         setAlertVisible(true);
     };
 
-    // Función para cerrar alert
     const closeAlert = () => {
         setAlertVisible(false);
     };
 
-    //procesar solicitud de login
     const handleLogin = async () => {
-        console.log("se ejecuto")
-
         // Validaciones básicas
         if (!email.trim()) {
             showAlert('Campo requerido', 'Por favor ingrese su correo electrónico', 'warning');
@@ -86,7 +75,6 @@ const Auth = () => {
             return;
         }
 
-        // Validación básica de email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             showAlert('Email inválido', 'Por favor ingrese un correo electrónico válido', 'warning');
@@ -94,47 +82,67 @@ const Auth = () => {
         }
 
         try {
+            // Petición al backend
             const data = await loginRequest(email, password);
 
-            const token = data.token;
-            const userEmail = data.user.email;
+            // Validar que el usuario exista
+            if (!data.user) {
+                showAlert('Error de autenticación', 'No se pudo obtener el perfil del usuario', 'error');
+                return;
+            }
 
-            //guardo en redux
-            dispatch(setCredentials({ token: token, email: email }));
-            await storeData('auth', { token: token, email: userEmail })
+            const profile = data.user;
 
-            //hago una peticion más para acceder al perfil completo del usuario 
-            const profileResponse = await userProfileRequest(userEmail);
+            // Guardar token, uid y email en Redux y AsyncStorage
+            dispatch(setCredentials({
+                token: data.token,
+                uid: data.uid,
+                email: data.email
+            }));
 
-            // Mapear campos al formato del Redux
+            await storeData('auth', {
+                token: data.token,
+                uid: data.uid,
+                email: data.email
+            });
+
+            // Formatear usuario para Redux (camelCase)
             const formattedUser = {
-                ...profileResponse,
-                isWorker: profileResponse.is_worker === 1,
-                jobId: profileResponse.id_job,
-                jobDescripction: profileResponse.job_description,
-                jobImages: Array.isArray(profileResponse.job_images)
-                    ? profileResponse.job_images.map((url: string, index: number) => ({ id: index, url }))
-                    : [],
+                uid: profile.uid,
+                name: profile.name || '',
+                email: profile.email || '',
+                phoneNumber: profile.phoneNumber || '',
+                dni: profile.dni || '',
+                userDescription: profile.userDescription || '',
+                imageProfile: profile.imageProfile || '',
+                location: profile.location || '',
+                is_worker: profile.is_worker || false,
+                id_job: profile.id_job || null,
+                job_description: profile.job_description || '',
+                job_images: Array.isArray(profile.job_images) ? profile.job_images : [],
             };
 
-            // Guardar en Redux y AsyncStorage
             dispatch(setUserProfile(formattedUser));
             await storeData('user', formattedUser);
 
-            // Mostrar mensaje de éxito antes de redirigir
+            // Alert y navegación
             showAlert('¡Bienvenido!', 'Inicio de sesión exitoso', 'success');
 
-            //delay para que se vea el mensaje de éxito
             setTimeout(() => {
                 closeAlert();
                 navigateToHome();
             }, 1500);
 
-        } catch (e) {
-            console.error(e);
-            showAlert('Error de autenticación', 'Las credenciales ingresadas son incorrectas. Por favor verifique su correo y contraseña.', 'error');
+        } catch (e: any) {
+            console.error('Error en handleLogin:', e.response?.data || e.message);
+
+            if (e.response?.data?.message) {
+                showAlert('Error de autenticación', e.response.data.message, 'error');
+            } else {
+                showAlert('Error de autenticación', 'Las credenciales ingresadas son incorrectas. Por favor verifique su correo y contraseña.', 'error');
+            }
         }
-    }
+    };
 
 
     return (
@@ -200,7 +208,6 @@ const Auth = () => {
                                         ----------------- O Inicia sesión con Google -----------------
                                     </Text>
                                     <View style={styles.icons}>
-
                                         <Pressable
                                             onPress={() => console.log('Google')}
                                             style={({ pressed }) => [
@@ -229,14 +236,12 @@ const Auth = () => {
                                         </Text>
                                     </Pressable>
                                 </View>
-
                             </View>
                         </ImageBackground>
                     </ScrollView>
                 </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
 
-            {/* Configuración de custom alert */}
             <CustomAlert
                 visible={alertVisible}
                 title={alertConfig.title}

@@ -22,13 +22,12 @@ import { router } from 'expo-router';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 import fonts from '@/constants/fonts';
 import { useDispatch } from 'react-redux';
-import { registerRequest } from '@/services/authService';
+import { registerRequest, loginRequest } from '@/services/authService'; // ✅ CAMBIO: Importar loginRequest
 import { setCredentials } from '@/redux/slices/authSlice';
 import { storeData } from '@/utils/storage';
 import { setUserProfile } from '@/redux/slices/userSlice';
 import CustomAlert from '@/components/atoms/CustomAlert';
 
-// Componente Loader
 const Loader = () => {
   return (
     <View style={loaderStyles.container}>
@@ -54,9 +53,8 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Estado para el loader
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Estados para el CustomAlert
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: '',
@@ -73,7 +71,6 @@ const RegisterScreen = () => {
     router.replace("/(main)/(onBoarding)");
   };
 
-  // Función para mostrar alert
   const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
     setAlertConfig({
       title,
@@ -84,32 +81,26 @@ const RegisterScreen = () => {
     setAlertVisible(true);
   };
 
-  // Función para cerrar alert
   const closeAlert = () => {
     setAlertVisible(false);
   };
 
-  // Validación de email
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Validación de teléfono con prefijos 
   const isValidArgentinePhone = (phone: string) => {
-    // Eliminar espacios para validar
     const phoneNoSpaces = phone.replace(/\s+/g, '');
-
-    // acá hago una expresión que acepta prefijos entre 2 y 4 dígitos, seguido de 6 a 8 dígitos
     const regex = /^(?:11|2\d{2,3}|3\d{2,3}|[34679]\d{2,3})\d{6,8}$/;
     return regex.test(phoneNoSpaces);
   };
 
   const handleRegister = async () => {
     try {
-      setIsLoading(true); // Activar loader
+      setIsLoading(true);
 
-      // Validación de campos vacíos
+      // Validaciones
       if (!firstName.trim()) {
         showAlert("Campo requerido", "Por favor, ingresa tu nombre.", 'warning');
         return;
@@ -140,25 +131,21 @@ const RegisterScreen = () => {
         return;
       }
 
-      // Validación de email
       if (!isValidEmail(email)) {
         showAlert("Email inválido", "Por favor, ingresa un correo electrónico válido.", 'warning');
         return;
       }
 
-      // Validación de contraseña
       if (password.length < 6) {
         showAlert("Contraseña corta", "La contraseña debe tener al menos 6 caracteres.", 'warning');
         return;
       }
 
-      // Validación de coincidencia de contraseñas
       if (password !== confirmPassword) {
         showAlert("Contraseñas no coinciden", "Las contraseñas ingresadas no son iguales. Por favor, verifícalas.", 'error');
         return;
       }
 
-      // Validación de teléfono
       if (!isValidArgentinePhone(phoneNumber)) {
         showAlert("Número inválido", "Por favor, ingresa un número de teléfono válido (Formato: código de área + número).", 'warning');
         return;
@@ -166,35 +153,53 @@ const RegisterScreen = () => {
 
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
 
-      const response = await registerRequest({
+      // ✅ PASO 1: Registrar usuario (NO devuelve token)
+      await registerRequest({
         name: fullName,
         email: email,
         password: password,
         phoneNumber: phoneNumber,
       });
 
-      const token = response.token;
-      const user = response.user;
+      // ✅ PASO 2: Hacer login automáticamente
+      const loginData = await loginRequest(email, password);
 
-      dispatch(setCredentials({ token, email: user.email }));
-      await storeData('auth', { token, email: user.email });
-
-      dispatch(setUserProfile({
-        id: user.id,
-        name: user.name,
-        phoneNumber: user.phoneNumber,
+      // ✅ PASO 3: Guardar credenciales con uid
+      dispatch(setCredentials({ 
+        token: loginData.token, 
+        uid: loginData.uid,
+        email: loginData.email 
       }));
-      await storeData('user', {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
+      
+      await storeData('auth', { 
+        token: loginData.token, 
+        uid: loginData.uid,
+        email: loginData.email 
       });
 
-      // Mostrar mensaje de éxito
+      // ✅ PASO 4: Guardar perfil del usuario
+      const profile = loginData.user;
+      
+      const formattedUser = {
+        uid: profile.uid, // ✅ uid en lugar de id
+        name: profile.name || '',
+        email: profile.email || '',
+        phoneNumber: profile.phoneNumber || '',
+        dni: profile.dni || '',
+        userDescription: profile.userDescription || '',
+        imageProfile: profile.imageProfile || '',
+        location: profile.location || '',
+        is_worker: profile.is_worker || false,
+        id_job: profile.id_job || null,
+        job_description: profile.job_description || '',
+        job_images: Array.isArray(profile.job_images) ? profile.job_images : [],
+      };
+
+      dispatch(setUserProfile(formattedUser));
+      await storeData('user', formattedUser);
+
       showAlert("¡Registro exitoso!", "Tu cuenta ha sido creada correctamente. Bienvenido a nuestra app.", 'success');
 
-      // delay para que se vea el mensaje de éxito
       setTimeout(() => {
         closeAlert();
         navigateToOnboarding();
@@ -202,15 +207,14 @@ const RegisterScreen = () => {
 
     } catch (e: any) {
       console.error(e);
+      
       if (e.response?.data) {
         const errors = e.response.data;
 
-        // Si hay errores específicos del servidor
         if (typeof errors === 'object') {
           const errorMessages = Object.values(errors).flat();
           const firstError = errorMessages[0] as string;
 
-          // Personalizar mensajes según el tipo de error
           if (firstError.toLowerCase().includes('email')) {
             showAlert("Email ya registrado", "Este correo electrónico ya está en uso. Por favor, usa otro correo o inicia sesión.", 'error');
           } else if (firstError.toLowerCase().includes('phone')) {
@@ -223,16 +227,14 @@ const RegisterScreen = () => {
         }
       } else {
         showAlert("Error de conexión", "No se pudo registrar el usuario. Por favor, verifica tu conexión a internet e intenta nuevamente.", 'error');
-      console.log(e);
       }
     } finally {
-      setIsLoading(false); // Desactivar loader siempre al final
+      setIsLoading(false);
     }
   };
 
   if (!fontsLoaded) return null;
 
-  // Si está cargando, mostrar el loader
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -335,7 +337,6 @@ const RegisterScreen = () => {
         </KeyboardAvoidingView>
       </ImageBackground>
 
-      {/* CustomAlert */}
       <CustomAlert
         visible={alertVisible}
         title={alertConfig.title}

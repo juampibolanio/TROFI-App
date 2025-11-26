@@ -1,65 +1,96 @@
 import api from './api';
 
-// Petición al backend para loguear un usuario.
-export const loginRequest = async (email: string, password: string) => {
-    const response = await api.post('/api/login', {
-        email,
-        password
-    });
+interface LoginResponseData {
+    message: string;
+    idToken: string;
+    refreshToken: string;
+    expiresIn: string;
+    uid: string;
+    email: string;
+    profile: any;
+}
 
-    const { access_token, user } = response.data;
+interface LoginResponse {
+    success: boolean;
+    message: string | null;
+    data: LoginResponseData;
+}
+
+interface RegisterResponse {
+    success: boolean;
+    message: string | null;
+    data: {
+        user: any;
+    };
+}
+
+// Login de usuario - retorna idToken de Firebase
+export const loginRequest = async (email: string, password: string) => {
+    const response = await api.post<LoginResponse>('/auth/login', { email, password });
+
+    const { idToken, uid, email: userEmail, profile } = response.data.data;
 
     return {
-        token: access_token,
-        user
+        token: idToken,
+        uid,
+        email: userEmail,
+        user: profile
     };
 };
 
-// Petición al backend para registrar un usuario.
+// Registro de usuario normal (no trabajador)
 export const registerRequest = async (formData: {
     name: string;
     email: string;
     password: string;
     phoneNumber: string;
 }) => {
-    const response = await api.post('/api/register', formData);
+    const response = await api.post<RegisterResponse>('/auth/register', formData);
 
-    console.log(response);
-    const { access_token, data } = response.data;
+    const { user } = response.data.data;
 
     return {
-        token: access_token,
-        user: data,
+        user,
     };
 };
 
-//petición al backend para hacer logout
-export const logoutRequest = async () => {
-    try {
-        const response = await api.get('/api/logout');
-        console.log(response)
-    } catch (e) {
-        console.error(e)
-    }
+// Registro de trabajador
+export const registerWorkerRequest = async (formData: {
+    name: string;
+    email: string;
+    password: string;
+    phoneNumber: string;
+    dni?: string;
+    location?: string;
+    id_job?: number;
+    job_description?: string;
+    userDescription?: string;
+}) => {
+    const response = await api.post('/users/worker/register', formData);
+
+    return response.data.data;
 };
 
-//peticion para recuperar contraseña
-export const resetPassword = async ({
-    email,
-    token,
-    password,
-    password_confirmation,
-}: {
-    email: string;
-    token: string;
-    password: string;
-    password_confirmation: string;
-}) => {
-    const response = await api.post('/api/reset-password', {
-        email,
-        token,
-        password,
-        password_confirmation,
-    });
+// Logout - revoca tokens de Firebase
+export const logoutRequest = async () => {
+    const response = await api.post('/auth/logout');
     return response.data;
+};
+
+// Solicitar email de recuperación de contraseña
+export const forgotPasswordRequest = async (email: string) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+};
+
+// Resetear contraseña con código (oobCode)
+export const resetPasswordRequest = async (oobCode: string, newPassword: string) => {
+    const response = await api.post('/auth/reset-password', { oobCode, newPassword });
+    return response.data;
+};
+
+// Obtener perfil del usuario autenticado
+export const getMeRequest = async () => {
+    const response = await api.get('/auth/me');
+    return response.data.data;
 };

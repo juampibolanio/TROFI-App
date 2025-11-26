@@ -15,7 +15,7 @@ import imagePath from '@/constants/imagePath';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import RNPickerSelect from 'react-native-picker-select';
 import { ubicacionesArgentina, provinciasArgentina } from '@/data/argentinaUbicaciones';
-import { saveUserProfile } from '@/services/userService';
+import { updateUserProfile } from '@/services/userService'; // ✅ CAMBIO: Usar updateUserProfile
 import { setImageProfile as setImageProfileAction, setUserProfile } from '@/redux/slices/userSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,6 +30,7 @@ import CustomAlert from '@/components/atoms/CustomAlert';
 const CompleteUserProfile = () => {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
+    const auth = useSelector((state: RootState) => state.auth); // ✅ CAMBIO: Obtener auth state
     const [fontsLoaded] = useFonts(fonts);
     const [dni, setDni] = useState('');
     const [userDescription, setUserDescription] = useState('');
@@ -38,7 +39,6 @@ const CompleteUserProfile = () => {
     const [provinciaSeleccionada, setProvinciaSeleccionada] = useState('');
     const [localidadSeleccionada, setLocalidadSeleccionada] = useState('');
 
-    // Estados para el CustomAlert
     const [alertVisible, setAlertVisible] = useState(false);
     const [alertConfig, setAlertConfig] = useState({
         title: '',
@@ -47,14 +47,12 @@ const CompleteUserProfile = () => {
         showCancel: false
     });
 
-    // Formatea la ubicación para backend
     useEffect(() => {
         if (provinciaSeleccionada && localidadSeleccionada) {
             setLocation(`${localidadSeleccionada}, ${provinciaSeleccionada}`);
         }
     }, [provinciaSeleccionada, localidadSeleccionada]);
 
-    // Función para mostrar alert
     const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
         setAlertConfig({
             title,
@@ -65,12 +63,10 @@ const CompleteUserProfile = () => {
         setAlertVisible(true);
     };
 
-    // Función para cerrar alert
     const closeAlert = () => {
         setAlertVisible(false);
     };
 
-    // Icono flecha para el select
     const DropdownIcon = () => (
         <Ionicons
             name="chevron-down"
@@ -80,7 +76,6 @@ const CompleteUserProfile = () => {
         />
     );
 
-    //handler para foto del usuario
     const handleSelectProfileImage = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
@@ -94,9 +89,8 @@ const CompleteUserProfile = () => {
                 try {
                     const uri = result.assets[0].uri;
                     const uploadedUrl = await uploadProfileImage(uri);
-                    setImageProfile(uploadedUrl); // Lo seteo en estado
-                    dispatch(setImageProfileAction(uploadedUrl)); // Guardo en Redux
-                    console.log(imageProfile);
+                    setImageProfile(uploadedUrl);
+                    dispatch(setImageProfileAction(uploadedUrl));
 
                     showAlert("¡Foto cargada!", "Tu foto de perfil se ha cargado correctamente.", 'success');
                 } catch (e) {
@@ -112,7 +106,7 @@ const CompleteUserProfile = () => {
 
     const handleSaveProfile = async () => {
         try {
-            // Validación de campos vacíos
+            // Validaciones
             if (!dni.trim()) {
                 showAlert("Campo requerido", "Por favor, ingresa tu número de DNI.", 'warning');
                 return;
@@ -138,21 +132,27 @@ const CompleteUserProfile = () => {
                 return;
             }
 
-            // Validación de DNI
-            const dniRegex = /^\d{8}$/;
+            const dniRegex = /^\d{7,8}$/;
             if (!dniRegex.test(dni)) {
-                showAlert("DNI inválido", "El DNI debe contener exactamente 8 números.", 'warning');
+                showAlert("DNI inválido", "El DNI debe contener entre 7 y 8 números.", 'warning');
                 return;
             }
 
-            // Validación de descripción (longitud mínima)
             if (userDescription.trim().length < 10) {
                 showAlert("Descripción muy corta", "La descripción debe tener al menos 10 caracteres.", 'warning');
                 return;
             }
 
-            // 1. Enviar al backend
-            await saveUserProfile({
+            // ✅ CAMBIO: Obtener UID del auth state
+            const uid = auth.uid || user.uid;
+            
+            if (!uid) {
+                showAlert("Error de sesión", "No se pudo identificar tu usuario. Por favor, inicia sesión nuevamente.", 'error');
+                return;
+            }
+
+            // ✅ CAMBIO: Enviar al backend con UID
+            await updateUserProfile(uid, {
                 dni,
                 userDescription,
                 imageProfile,
@@ -167,48 +167,36 @@ const CompleteUserProfile = () => {
                 location
             };
 
-            // 2. Guardar en Redux (el slice calculará isProfileComplete automáticamente)
             dispatch(setUserProfile(updatedUser));
-
-            // 3. Guardar en AsyncStorage
             await storeData('user', updatedUser);
 
-            // Mostrar mensaje de éxito
             showAlert("¡Perfil completado!", "Los datos fueron guardados correctamente. Bienvenido a Trofi.", 'success');
 
-            // Delay para que se vea el mensaje de éxito
             setTimeout(() => {
                 closeAlert();
                 router.replace('/(main)/(tabs)/featured');
             }, 2000);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
 
-            // Manejo de errores específicos
-            if (error && typeof error === 'object' && 'response' in error) {
-                const serverError = error as any;
-                if (serverError.response?.data) {
-                    const errors = serverError.response.data;
+            if (error.response?.data) {
+                const errors = error.response.data;
 
-                    if (typeof errors === 'object') {
-                        const errorMessages = Object.values(errors).flat();
-                        const firstError = errorMessages[0] as string;
+                if (typeof errors === 'object') {
+                    const errorMessages = Object.values(errors).flat();
+                    const firstError = errorMessages[0] as string;
 
-                        // Personalizar mensajes según el tipo de error
-                        if (firstError.toLowerCase().includes('dni')) {
-                            showAlert("DNI ya registrado", "Este número de DNI ya está registrado en el sistema.", 'error');
-                        } else {
-                            showAlert("Error del servidor", firstError, 'error');
-                        }
+                    if (firstError.toLowerCase().includes('dni')) {
+                        showAlert("DNI ya registrado", "Este número de DNI ya está registrado en el sistema.", 'error');
                     } else {
-                        showAlert("Error del servidor", errors.toString(), 'error');
+                        showAlert("Error del servidor", firstError, 'error');
                     }
                 } else {
-                    showAlert("Error de conexión", "No se pudo guardar el perfil. Verifica tu conexión a internet e intenta nuevamente.", 'error');
+                    showAlert("Error del servidor", errors.toString(), 'error');
                 }
             } else {
-                showAlert("Error inesperado", "Hubo un problema al guardar el perfil. Por favor, intenta nuevamente.", 'error');
+                showAlert("Error de conexión", "No se pudo guardar el perfil. Verifica tu conexión a internet e intenta nuevamente.", 'error');
             }
         }
     };
@@ -223,16 +211,13 @@ const CompleteUserProfile = () => {
                 <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
                     <View style={styles.header}>
                         <Image style={styles.icon} source={imagePath.icon} resizeMode="contain" />
-
                         <Text style={styles.title}>Complete su perfil</Text>
-
                         <Text style={styles.description}>
                             Complete su perfil para comenzar a buscar y contactar personas. Asegúrese de proporcionar información precisa y detallada para mejorar su experiencia en la aplicación.
                         </Text>
                     </View>
 
                     <View style={styles.body}>
-
                         {/* FOTO DE PERFIL */}
                         <View style={styles.photoContainer}>
                             <Pressable onPress={handleSelectProfileImage}>
@@ -344,7 +329,6 @@ const CompleteUserProfile = () => {
                 </ScrollView>
             </ImageBackground>
 
-            {/* CustomAlert */}
             <CustomAlert
                 visible={alertVisible}
                 title={alertConfig.title}
@@ -363,29 +347,24 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0E3549',
     },
-
     overlay: {
         flex: 1,
     },
-
     scrollContainer: {
         flexGrow: 1,
         paddingHorizontal: moderateScale(20),
         paddingVertical: moderateScale(20),
         gap: moderateScale(10)
     },
-
     header: {
         marginBottom: verticalScale(20),
     },
-
     icon: {
         width: moderateScale(50),
         height: moderateScale(50),
         alignSelf: 'center',
         marginBottom: moderateScale(10),
     },
-
     title: {
         fontSize: moderateScale(24),
         fontWeight: 'bold',
@@ -393,28 +372,23 @@ const styles = StyleSheet.create({
         marginBottom: moderateScale(10),
         textAlign: 'center',
     },
-
     description: {
         fontSize: moderateScale(14),
         color: '#ffffff',
         textAlign: 'left',
     },
-
     body: {
         flex: 1,
         alignItems: 'center',
     },
-
     fieldContainer: {
         width: '100%',
         marginBottom: moderateScale(20),
     },
-
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-
     input: {
         flex: 1,
         color: '#fff',
@@ -422,21 +396,18 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         fontSize: 14,
     },
-
     underline: {
         height: 1.5,
         backgroundColor: '#888',
         width: '100%',
         marginTop: 2,
     },
-
     characterCount: {
         color: '#ccc',
         fontSize: moderateScale(12),
         textAlign: 'right',
         marginTop: moderateScale(5),
     },
-
     photoContainer: {
         alignItems: 'center',
         marginBottom: verticalScale(10),
@@ -451,7 +422,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#888',
     },
-
     profileImage: {
         width: moderateScale(120),
         height: moderateScale(120),
@@ -460,23 +430,19 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#ccc',
     },
-
     imageText: {
         color: '#ccc',
         fontSize: moderateScale(12),
         marginTop: moderateScale(4),
         textAlign: 'center',
     },
-
     iconButton: {
         padding: 6,
         marginLeft: 4,
     },
-
     footer: {
         flex: 1
     },
-
     button: {
         backgroundColor: '#D9D9D9',
         padding: moderateScale(15),
@@ -485,7 +451,6 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginBottom: moderateScale(10)
     },
-
     buttonText: {
         color: '#000000',
         textAlign: 'center',
