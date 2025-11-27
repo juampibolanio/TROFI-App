@@ -1,73 +1,102 @@
-import { useEffect, useState } from 'react'
-import { View, Text, SafeAreaView, StyleSheet, ImageBackground, Image, Pressable } from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
+import { useEffect, useState } from 'react';
+import {
+    View,
+    Text,
+    SafeAreaView,
+    StyleSheet,
+    ImageBackground,
+    Image,
+    Pressable
+} from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 import imagePath from '@/constants/imagePath';
 import { moderateScale } from 'react-native-size-matters';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from '@expo-google-fonts/roboto';
 import fonts from '@/constants/fonts';
 import Loader from '@/components/atoms/Loader';
-import { getUserById } from '@/services/userService';
+import { getUserByUid } from '@/services/userService';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
 const UserDetail = () => {
-    const { id } = useLocalSearchParams();
+
+    // Acepta tanto /[uid] como /[id]
+    const params = useLocalSearchParams();
+    const uid = params.uid || params.id;
+
     const [fontsLoaded] = useFonts(fonts);
     const [perfil, setPerfil] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    const currentUserId = useSelector((state: RootState) => state.user.id);
+    // UID del usuario autenticado (dueño del chat)
+    const currentUserUid = useSelector((state: RootState) => state.user.uid);
 
     const navigateToUserGalery = () => {
-        router.push({ pathname: "/(main)/(tabs)/search/[id]/userGalery", params: { id: perfil.id, name: perfil.fullname } })
-    }
+        if (!perfil) return;
+        router.push({
+            pathname: "/(main)/(tabs)/search/[uid]/userGalery",
+            params: { uid: perfil.uid, name: perfil.name }
+        });
+    };
 
     const navigateToReviewDetail = () => {
-        router.push({ pathname: "/(main)/(tabs)/search/[id]/reviewDetail", params: { id: perfil.id, name: perfil.fullname, imageProfile: perfil.imageProfile } })
-    }
+        if (!perfil) return;
+        router.push({
+            pathname: "/(main)/(tabs)/search/[uid]/reviewDetail",
+            params: {
+                uid: perfil.uid,
+                name: perfil.name,
+                imageProfile: perfil.imageProfile
+            }
+        });
+    };
 
-    // función para navegar al chat
     const navigateToChat = () => {
-        if (!currentUserId || !perfil) return;
+        if (!currentUserUid || !perfil) return;
 
-        // Crear el chatId 
-        const chatId = currentUserId < perfil.id
-            ? `${currentUserId}_${perfil.id}`
-            : `${perfil.id}_${currentUserId}`;
+        const chatId =
+            currentUserUid < perfil.uid
+                ? `${currentUserUid}_${perfil.uid}`
+                : `${perfil.uid}_${currentUserUid}`;
 
-        // Navegar a la conversación con todos los parámetros necesarios
         router.push({
             pathname: "/(main)/(tabs)/messages/conversation",
             params: {
-                chatId: chatId,
-                otherUserId: perfil.id.toString(),
-                otherUserName: perfil.fullname,
+                chatId,
+                otherUserId: perfil.uid,
+                otherUserName: perfil.name,
                 otherUserImage: perfil.imageProfile || ''
             }
         });
-    }
+    };
 
     const goBack = () => {
         router.back();
-    }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const perfilData = await getUserById(Number(id));
+                if (!uid) {
+                    console.log("❌ No llegó UID a la vista");
+                    return;
+                }
 
-                setPerfil(perfilData);
-                console.log(perfilData);
+                const perfilData = await getUserByUid(uid as string);
+
+                setPerfil(perfilData.data);
+                console.log("📌 Perfil cargado:", perfilData);
+
             } catch (error) {
-                console.error("Error al obtener perfil o reseñas:", error);
+                console.error("Error al obtener perfil:", error);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [id]);
+    }, [uid]);
 
     if (!fontsLoaded || loading) {
         return (
@@ -89,7 +118,7 @@ const UserDetail = () => {
         <SafeAreaView style={styles.container}>
             <ImageBackground source={imagePath.backgroundUDetails} style={styles.overlay} resizeMode='cover'>
 
-                {/* BACK ARROW */}
+                {/* BACK */}
                 <View style={styles.backArrowContainer}>
                     <Pressable
                         style={({ pressed }) => [styles.backArrow, pressed && { opacity: 0.5 }]}
@@ -102,13 +131,20 @@ const UserDetail = () => {
                 {/* HEADER */}
                 <View style={styles.header}>
                     <Image source={{ uri: perfil.imageProfile }} style={styles.imagen} />
+
                     <View style={styles.infoContainer}>
-                        <Text style={styles.username}>{perfil.fullname}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Ionicons name="location-outline" size={14} color="white" style={{ marginRight: 4 }} />
-                            <Text style={styles.ubication}>{perfil.location}</Text>
-                        </View>
-                        <Text style={styles.jobDescription}>{perfil.jobDescription}</Text>
+                        <Text style={styles.username}>{perfil.name}</Text>
+
+                        {perfil.location ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons name="location-outline" size={14} color="white" style={{ marginRight: 4 }} />
+                                <Text style={styles.ubication}>{perfil.location}</Text>
+                            </View>
+                        ) : null}
+
+                        <Text style={styles.jobDescription}>
+                            {perfil.job_description || 'Sin descripción laboral'}
+                        </Text>
 
                         <Pressable
                             style={({ pressed }) => [
@@ -125,18 +161,22 @@ const UserDetail = () => {
 
                 {/* BODY */}
                 <View style={styles.body}>
+                    {/* DESCRIPCIÓN */}
                     <View style={styles.descriptionOverlay}>
                         <View style={styles.description}>
                             <Text style={styles.descriptionTitle}>Descripción</Text>
-                            <Text style={styles.descriptionText}>{perfil.userDescription}</Text>
+                            <Text style={styles.descriptionText}>
+                                {perfil.userDescription || 'Sin descripción personal'}
+                            </Text>
                         </View>
                     </View>
 
+                    {/* PUNTUACIÓN */}
                     <View style={styles.scoreOverlay}>
                         <View style={styles.score}>
                             <Text style={styles.scoreTitle}>Puntuación</Text>
                             <View style={styles.scoreContainer}>
-                                <Text style={styles.scoreNumber}>{perfil.score === 0 ? 'N/D' : perfil.score}</Text>
+                                <Text style={styles.scoreNumber}>N/D</Text>
                                 <Ionicons name="star-outline" size={30} color="#0E3549" />
                             </View>
                         </View>
@@ -160,38 +200,28 @@ const UserDetail = () => {
                             <Text style={styles.textBottom}>Galería de trabajo</Text>
                         </Pressable>
                     </View>
-
                 </View>
+
             </ImageBackground>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#0E3549',
-    },
+    container: { flex: 1, backgroundColor: '#0E3549' },
+    overlay: { flex: 1 },
 
-    overlay: {
-        flex: 1,
-    },
-
-    /* ----------------------------------- BACK ARROW -----------------------------------*/
     backArrowContainer: {
         position: 'absolute',
         top: moderateScale(10),
         left: moderateScale(15),
         zIndex: 1,
     },
-
     backArrow: {
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         borderRadius: moderateScale(20),
         padding: moderateScale(8),
     },
-
-    /* ----------------------------------- HEADER -----------------------------------*/
 
     header: {
         flexDirection: 'row',
@@ -200,36 +230,29 @@ const styles = StyleSheet.create({
         padding: moderateScale(20),
         paddingTop: moderateScale(50),
     },
-
     imagen: {
         width: moderateScale(115),
         height: moderateScale(115),
         borderRadius: moderateScale(60),
         borderColor: '#FFFFFF',
-        borderWidth: moderateScale(2)
+        borderWidth: moderateScale(2),
     },
+    infoContainer: { flex: 1, justifyContent: 'center', gap: moderateScale(5), marginLeft: moderateScale(15) },
 
-    infoContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        gap: moderateScale(5),
-        marginLeft: moderateScale(15),
-    },
     username: {
         fontSize: moderateScale(22),
         color: '#FFFFFF',
-        fontFamily: 'RobotoRegular'
+        fontFamily: 'RobotoRegular',
     },
     ubication: {
         fontSize: moderateScale(14),
         color: '#FFFFFF',
-        fontFamily: 'RobotoRegular'
-
+        fontFamily: 'RobotoRegular',
     },
     jobDescription: {
         fontSize: moderateScale(12),
         color: '#FFFFFF',
-        fontFamily: 'RobotoRegular'
+        fontFamily: 'RobotoRegular',
     },
 
     sendMessageBottom: {
@@ -242,39 +265,28 @@ const styles = StyleSheet.create({
         borderRadius: moderateScale(15),
         marginTop: moderateScale(5),
         alignSelf: 'flex-end',
-        gap: moderateScale(6)
-
+        gap: moderateScale(6),
     },
-
     sendText: {
         color: '#000000',
         fontSize: moderateScale(12),
         fontWeight: 'bold',
-        fontFamily: 'RobotoRegular'
+        fontFamily: 'RobotoRegular',
     },
 
-    sendIcon: {
-    },
-
-    /* ----------------------------------- BODY -----------------------------------*/
-    body: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: moderateScale(10),
-    },
+    body: { flexDirection: 'row', justifyContent: 'center', gap: moderateScale(10) },
 
     descriptionOverlay: {
         backgroundColor: '#696969',
         paddingVertical: moderateScale(4),
         paddingHorizontal: moderateScale(5),
-        borderRadius: moderateScale(15)
+        borderRadius: moderateScale(15),
     },
-
     scoreOverlay: {
         backgroundColor: '#696969',
         paddingVertical: moderateScale(4),
         paddingHorizontal: moderateScale(5),
-        borderRadius: moderateScale(10)
+        borderRadius: moderateScale(10),
     },
 
     description: {
@@ -282,21 +294,19 @@ const styles = StyleSheet.create({
         height: moderateScale(250),
         backgroundColor: '#D9D9D9',
         padding: moderateScale(10),
-        borderRadius: moderateScale(10)
+        borderRadius: moderateScale(10),
     },
-
     descriptionTitle: {
         borderRadius: moderateScale(10),
         padding: moderateScale(3),
         fontSize: moderateScale(20),
-        fontWeight: 'bold'
+        fontWeight: 'bold',
     },
-
     descriptionText: {
         backgroundColor: 'transparent',
         fontFamily: 'RobotoLight',
         fontSize: moderateScale(14),
-        textAlign: 'justify'
+        textAlign: 'justify',
     },
 
     score: {
@@ -304,60 +314,36 @@ const styles = StyleSheet.create({
         height: moderateScale(250),
         backgroundColor: '#D9D9D9',
         padding: moderateScale(10),
-        borderRadius: moderateScale(10)
+        borderRadius: moderateScale(10),
     },
-
     scoreTitle: {
         borderRadius: moderateScale(10),
         padding: moderateScale(3),
         fontSize: moderateScale(15),
         fontWeight: 'bold',
-        textAlign: 'center'
+        textAlign: 'center',
     },
+    scoreContainer: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+    scoreNumber: { fontSize: moderateScale(32), fontFamily: 'RobotoLight' },
 
-    scoreContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center'
-    },
-
-    scoreNumber: {
-        fontSize: moderateScale(32),
-        fontFamily: 'RobotoLight'
-    },
-    starIcon: {
-    },
-    /* ----------------------------------- FOOTER -----------------------------------*/
-
-    footer: {
-        justifyContent: 'center',
-    },
+    footer: { justifyContent: 'center' },
 
     profileBottomsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: moderateScale(15)
+        padding: moderateScale(15),
     },
-
-    communityReview: {
-        padding: moderateScale(12),
-        backgroundColor: '#D9D9D9',
-        borderRadius: moderateScale(12)
-    },
-
     workGalery: {
         padding: moderateScale(12),
         backgroundColor: '#D9D9D9',
-        borderRadius: moderateScale(12)
+        borderRadius: moderateScale(12),
     },
-
     textBottom: {
         color: '#000000',
         fontSize: moderateScale(12),
         fontFamily: 'RobotoRegular',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
     },
-
-})
+});
 
 export default UserDetail;

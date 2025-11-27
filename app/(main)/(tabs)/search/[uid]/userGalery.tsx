@@ -11,7 +11,7 @@ import {
     TouchableOpacity,
     Dimensions
 } from 'react-native';
-import { router, useLocalSearchParams, useRouter } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import imagePath from '@/constants/imagePath';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
@@ -24,9 +24,9 @@ import { Ionicons } from '@expo/vector-icons';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const UserGalery = () => {
-    const { id, name } = useLocalSearchParams();
+    // ⚠️ CAMBIO: Recibir uid en lugar de id
+    const { uid, name } = useLocalSearchParams();
 
-    const userId = parseInt(id as string);
     const [fontsLoaded] = useFonts(fonts);
     const [photos, setPhotos] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,11 +36,12 @@ const UserGalery = () => {
     const [previewVisible, setPreviewVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    //traigo las fotos del usuario
+    // Traer las fotos del usuario
     useEffect(() => {
         const fetchPhotos = async () => {
             try {
-                const data = await getUserPhotos(userId);
+                // ⚠️ CAMBIO: Pasar UID (string) a la función
+                const data = await getUserPhotos(uid as string);
                 setPhotos(data);
             } catch (err) {
                 console.error('Error al obtener fotos del usuario:', err);
@@ -50,8 +51,13 @@ const UserGalery = () => {
             }
         };
 
-        fetchPhotos();
-    }, [userId]);
+        if (uid) {
+            fetchPhotos();
+        } else {
+            setLoading(false);
+            setError(true);
+        }
+    }, [uid]);
 
     // Mostrar imagen en vista previa
     const handleImagePress = (imageUrl: string) => {
@@ -85,6 +91,10 @@ const UserGalery = () => {
                     <View style={styles.imageContainer}>
                         {loading ? (
                             <Loader />
+                        ) : error ? (
+                            <Text style={styles.textNoImage}>
+                                Error al cargar las imágenes
+                            </Text>
                         ) : photos.length > 0 ? (
                             photos.map((uri, index) => (
                                 <TouchableOpacity
@@ -150,11 +160,9 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0E3549'
     },
-
     overlay: {
         flex: 1,
     },
-
     headerContainer: {
         position: 'absolute',
         zIndex: 10,
@@ -169,12 +177,10 @@ const styles = StyleSheet.create({
         minHeight: moderateScale(40),
         alignSelf: 'center',
     },
-
     backBottom: {
         padding: moderateScale(8),
         marginRight: moderateScale(6),
     },
-
     title: {
         flex: 1,
         textAlign: 'center',
@@ -183,13 +189,11 @@ const styles = StyleSheet.create({
         fontFamily: 'RobotoLight',
         color: '#000',
     },
-
     imageContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
     },
-
     image: {
         width: scale(150),
         height: scale(150),
@@ -198,11 +202,9 @@ const styles = StyleSheet.create({
         borderColor: '#FFFFFF',
         borderWidth: 2
     },
-
     scrollContent: {
         paddingTop: moderateScale(70),
     },
-
     textNoImage: {
         color: '#FFFFFF',
         fontSize: moderateScale(16),
@@ -210,23 +212,18 @@ const styles = StyleSheet.create({
         marginTop: verticalScale(20),
         fontFamily: 'RobotoLight',
     },
-
-    /* ----------------------------------- MODAL VISTA PREVIA -----------------------------------*/
-
     modalContainer: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.9)',
         justifyContent: 'center',
         alignItems: 'center',
     },
-
     modalBackground: {
         flex: 1,
         width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
     },
-
     modalContent: {
         flex: 1,
         width: '100%',
@@ -234,7 +231,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         position: 'relative',
     },
-
     closeButton: {
         position: 'absolute',
         top: moderateScale(50),
@@ -244,7 +240,6 @@ const styles = StyleSheet.create({
         borderRadius: moderateScale(20),
         padding: moderateScale(5),
     },
-
     previewImage: {
         width: screenWidth,
         height: screenHeight * 0.8,

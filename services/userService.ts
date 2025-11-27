@@ -40,7 +40,7 @@ export const getMeRequest = async () => {
 // Obtener fotos (solo URLs)
 export const getUserPhotos = async (uid: string): Promise<string[]> => {
   try {
-    const res = await api.get(`/users/photos/${uid}`);
+    const res = await api.get(`/users/photos/user/${uid}`);
     return res.data;
   } catch (err) {
     console.error('Error al obtener las fotos del usuario:', err);
@@ -95,22 +95,28 @@ export const searchWorkers = async ({
   selectedJobId,
 }: {
   searchText: string;
-  selectedJobId: number | null;
+  selectedJobId: string | null;
 }) => {
   try {
-    const res = await api.get('/users/workers/search', {
+    const res = await api.get("/users/workers/search", {
       params: {
-        search: searchText,
-        id_job: selectedJobId ?? '',
+        search: searchText || "",
+        id_job: selectedJobId || "",
       },
     });
 
-    return res.data?.workers ?? [];
-  } catch (err) {
-    console.error('Error al buscar trabajadores:', err);
+    console.log("🔵 RESPUESTA DEL BACKEND:", res.data);
+
+    // 👇 Esta es la clave correcta
+    return res.data.data?.workers ?? [];
+  } catch (error) {
+    console.error("❌ Error al buscar trabajadores:", error);
     return [];
   }
 };
+
+
+
 
 /* ================================
    ACTUALIZACIONES DE PERFIL

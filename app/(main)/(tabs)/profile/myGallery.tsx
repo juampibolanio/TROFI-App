@@ -26,6 +26,7 @@ import fonts from '@/constants/fonts';
 import { useFonts } from '@expo-google-fonts/roboto';
 import CustomAlert from '@/components/atoms/CustomAlert';
 import Loader from '@/components/atoms/Loader';
+import { storeData } from '@/utils/storage';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -65,7 +66,7 @@ const MyGallery = () => {
 
       // ⚠️ CAMBIO CRÍTICO: Usar UID en lugar de ID
       const uid = user.uid;
-      
+
       if (!uid) {
         console.log('No hay UID de usuario disponible');
         setIsLoading(false);
@@ -106,9 +107,7 @@ const MyGallery = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (job_images.length === 0) {
-        loadUserPhotos();
-      }
+      loadUserPhotos(); // siempre recarga las fotos al enfocar la pantalla
     }, [])
   );
 
@@ -141,33 +140,39 @@ const MyGallery = () => {
     if (!result.canceled && result.assets?.length > 0) {
       try {
         const localUri = result.assets[0].uri;
-        const uploadedUrl = await uploadProfileImage(localUri);
-        
-        // ⚠️ CAMBIO: Pasar UID
-        const imageData = await uploadPhoto(uid, uploadedUrl);
-        dispatch(addUserPhoto(imageData.image));
 
+        // 1) Subir a Firebase Storage → devuelve URL pública
+        const uploadedUrl = await uploadProfileImage(localUri);
+
+        // 2) Guardar en RTDB mediante Express → devuelve { id, url }
+        await uploadPhoto(uid, uploadedUrl);
+
+        // 3) 🔥 RECARGAR TODAS LAS FOTOS DESDE EL SERVIDOR
+        await loadUserPhotos();
+
+        // 4) Alert de éxito
         showAlert({
-          type: 'success',
-          title: '¡Éxito!',
-          message: 'La imagen se subió correctamente a tu galería.',
+          type: "success",
+          title: "¡Éxito!",
+          message: "La imagen se subió correctamente a tu galería.",
           showCancel: false,
-          confirmText: 'Continuar',
+          confirmText: "Continuar",
           onConfirm: () => setAlertVisible(false),
           onCancel: () => { },
-          cancelText: ''
+          cancelText: "",
         });
       } catch (e) {
-        console.error('Error al subir la imagen:', e);
+        console.error("Error al subir la imagen:", e);
+
         showAlert({
-          type: 'error',
-          title: 'Error',
-          message: 'No se pudo subir la imagen. Verifica tu conexión e intenta nuevamente.',
+          type: "error",
+          title: "Error",
+          message: "No se pudo subir la imagen. Verifica tu conexión e intenta nuevamente.",
           showCancel: false,
-          confirmText: 'Reintentar',
+          confirmText: "Reintentar",
           onConfirm: () => setAlertVisible(false),
           onCancel: () => { },
-          cancelText: ''
+          cancelText: "",
         });
       }
     }
