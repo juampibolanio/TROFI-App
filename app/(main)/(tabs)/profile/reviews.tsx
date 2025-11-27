@@ -3,8 +3,8 @@ import UserReviewDetail from '@/components/userReviewDetail';
 import imagePath from '@/constants/imagePath';
 import { getUserReviews } from '@/services/reviewService';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import {
   ScrollView,
   Pressable,
   Text,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { moderateScale } from 'react-native-size-matters';
@@ -19,38 +20,50 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
 type Reviewer = {
+  uid: string;
   name?: string;
   imageProfile?: string;
 };
 
 type Review = {
+  id: string;
   reviewer?: Reviewer;
   description: string;
   score: number;
+  created_at: string;
 };
 
 const MyReviews = () => {
-  const userId = useSelector((state: RootState) => state.user.id);
-  const username = useSelector((state: RootState) => state.user.name);
+  const userUid = useSelector((state: RootState) => state.user.uid);
   const [reviewsData, setReviewsData] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const data = await getUserReviews(Number(userId));
-        setReviewsData(data || []);
-      } catch (error) {
-        console.error('Error al obtener reseñas:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchReviews = async () => {
+    if (!userUid) return;
 
-    if (userId) {
-      fetchReviews();
+    try {
+      const data = await getUserReviews(userUid);
+      setReviewsData(data || []);
+    } catch (error) {
+      console.error('Error al obtener reseñas:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  }, [userId]);
+  };
+
+  // Cargar reseñas al enfocar la pantalla
+  useFocusEffect(
+    useCallback(() => {
+      fetchReviews();
+    }, [userUid])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchReviews();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,16 +82,31 @@ const MyReviews = () => {
         {loading ? (
           <Loader />
         ) : (
-          <ScrollView>
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#FFFFFF"
+                colors={["#FFFFFF"]}
+              />
+            }
+          >
             <View style={styles.reviewContainer}>
               {reviewsData.length === 0 ? (
-                <Text style={{ color: '#fff', textAlign: 'center' }}>
-                  Aún no tenés reseñas.
-                </Text>
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="star-outline" size={60} color="rgba(255,255,255,0.5)" />
+                  <Text style={styles.emptyText}>
+                    Aún no tenés reseñas.
+                  </Text>
+                  <Text style={styles.emptySubtext}>
+                    Las reseñas de otros usuarios aparecerán aquí
+                  </Text>
+                </View>
               ) : (
-                reviewsData.map((r, index) => (
+                reviewsData.map((r) => (
                   <UserReviewDetail
-                    key={index}
+                    key={r.id}
                     profileImage={
                       r.reviewer?.imageProfile
                         ? { uri: r.reviewer.imageProfile }
@@ -141,6 +169,25 @@ const styles = StyleSheet.create({
     borderTopRightRadius: moderateScale(15),
     gap: moderateScale(10),
     marginTop: moderateScale(60),
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(60),
+    gap: moderateScale(12),
+  },
+  emptyText: {
+    color: '#FFFFFF',
+    fontSize: moderateScale(16),
+    fontFamily: 'RobotoRegular',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  emptySubtext: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: moderateScale(13),
+    fontFamily: 'RobotoLight',
+    textAlign: 'center',
   },
 });
 
