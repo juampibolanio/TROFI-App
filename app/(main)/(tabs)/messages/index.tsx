@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,28 +9,29 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
+  Image,
+  Alert,
 } from "react-native";
 import SearchBar from "@/components/searchBar";
 import imagePath from "@/constants/imagePath";
 import { moderateScale } from "react-native-size-matters";
 import { Ionicons } from '@expo/vector-icons';
-
-import { ref, onValue, query, orderByChild, limitToLast } from "firebase/database";
-import { database } from "@/constants/firebaseConfig";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { getUserById } from "@/services/userService";
-import ChatButton from "@/components/atoms/ChatButton";
+import { getUserByUid } from "@/services/userService";
+import { getUserChats, deleteChat } from "@/services/messageService";
+import { router, useFocusEffect } from "expo-router";
 
 type Chat = {
-  chatId: string;
-  namePerson: string;
-  profileImageSource: { uri: string };
-  otherUserId: number;
-  lastMessage?: string;
-  lastMessageTime?: number;
-  lastMessageSender?: string;
-  isRead?: boolean;
+  id: string;
+  participants: string[];
+  lastMessage: string;
+  timestamp: number;
+  readBy: { [uid: string]: boolean };
+  isUnread: boolean;
+  otherUserUid: string;
+  otherUserName: string;
+  otherUserImage: string;
 };
 
 const Loader = () => {
@@ -39,8 +40,8 @@ const Loader = () => {
       <ActivityIndicator size="large" color={"#ffffff"} />
       <Text style={loaderStyles.loadingText}>Cargando chats...</Text>
     </View>
-  )
-}
+  );
+};
 
 const loaderStyles = StyleSheet.create({
   container: {
@@ -85,117 +86,83 @@ const EmptyState = ({ searchText, onClearSearch }: { searchText: string, onClear
 };
 
 const Messages = () => {
-  const currentUserId = useSelector((state: RootState) => state.user.id);
+  const currentUserUid = useSelector((state: RootState) => state.user.uid);
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [filteredChats, setFilteredChats] = useState<Chat[]>([]);
 
-  // Función para obtener el último mensaje de un chat
-  const getLastMessage = (chatId: string): Promise<{ lastMessage: string; lastMessageTime: number; lastMessageSender: string; isRead: boolean } | null> => {
-    return new Promise((resolve) => {
-      const messagesRef = ref(database, `chats/${chatId}/messages`);
-      const lastMessageQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(1));
+  /**
+   * Carga los chats del usuario desde el backend
+   */
+  const loadChats = async () => {
+    if (!currentUserUid) return;
 
-      onValue(lastMessageQuery, (snapshot) => {
-        const messages = snapshot.val();
-        if (messages) {
-          const messageKey = Object.keys(messages)[0];
-          const message = messages[messageKey];
-          resolve({
-            lastMessage: message.text || "📷 Imagen",
-            lastMessageTime: message.timestamp,
-            lastMessageSender: message.senderId,
-            isRead: currentUserId != null ? message.readBy?.[currentUserId.toString()] || false : false
-          });
-        } else {
-          resolve(null);
-        }
-      }, { onlyOnce: true });
-    });
-  };
+    try {
+      const response = await getUserChats(currentUserUid);
+      const chatsData = response.data.chats;
 
-  // Función para formatear el tiempo
-  const formatTime = (timestamp: number) => {
-    const now = new Date();
-    const messageDate = new Date(timestamp);
-    const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+      // Enriquecer cada chat con información del otro usuario
+      const enrichedChats = await Promise.all(
+        chatsData.map(async (chat: any) => {
+          try {
+            // Encontrar el UID del otro participante
+            const otherUserUid = chat.participants.find((uid: string) => uid !== currentUserUid);
 
-    if (diffInHours < 24) {
-      return messageDate.toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } else if (diffInHours < 168) { // menos de una semana
-      return messageDate.toLocaleDateString('es-ES', {
-        weekday: 'short'
-      });
-    } else {
-      return messageDate.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit'
-      });
+            if (!otherUserUid) return null;
+
+            // Obtener información del otro usuario
+            const otherUserResponse = await getUserByUid(otherUserUid);
+            const otherUser = otherUserResponse.data;
+
+            // readBy es un objeto { uid: true }, no un array
+            const readByObj = chat.readBy || {};
+            const isUnread = !readByObj[currentUserUid || ''];
+
+            return {
+              id: chat.id,
+              participants: chat.participants,
+              lastMessage: chat.lastMessage || '',
+              timestamp: chat.timestamp || Date.now(),
+              readBy: readByObj,
+              isUnread,
+              otherUserUid,
+              otherUserName: otherUser.name || 'Usuario',
+              otherUserImage: otherUser.imageProfile || '',
+            };
+          } catch (error) {
+            console.error('Error al obtener datos del usuario:', error);
+            return null;
+          }
+        })
+      );
+
+      // Filtrar chats nulos y ordenar por timestamp
+      const validChats = enrichedChats
+        .filter((chat): chat is Chat => chat !== null)
+        .sort((a, b) => b.timestamp - a.timestamp);
+
+      setChats(validChats);
+      setFilteredChats(validChats);
+    } catch (error: any) {
+      console.error("Error al cargar chats:", error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'No se pudieron cargar los chats'
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const loadChats = async () => {
-    if (!currentUserId) return;
-
-    const chatsRef = ref(database, "chats");
-
-    const unsubscribe = onValue(chatsRef, async (snapshot) => {
-      try {
-        const chatsData = snapshot.val() || {};
-        const chatEntries = Object.keys(chatsData);
-        const userChats: Chat[] = [];
-
-        const promises = chatEntries.map(async (chatId) => {
-          if (chatId.includes(currentUserId.toString())) {
-            const [id1, id2] = chatId.split("_");
-            const otherUserId = id1 === currentUserId.toString() ? parseInt(id2) : parseInt(id1);
-
-            try {
-              const otherUser = await getUserById(otherUserId);
-              const lastMessageData = await getLastMessage(chatId);
-
-              userChats.push({
-                chatId,
-                namePerson: otherUser.fullname,
-                profileImageSource: { uri: otherUser.imageProfile || imagePath.logo },
-                otherUserId: otherUser.id,
-                lastMessage: lastMessageData?.lastMessage,
-                lastMessageTime: lastMessageData?.lastMessageTime,
-                lastMessageSender: lastMessageData?.lastMessageSender,
-                isRead: lastMessageData?.isRead
-              });
-            } catch (error) {
-              console.log("Error al obtener usuario por ID:", error);
-            }
-          }
-        });
-
-        await Promise.all(promises);
-
-        // Ordenar chats por último mensaje (más reciente primero)
-        userChats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
-
-        setChats(userChats);
-        setFilteredChats(userChats);
-      } catch (error) {
-        console.error("Error al cargar chats:", error);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    });
-
-    return () => unsubscribe();
-  };
-
-  useEffect(() => {
-    loadChats();
-  }, [currentUserId]);
+  // Cargar chats al montar y cuando vuelva el foco
+  useFocusEffect(
+    useCallback(() => {
+      loadChats();
+    }, [currentUserUid])
+  );
 
   // Función para refrescar
   const onRefresh = () => {
@@ -210,7 +177,7 @@ const Messages = () => {
       setFilteredChats(chats);
     } else {
       const filtered = chats.filter(chat =>
-        chat.namePerson.toLowerCase().includes(text.toLowerCase())
+        chat.otherUserName.toLowerCase().includes(text.toLowerCase())
       );
       setFilteredChats(filtered);
     }
@@ -228,11 +195,78 @@ const Messages = () => {
       setFilteredChats(chats);
     } else {
       const filtered = chats.filter(chat =>
-        chat.namePerson.toLowerCase().includes(searchText.toLowerCase())
+        chat.otherUserName.toLowerCase().includes(searchText.toLowerCase())
       );
       setFilteredChats(filtered);
     }
   }, [chats, searchText]);
+
+  /**
+   * Navega a la conversación
+   */
+  const navigateToChat = (chat: Chat) => {
+    router.push({
+      pathname: "/(main)/(tabs)/messages/conversation",
+      params: {
+        chatId: chat.id,
+        otherUserId: chat.otherUserUid,
+        otherUserName: chat.otherUserName,
+        otherUserImage: chat.otherUserImage,
+      }
+    });
+  };
+
+  /**
+   * Elimina un chat (soft delete)
+   */
+  const handleDeleteChat = (chatId: string) => {
+    Alert.alert(
+      'Eliminar chat',
+      '¿Estás seguro que deseas eliminar esta conversación?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (!currentUserUid) return;
+              await deleteChat(chatId, currentUserUid);
+              loadChats(); // Recargar chats
+            } catch (error: any) {
+              console.error('Error al eliminar chat:', error);
+              Alert.alert('Error', 'No se pudo eliminar el chat');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  /**
+   * Formatea el timestamp
+   */
+  const formatTime = (timestamp: number) => {
+    const now = new Date();
+    const messageDate = new Date(timestamp);
+    const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return messageDate.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } else if (diffInHours < 168) {
+      return messageDate.toLocaleDateString('es-ES', {
+        weekday: 'short'
+      });
+    } else {
+      return messageDate.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit'
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -286,56 +320,44 @@ const Messages = () => {
               <EmptyState searchText={searchText} onClearSearch={clearSearch} />
             ) : (
               <View style={styles.chatsContainer}>
-                {filteredChats.map(({
-                  chatId,
-                  namePerson,
-                  profileImageSource,
-                  otherUserId,
-                  lastMessage,
-                  lastMessageTime,
-                  lastMessageSender,
-                  isRead
-                }) => (
-                  <View key={chatId} style={styles.chatItemContainer}>
-                    <ChatButton
-                      chatId={chatId}
-                      namePerson={namePerson}
-                      profileImageSource={profileImageSource}
-                      otherUserId={otherUserId}
-                      senderId={currentUserId?.toString() ?? ""}
+                {filteredChats.map((chat) => (
+                  <Pressable
+                    key={chat.id}
+                    style={({ pressed }) => [
+                      styles.chatItem,
+                      pressed && { opacity: 0.7 }
+                    ]}
+                    onPress={() => navigateToChat(chat)}
+                    onLongPress={() => handleDeleteChat(chat.id)}
+                  >
+                    {/* Imagen de perfil */}
+                    <Image
+                      source={{ uri: chat.otherUserImage || '' }}
+                      style={styles.profileImage}
+                      defaultSource={imagePath.defaultUserImage}
                     />
-                    {/* Previsualización del último mensaje */}
-                    {lastMessage && lastMessageTime && (
-                      <View style={styles.lastMessageContainer}>
-                        <View style={styles.messageContent}>
-                          <View style={styles.messageRow}>
-                            {/* Indicador de quién envió el mensaje */}
-                            <Text style={styles.senderIndicator}>
-                              {lastMessageSender === currentUserId?.toString() ? "Tú: " : ""}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.lastMessageText,
-                                !isRead && lastMessageSender !== currentUserId?.toString() && styles.unreadMessage
-                              ]}
-                              numberOfLines={1}
-                            >
-                              {lastMessage}
-                            </Text>
-                          </View>
-                          <View style={styles.timeContainer}>
-                            <Text style={styles.lastMessageTime}>
-                              {formatTime(lastMessageTime)}
-                            </Text>
-                            {/* Indicador de mensaje no leído */}
-                            {!isRead && lastMessageSender !== currentUserId?.toString() && (
-                              <View style={styles.unreadIndicator} />
-                            )}
-                          </View>
-                        </View>
+
+                    {/* Información del chat */}
+                    <View style={styles.chatInfo}>
+                      <View style={styles.chatHeader}>
+                        <Text style={styles.chatName}>{chat.otherUserName}</Text>
+                        <Text style={styles.chatTime}>{formatTime(chat.timestamp)}</Text>
                       </View>
-                    )}
-                  </View>
+
+                      <View style={styles.messageRow}>
+                        <Text
+                          style={[
+                            styles.lastMessage,
+                            chat.isUnread && styles.unreadMessage
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {chat.lastMessage || 'Sin mensajes'}
+                        </Text>
+                        {chat.isUnread && <View style={styles.unreadIndicator} />}
+                      </View>
+                    </View>
+                  </Pressable>
                 ))}
               </View>
             )}
@@ -388,54 +410,53 @@ const styles = StyleSheet.create({
   chatsContainer: {
     paddingHorizontal: 15,
   },
-  chatItemContainer: {
-    marginBottom: 8,
+  chatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: moderateScale(12),
+    borderRadius: moderateScale(15),
+    marginBottom: moderateScale(10),
   },
-  lastMessageContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    marginHorizontal: 10,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-    marginTop: -5,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(14, 53, 73, 0.1)',
+  profileImage: {
+    width: moderateScale(50),
+    height: moderateScale(50),
+    borderRadius: moderateScale(25),
+    marginRight: moderateScale(12),
+    backgroundColor: '#f0f0f0',
   },
-  messageContent: {
+  chatInfo: {
+    flex: 1,
+  },
+  chatHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: moderateScale(4),
+  },
+  chatName: {
+    fontSize: moderateScale(16),
+    fontWeight: 'bold',
+    color: '#0E3549',
+  },
+  chatTime: {
+    fontSize: moderateScale(11),
+    color: '#666',
   },
   messageRow: {
     flexDirection: 'row',
-    flex: 1,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  senderIndicator: {
-    fontSize: moderateScale(11),
-    color: "#0E3549",
-    fontWeight: '600',
-  },
-  lastMessageText: {
+  lastMessage: {
     flex: 1,
-    fontSize: moderateScale(11),
-    color: "#666",
-    marginRight: 8,
+    fontSize: moderateScale(13),
+    color: '#666',
+    marginRight: moderateScale(8),
   },
   unreadMessage: {
     fontWeight: '600',
-    color: "#0E3549",
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  lastMessageTime: {
-    fontSize: moderateScale(9),
-    color: "#0E3549",
-    fontWeight: '500',
+    color: '#0E3549',
   },
   unreadIndicator: {
     width: 8,

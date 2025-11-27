@@ -6,7 +6,8 @@ import {
     StyleSheet,
     ImageBackground,
     Image,
-    Pressable
+    Pressable,
+    Alert
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import imagePath from '@/constants/imagePath';
@@ -16,20 +17,20 @@ import { useFonts } from '@expo-google-fonts/roboto';
 import fonts from '@/constants/fonts';
 import Loader from '@/components/atoms/Loader';
 import { getUserByUid } from '@/services/userService';
+import { startChat } from '@/services/messageService';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
 const UserDetail = () => {
-
-    // Acepta tanto /[uid] como /[id]
     const params = useLocalSearchParams();
     const uid = params.uid || params.id;
 
     const [fontsLoaded] = useFonts(fonts);
     const [perfil, setPerfil] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [startingChat, setStartingChat] = useState(false);
 
-    // UID del usuario autenticado (dueño del chat)
+    // UID del usuario autenticado
     const currentUserUid = useSelector((state: RootState) => state.user.uid);
 
     const navigateToUserGalery = () => {
@@ -52,23 +53,46 @@ const UserDetail = () => {
         });
     };
 
-    const navigateToChat = () => {
-        if (!currentUserUid || !perfil) return;
+    /**
+     * Inicia o recupera un chat con el usuario
+     */
+    const navigateToChat = async () => {
+        if (!currentUserUid || !perfil) {
+            Alert.alert('Error', 'No se pudo identificar al usuario');
+            return;
+        }
 
-        const chatId =
-            currentUserUid < perfil.uid
-                ? `${currentUserUid}_${perfil.uid}`
-                : `${perfil.uid}_${currentUserUid}`;
+        if (currentUserUid === perfil.uid) {
+            Alert.alert('Aviso', 'No puedes iniciar un chat contigo mismo');
+            return;
+        }
 
-        router.push({
-            pathname: "/(main)/(tabs)/messages/conversation",
-            params: {
-                chatId,
-                otherUserId: perfil.uid,
-                otherUserName: perfil.name,
-                otherUserImage: perfil.imageProfile || ''
-            }
-        });
+        try {
+            setStartingChat(true);
+
+            // Llamar al backend para crear/obtener el chat
+            const response = await startChat(currentUserUid, perfil.uid, '');
+            const chatId = response.data.chatId;
+
+            // Navegar a la conversación
+            router.push({
+                pathname: "/(main)/(tabs)/messages/conversation",
+                params: {
+                    chatId,
+                    otherUserId: perfil.uid,
+                    otherUserName: perfil.name,
+                    otherUserImage: perfil.imageProfile || ''
+                }
+            });
+        } catch (error: any) {
+            console.error('Error al iniciar chat:', error);
+            Alert.alert(
+                'Error',
+                error.response?.data?.message || 'No se pudo iniciar el chat. Intenta nuevamente.'
+            );
+        } finally {
+            setStartingChat(false);
+        }
     };
 
     const goBack = () => {
@@ -84,7 +108,6 @@ const UserDetail = () => {
                 }
 
                 const perfilData = await getUserByUid(uid as string);
-
                 setPerfil(perfilData.data);
                 console.log("📌 Perfil cargado:", perfilData);
 
@@ -150,11 +173,22 @@ const UserDetail = () => {
                             style={({ pressed }) => [
                                 styles.sendMessageBottom,
                                 pressed && { opacity: 0.8 },
+                                startingChat && { opacity: 0.5 }
                             ]}
                             onPress={navigateToChat}
+                            disabled={startingChat}
                         >
-                            <Ionicons name='send' size={15} color={'#0E3549'} />
-                            <Text style={styles.sendText}>Enviar mensaje</Text>
+                            {startingChat ? (
+                                <>
+                                    <Loader />
+                                    <Text style={styles.sendText}>Abriendo chat...</Text>
+                                </>
+                            ) : (
+                                <>
+                                    <Ionicons name='send' size={15} color={'#0E3549'} />
+                                    <Text style={styles.sendText}>Enviar mensaje</Text>
+                                </>
+                            )}
                         </Pressable>
                     </View>
                 </View>
