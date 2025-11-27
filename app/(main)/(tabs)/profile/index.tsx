@@ -13,17 +13,40 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { moderateScale } from 'react-native-size-matters';
 import imagePath from '@/constants/imagePath';
+import { useEffect, useState } from 'react';
+import { getUserAverageScore } from '@/services/reviewService';
 
 const Perfil = () => {
   const user = useSelector((state: RootState) => state.user);
+  const [averageScore, setAverageScore] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [loadingScore, setLoadingScore] = useState(true);
+
+  useEffect(() => {
+    const fetchAverageScore = async () => {
+      if (!user.uid) return;
+
+      try {
+        const data = await getUserAverageScore(user.uid);
+        setAverageScore(data.averageScore);
+        setTotalReviews(data.totalReviews);
+      } catch (error) {
+        console.error('Error al obtener promedio:', error);
+      } finally {
+        setLoadingScore(false);
+      }
+    };
+
+    fetchAverageScore();
+  }, [user.uid]);
 
   const navigateToCompleteWork = () => {
     router.push('/(main)/(onBoarding)/completeJobProfile');
-  }
+  };
 
   const navigateToEditProfile = () => {
     router.push('/(main)/(tabs)/profile/editProfile');
-  }
+  };
 
   const navigateToMyReviews = () => {
     router.push('/profile/reviews');
@@ -83,9 +106,25 @@ const Perfil = () => {
             <View style={styles.score}>
               <Text style={styles.scoreTitle}>Puntuación</Text>
               <View style={styles.scoreContainer}>
-                <Text style={styles.scoreNumber}>N/D</Text>
-                <Ionicons name="star-outline" size={30} color="#0E3549" />
+                {loadingScore ? (
+                  <Text style={styles.scoreNumber}>...</Text>
+                ) : totalReviews > 0 ? (
+                  <>
+                    <Text style={styles.scoreNumber}>{averageScore.toFixed(1)}</Text>
+                    <Ionicons name="star" size={30} color="#FFD700" />
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.scoreNumber}>N/D</Text>
+                    <Ionicons name="star-outline" size={30} color="#0E3549" />
+                  </>
+                )}
               </View>
+              {totalReviews > 0 && (
+                <Text style={styles.totalReviewsText}>
+                  {totalReviews} {totalReviews === 1 ? 'reseña' : 'reseñas'}
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -247,11 +286,19 @@ const styles = StyleSheet.create({
   scoreContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginTop: moderateScale(10)
   },
   scoreNumber: {
     fontSize: moderateScale(32),
     fontFamily: 'RobotoLight'
+  },
+  totalReviewsText: {
+    fontSize: moderateScale(11),
+    color: '#666',
+    textAlign: 'center',
+    marginTop: moderateScale(8),
+    fontFamily: 'RobotoRegular'
   },
   footer: {
     justifyContent: 'center',
