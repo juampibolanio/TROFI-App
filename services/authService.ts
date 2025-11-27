@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 interface LoginResponseData {
     message: string;
@@ -46,6 +46,7 @@ export const registerRequest = async (formData: {
     phoneNumber: string;
 }) => {
     const response = await api.post<RegisterResponse>('/auth/register', formData);
+
 
     const { user } = response.data.data;
 
