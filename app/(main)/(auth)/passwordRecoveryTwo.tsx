@@ -9,9 +9,8 @@ import { useFonts } from '@expo-google-fonts/roboto';
 
 import imagePath from '@/constants/imagePath';
 import fonts from '@/constants/fonts';
-import api from '@/services/api';
+import { forgotPasswordRequest } from '@/services/authService'; // ✅ CAMBIO: Importar la función correcta
 
-import BottomComponent from '@/components/atoms/BottomComponent';
 import { CustomTextInput } from '@/components/atoms/CustomTextInput';
 import HorizontalRule from '@/components/atoms/HorizontalRule';
 
@@ -23,14 +22,35 @@ const PasswordRecovery = () => {
     const handleSendResetEmail = async () => {
         if (!email) return Alert.alert('Error', 'Por favor ingresa tu email.');
 
+        // Validación básica de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return Alert.alert('Email inválido', 'Por favor ingresa un correo electrónico válido.');
+        }
+
         try {
             setLoading(true);
-            await api.post('/api/forgot-password', { email }); // <--- este es tu endpoint correcto
-            Alert.alert('Éxito', 'Te enviamos un email con el enlace para reestablecer tu contraseña.');
+            // ✅ CAMBIO: Usar forgotPasswordRequest del authService
+            await forgotPasswordRequest(email);
+            
+            Alert.alert(
+                'Éxito', 
+                'Te enviamos un email con el enlace para restablecer tu contraseña. Revisa tu bandeja de entrada.'
+            );
             setEmail('');
         } catch (error: any) {
             console.error(error);
-            Alert.alert('Error', error?.response?.data?.message || 'Hubo un problema al enviar el correo.');
+            
+            // Manejo de errores mejorado
+            let errorMessage = 'Hubo un problema al enviar el correo.';
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
         }
@@ -43,7 +63,6 @@ const PasswordRecovery = () => {
                 style={styles.overlay}
                 resizeMode='cover'
             >
-
                 {/* HEADER */}
                 <View style={styles.header}>
                     <Image source={imagePath.icon} style={styles.iconStyle} resizeMode='contain' />
@@ -55,7 +74,7 @@ const PasswordRecovery = () => {
                     <View style={styles.titlesContainer}>
                         <Text style={styles.recoveryTittle}>Recuperar Contraseña</Text>
                         <Text style={styles.recoverySubtitle}>
-                            Para recuperar tu contraseña, enviaremos un mensaje a tu correo electrónico
+                            Para recuperar tu contraseña, enviaremos un mensaje a tu correo electrónico con un enlace para restablecerla.
                         </Text>
                     </View>
                     <HorizontalRule />
@@ -70,7 +89,7 @@ const PasswordRecovery = () => {
                         />
 
                         <TouchableOpacity
-                            style={styles.sendButton}
+                            style={[styles.sendButton, loading && styles.disabledButton]}
                             onPress={handleSendResetEmail}
                             disabled={loading}
                         >
@@ -87,7 +106,6 @@ const PasswordRecovery = () => {
                 <View style={styles.footer}>
                     <HorizontalRule />
                 </View>
-
             </ImageBackground>
         </SafeAreaView>
     );
@@ -145,6 +163,9 @@ const styles = StyleSheet.create({
         paddingVertical: verticalScale(13),
         paddingHorizontal: verticalScale(75),
         borderRadius: verticalScale(30),
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
     sendButtonText: {
         color: '#FFFFFF',

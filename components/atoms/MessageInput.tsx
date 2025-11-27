@@ -1,36 +1,53 @@
 import React, { useState } from 'react';
 import { View, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ref, push } from 'firebase/database';
-import { database } from '@/constants/firebaseConfig';
+import { sendMessage } from '@/services/messageService';
 
-type Props = {
+type MessageInputProps = {
     chatId: string;
     senderId: string;
-    otherUserId: number;
+    onMessageSent?: (message: any) => void;
 };
 
-const MessageInput: React.FC<Props> = ({ chatId, senderId, otherUserId }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ chatId, senderId, onMessageSent }) => {
     const [message, setMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
 
-    const sendMessage = async () => {
+    /**
+     * Envía un mensaje al backend
+     */
+    const handleSendMessage = async () => {
         if (!message.trim() || isSending) return;
+
+        if (!chatId || !senderId) {
+            Alert.alert('Error', 'Faltan datos para enviar el mensaje');
+            return;
+        }
 
         setIsSending(true);
 
         try {
-            const messagesRef = ref(database, `chats/${chatId}/messages`);
-            await push(messagesRef, {
-                senderId: senderId,
-                text: message.trim(),
-                timestamp: Date.now(),
-            });
+            const response = await sendMessage(chatId, senderId, message.trim());
+            const newMessage = response.data.message;
 
+            // Limpiar input
             setMessage('');
-        } catch (error) {
-            console.error('Error sending message:', error);
-            Alert.alert('Error', 'No se pudo enviar el mensaje');
+
+            // Callback para actualizar la UI inmediatamente
+            if (onMessageSent) {
+                onMessageSent({
+                    id: newMessage.id,
+                    senderId: newMessage.senderId,
+                    content: newMessage.content,
+                    timestamp: newMessage.timestamp,
+                });
+            }
+        } catch (error: any) {
+            console.error('Error al enviar mensaje:', error);
+            Alert.alert(
+                'Error',
+                error.response?.data?.message || 'No se pudo enviar el mensaje. Intenta nuevamente.'
+            );
         } finally {
             setIsSending(false);
         }
@@ -48,22 +65,23 @@ const MessageInput: React.FC<Props> = ({ chatId, senderId, otherUserId }) => {
                     multiline
                     maxLength={500}
                     returnKeyType="send"
-                    onSubmitEditing={sendMessage}
+                    onSubmitEditing={handleSendMessage}
                     blurOnSubmit={false}
+                    editable={!isSending}
                 />
 
                 <Pressable
                     style={[
                         styles.sendButton,
-                        { opacity: message.trim() ? 1 : 0.5 }
+                        { opacity: message.trim() && !isSending ? 1 : 0.5 }
                     ]}
-                    onPress={sendMessage}
+                    onPress={handleSendMessage}
                     disabled={!message.trim() || isSending}
                 >
                     <Ionicons
                         name="send"
                         size={20}
-                        color={message.trim() ? "#0E3549" : "#999"}
+                        color={message.trim() && !isSending ? "#0E3549" : "#999"}
                     />
                 </Pressable>
             </View>

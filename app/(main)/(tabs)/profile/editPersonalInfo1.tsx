@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, SafeAreaView, ImageBackground, ActivityIndicator,
+  StyleSheet, ScrollView, SafeAreaView, ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import imagePath from '@/constants/imagePath';
 import { updatePhoneNumber, updateUserName } from '@/services/userService';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setUserProfile } from '@/redux/slices/userSlice';
-import CustomAlert from '@/components/atoms/CustomAlert'; // Ajusta la ruta según tu estructura
-import Loader from '@/components/atoms/Loader'; // Ajusta la ruta según tu estructura
+import { RootState } from '@/redux/store';
+import CustomAlert from '@/components/atoms/CustomAlert';
+import Loader from '@/components/atoms/Loader';
 import { moderateScale } from 'react-native-size-matters';
 
 const EditPersonalInfo1 = () => {
   const router = useRouter();
   const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.user);
+
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [celular, setCelular] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  // Estados para el alert
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: '',
@@ -88,6 +90,24 @@ const EditPersonalInfo1 = () => {
   const handleSave = async () => {
     if (!validateInputs()) return;
 
+    // Obtener UID
+    const uid = user.uid;
+    
+    if (!uid) {
+      showAlert({
+        title: 'Error de sesión',
+        message: 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.',
+        type: 'error',
+        showCancel: false,
+        onConfirm: () => {
+          hideAlert();
+          router.replace('/(main)/(auth)');
+        },
+        onCancel: undefined,
+      });
+      return;
+    }
+
     const fullName = `${nombre.trim()} ${apellido.trim()}`;
     
     showAlert({
@@ -100,8 +120,9 @@ const EditPersonalInfo1 = () => {
         setIsLoading(true);
         
         try {
-          await updateUserName(fullName);
-          await updatePhoneNumber(celular);
+          // Pasar UID a las funciones
+          await updateUserName(uid, fullName);
+          await updatePhoneNumber(uid, celular);
 
           dispatch(setUserProfile({
             name: fullName,
@@ -122,6 +143,7 @@ const EditPersonalInfo1 = () => {
           });
         } catch (error) {
           setIsLoading(false);
+          console.error('Error al actualizar:', error);
           showAlert({
             title: 'Error',
             message: 'No se pudieron actualizar los datos. Por favor intenta nuevamente.',
@@ -218,12 +240,14 @@ const EditPersonalInfo1 = () => {
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Guardar y actualizar</Text>
             </TouchableOpacity>
+            
             <TouchableOpacity
               style={[styles.saveButton, { marginTop: 10 }]}
               onPress={() => router.push('/(main)/(tabs)/profile/editPersonalInfo2')}
             >
               <Text style={[styles.saveButtonText, { color: '#0E3549' }]}>Editar otros datos</Text>
             </TouchableOpacity>
+            
             <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>

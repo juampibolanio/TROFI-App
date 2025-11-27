@@ -1,23 +1,30 @@
-import React, { useEffect, useState, useRef } from "react";
-import { SafeAreaView, ScrollView, View, StyleSheet, Text, Image, Pressable, ActivityIndicator } from "react-native";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  StyleSheet,
+  Text,
+  Image,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  RefreshControl
+} from "react-native";
 import ReceivedMessage from "@/components/atoms/receivedMessage";
 import MessageSent from "@/components/atoms/messageSent";
-import ButtomMessage from "@/components/atoms/ChatButton";
 import { Ionicons } from '@expo/vector-icons';
-
-import { ref, onValue, off } from "firebase/database";
-import { database } from "@/constants/firebaseConfig";
-
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useLocalSearchParams, router } from "expo-router";
 import imagePath from "@/constants/imagePath";
 import MessageInput from "@/components/atoms/MessageInput";
+import { getMessages, markAsRead } from "@/services/messageService";
 
 type Message = {
   id: string;
   senderId: string;
-  text: string;
+  content: string;
   timestamp: number;
 };
 
@@ -27,8 +34,8 @@ const Loader = () => {
     <View style={loaderStyles.container}>
       <ActivityIndicator size="large" color={"#ffffff"} />
     </View>
-  )
-}
+  );
+};
 
 const loaderStyles = StyleSheet.create({
   container: {
@@ -46,9 +53,10 @@ const Conversation = () => {
     otherUserImage: string;
   }>();
 
-  const currentUserId = useSelector((state: RootState) => state.user.id);
+  const currentUserUid = useSelector((state: RootState) => state.user.uid);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const goBack = () => {
@@ -59,44 +67,99 @@ const Conversation = () => {
   const navigateToUserProfile = () => {
     if (otherUserId) {
       router.push({
-        pathname: "/(main)/(tabs)/search/[id]",
-        params: { id: otherUserId }
+        pathname: "/(main)/(tabs)/search/[uid]",
+        params: { uid: otherUserId }
       });
     }
   };
 
-  //configuración del chat
-  useEffect(() => {
+  /**
+   * Carga los mensajes del chat desde el backend
+   */
+  const loadMessages = useCallback(async () => {
     if (!chatId) return;
 
-    const messagesRef = ref(database, `chats/${chatId}/messages`);
-
-    const unsubscribe = onValue(messagesRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      const msgs: Message[] = Object.entries(data).map(([key, value]: any) => ({
-        id: key,
-        senderId: String(value.senderId || ''),
-        text: String(value.text || ''),
-        timestamp: Number(value.timestamp || 0),
+    try {
+      const response = await getMessages(chatId, 50);
+      const msgs: Message[] = response.data.messages.map((msg: any) => ({
+        id: msg.id,
+        senderId: msg.senderId,
+        content: msg.content,
+        timestamp: msg.timestamp,
       }));
-      msgs.sort((a, b) => a.timestamp - b.timestamp);
-      setMessages(msgs);
-      setIsLoading(false);
 
+      setMessages(msgs);
+
+      // Marcar mensajes como leídos si el usuario no es el remitente del último mensaje
+      if (currentUserUid && msgs.length > 0) {
+        const lastMessage = msgs[msgs.length - 1];
+        if (lastMessage.senderId !== currentUserUid) {
+          await markAsRead(chatId, currentUserUid).catch(err => 
+            console.log('Error al marcar como leído:', err)
+          );
+        }
+      }
+
+      // Scroll automático al final
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
-    });
+    } catch (error: any) {
+      console.error("Error al cargar mensajes:", error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'No se pudieron cargar los mensajes'
+      );
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  }, [chatId, currentUserUid]);
 
-    return () => off(messagesRef, "value", unsubscribe);
-  }, [chatId]);
+  // Cargar mensajes al montar el componente
+  useEffect(() => {
+    loadMessages();
 
-  const currentUserIdString = currentUserId ? String(currentUserId) : '';
+    // Polling cada 3 segundos para actualizar mensajes (puedes usar WebSockets en el futuro)
+    const interval = setInterval(() => {
+      loadMessages();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [loadMessages]);
+
+  // Función para refrescar mensajes
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadMessages();
+  };
+
+  /**
+   * Callback cuando se envía un mensaje nuevo
+   * Se llama desde MessageInput después de enviar
+   */
+  const handleNewMessage = (newMessage: Message) => {
+    setMessages(prev => [...prev, newMessage]);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
+
+  if (!currentUserUid) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: Usuario no autenticado</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container2}>
 
+        {/* HEADER */}
         <View style={styles.header}>
           <Pressable onPress={goBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#0E3549" />
@@ -119,46 +182,59 @@ const Conversation = () => {
           <Loader />
         ) : (
           <>
-            {/* Mensajes */}
+            {/* MENSAJES */}
             <ScrollView
               ref={scrollViewRef}
               style={styles.messagesScrollView}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.messagesContainer}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#0E3549"
+                  colors={["#0E3549"]}
+                />
+              }
             >
               {messages.length === 0 && (
                 <View style={styles.emptyContainer}>
+                  <Ionicons name="chatbubbles-outline" size={60} color="rgba(0,0,0,0.3)" />
                   <Text style={styles.emptyText}>No hay mensajes aún</Text>
                   <Text style={styles.emptySubtext}>Inicia la conversación</Text>
                 </View>
               )}
 
               {messages.map((msg) => {
-                if (!msg.id || !msg.text) return null;
+                if (!msg.id || !msg.content) return null;
 
-                return msg.senderId === currentUserIdString ? (
+                const messageTime = msg.timestamp 
+                  ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : '';
+
+                return msg.senderId === currentUserUid ? (
                   <MessageSent
                     key={msg.id}
-                    time={msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                    textMessage={msg.text}
+                    time={messageTime}
+                    textMessage={msg.content}
                   />
                 ) : (
                   <ReceivedMessage
                     key={msg.id}
                     profileImageSource={{ uri: otherUserImage || '' }}
-                    time={msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                    textMessage={msg.text}
+                    time={messageTime}
+                    textMessage={msg.content}
                   />
                 );
               })}
             </ScrollView>
 
-            {/* Input para escribir mensajes */}
+            {/* INPUT PARA ESCRIBIR MENSAJES */}
             <View style={styles.inputContainer}>
               <MessageInput
                 chatId={chatId || ''}
-                senderId={currentUserIdString}
-                otherUserId={Number(otherUserId) || 0}
+                senderId={currentUserUid}
+                onMessageSent={handleNewMessage}
               />
             </View>
           </>
@@ -230,6 +306,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     fontWeight: "500",
+    marginTop: 15,
   },
   emptySubtext: {
     fontSize: 14,
@@ -244,6 +321,15 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.1)",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 

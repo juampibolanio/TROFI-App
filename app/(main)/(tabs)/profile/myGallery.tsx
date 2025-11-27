@@ -26,48 +26,63 @@ import fonts from '@/constants/fonts';
 import { useFonts } from '@expo-google-fonts/roboto';
 import CustomAlert from '@/components/atoms/CustomAlert';
 import Loader from '@/components/atoms/Loader';
+import { storeData } from '@/utils/storage';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const MyGallery = () => {
   const dispatch = useDispatch();
-  const jobImages = useSelector((state: RootState) => state.user.jobImages) || [];
+  const job_images = useSelector((state: RootState) => state.user.job_images) || [];
   const user = useSelector((state: RootState) => state.user);
   const [fontsLoaded] = useFonts(fonts);
 
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);
-
-  // Estados para la vista previa
   const [previewVisible, setPreviewVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
   const [isLoading, setIsLoading] = useState(true);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    type: 'info' as 'success' | 'error' | 'warning' | 'info',
+    title: '',
+    message: '',
+    showCancel: false,
+    confirmText: 'Aceptar',
+    cancelText: 'Cancelar',
+    onConfirm: () => { },
+    onCancel: () => { }
+  });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   // Función para cargar las fotos del usuario
   const loadUserPhotos = async () => {
     try {
       setIsLoading(true);
 
-      // Verificar si tenemos el ID del usuario
-      if (!user.id) {
-        console.log('No hay ID de usuario disponible');
+      // ⚠️ CAMBIO CRÍTICO: Usar UID en lugar de ID
+      const uid = user.uid;
+
+      if (!uid) {
+        console.log('No hay UID de usuario disponible');
         setIsLoading(false);
         return;
       }
 
-      const photos = await getUserPhotos(user.id);
+      // ⚠️ CAMBIO: Llamar con UID
+      const photos = await getUserPhotos(uid);
 
-      // Si hay fotos, actualizamos el estado con todas las fotos
       if (Array.isArray(photos) && photos.length > 0) {
-        // Convertir las fotos al formato esperado si es necesario
-        const formattedPhotos = photos.map((photo: any) => ({
-          id: photo.id,
-          url: typeof photo.url === 'string' ? photo.url : (typeof photo === 'string' ? photo : ''),
+        const formattedPhotos = photos.map((photo: any, index: number) => ({
+          id: index,
+          url: typeof photo === 'string' ? photo : photo.url,
         }));
 
-        // Usar setUserProfile para actualizar las fotos
-        dispatch(setUserProfile({ jobImages: formattedPhotos }));
+        dispatch(setUserProfile({ job_images: formattedPhotos }));
       }
     } catch (error) {
       console.error('Error al cargar las fotos:', error);
@@ -86,41 +101,37 @@ const MyGallery = () => {
     }
   };
 
-  // Cargar fotos cuando el componente se monta
   useEffect(() => {
     loadUserPhotos();
   }, []);
 
-  // Recargar fotos cada vez que la pantalla obtiene el foco
   useFocusEffect(
     useCallback(() => {
-      if (jobImages.length === 0) {
-        loadUserPhotos();
-      }
+      loadUserPhotos(); // siempre recarga las fotos al enfocar la pantalla
     }, [])
   );
 
-  // Estados para CustomAlert
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    type: 'info' as 'success' | 'error' | 'warning' | 'info',
-    title: '',
-    message: '',
-    showCancel: false,
-    confirmText: 'Aceptar',
-    cancelText: 'Cancelar',
-    onConfirm: () => { },
-    onCancel: () => { }
-  });
-
-  // Función helper para mostrar alerts
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
-
   // Agregar imagen a galería
   const handleAddPhoto = async () => {
+    // ⚠️ VALIDAR UID
+    const uid = user.uid;
+    if (!uid) {
+      showAlert({
+        type: 'error',
+        title: 'Error de sesión',
+        message: 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.',
+        showCancel: false,
+        confirmText: 'Aceptar',
+        onConfirm: () => {
+          setAlertVisible(false);
+          router.replace('/(main)/(auth)');
+        },
+        onCancel: () => { },
+        cancelText: ''
+      });
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
@@ -129,37 +140,44 @@ const MyGallery = () => {
     if (!result.canceled && result.assets?.length > 0) {
       try {
         const localUri = result.assets[0].uri;
-        const uploadedUrl = await uploadProfileImage(localUri);
-        const imageData = await uploadPhoto(uploadedUrl);
-        dispatch(addUserPhoto(imageData));
 
+        // 1) Subir a Firebase Storage → devuelve URL pública
+        const uploadedUrl = await uploadProfileImage(localUri);
+
+        // 2) Guardar en RTDB mediante Express → devuelve { id, url }
+        await uploadPhoto(uid, uploadedUrl);
+
+        // 3) 🔥 RECARGAR TODAS LAS FOTOS DESDE EL SERVIDOR
+        await loadUserPhotos();
+
+        // 4) Alert de éxito
         showAlert({
-          type: 'success',
-          title: '¡Éxito!',
-          message: 'La imagen se subió correctamente a tu galería.',
+          type: "success",
+          title: "¡Éxito!",
+          message: "La imagen se subió correctamente a tu galería.",
           showCancel: false,
-          confirmText: 'Continuar',
+          confirmText: "Continuar",
           onConfirm: () => setAlertVisible(false),
           onCancel: () => { },
-          cancelText: ''
+          cancelText: "",
         });
       } catch (e) {
-        console.error('Error al subir la imagen:', e);
+        console.error("Error al subir la imagen:", e);
+
         showAlert({
-          type: 'error',
-          title: 'Error',
-          message: 'No se pudo subir la imagen. Verifica tu conexión e intenta nuevamente.',
+          type: "error",
+          title: "Error",
+          message: "No se pudo subir la imagen. Verifica tu conexión e intenta nuevamente.",
           showCancel: false,
-          confirmText: 'Reintentar',
+          confirmText: "Reintentar",
           onConfirm: () => setAlertVisible(false),
           onCancel: () => { },
-          cancelText: ''
+          cancelText: "",
         });
       }
     }
   };
 
-  // Mostrar imagen en vista previa
   const handleImagePress = (imageUrl: string, photoId: number) => {
     if (selectionMode) {
       toggleSelection(photoId);
@@ -169,14 +187,29 @@ const MyGallery = () => {
     }
   };
 
-  // Cerrar vista previa
   const closePreview = () => {
     setPreviewVisible(false);
     setSelectedImage(null);
   };
 
-  // eliminar imagen al mantener presionado
+  // Eliminar imagen individual
   const handleDeletePhoto = (photoId: number) => {
+    // ⚠️ VALIDAR UID
+    const uid = user.uid;
+    if (!uid) {
+      showAlert({
+        type: 'error',
+        title: 'Error de sesión',
+        message: 'No se pudo identificar al usuario.',
+        showCancel: false,
+        confirmText: 'Aceptar',
+        onConfirm: () => setAlertVisible(false),
+        onCancel: () => { },
+        cancelText: ''
+      });
+      return;
+    }
+
     showAlert({
       type: 'warning',
       title: 'Eliminar Foto',
@@ -187,7 +220,8 @@ const MyGallery = () => {
       onConfirm: async () => {
         setAlertVisible(false);
         try {
-          await deletePhoto(photoId);
+          // ⚠️ CAMBIO: Pasar UID
+          await deletePhoto(uid, photoId);
           dispatch(removeUserPhoto(photoId));
           showAlert({
             type: 'success',
@@ -217,7 +251,6 @@ const MyGallery = () => {
     });
   };
 
-  // Eliminar multiples imagenes: seleccionar imagen
   const toggleSelection = (photoId: number) => {
     if (selectedPhotos.includes(photoId)) {
       setSelectedPhotos(selectedPhotos.filter(id => id !== photoId));
@@ -226,7 +259,6 @@ const MyGallery = () => {
     }
   };
 
-  // Activar modo selección con mensaje informativo
   const enableSelectionMode = () => {
     setSelectionMode(true);
     showAlert({
@@ -241,8 +273,23 @@ const MyGallery = () => {
     });
   };
 
-  // Confirmar eliminación múltiple
   const confirmMultipleDelete = () => {
+    // ⚠️ VALIDAR UID
+    const uid = user.uid;
+    if (!uid) {
+      showAlert({
+        type: 'error',
+        title: 'Error de sesión',
+        message: 'No se pudo identificar al usuario.',
+        showCancel: false,
+        confirmText: 'Aceptar',
+        onConfirm: () => setAlertVisible(false),
+        onCancel: () => { },
+        cancelText: ''
+      });
+      return;
+    }
+
     if (selectedPhotos.length === 0) {
       showAlert({
         type: 'info',
@@ -269,7 +316,8 @@ const MyGallery = () => {
         setAlertVisible(false);
         try {
           for (const id of selectedPhotos) {
-            await deletePhoto(id);
+            // ⚠️ CAMBIO: Pasar UID
+            await deletePhoto(uid, id);
             dispatch(removeUserPhoto(id));
           }
           const deletedCount = selectedPhotos.length;
@@ -310,10 +358,7 @@ const MyGallery = () => {
 
         <View style={styles.headerContainer}>
           <Pressable
-            style={({ pressed }) => [
-              styles.backBottom,
-              pressed && { opacity: 0.5 }
-            ]}
+            style={({ pressed }) => [styles.backBottom, pressed && { opacity: 0.5 }]}
             onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={28} color="black" />
           </Pressable>
@@ -321,7 +366,6 @@ const MyGallery = () => {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* BANNER INFORMATIVO EN MODO SELECCIÓN */}
           {selectionMode && (
             <View style={styles.selectionBanner}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#FFFFFF" />
@@ -337,8 +381,8 @@ const MyGallery = () => {
           <View style={styles.imageContainer}>
             {isLoading ? (
               <Loader />
-            ) : Array.isArray(jobImages) && jobImages.length > 0 ? (
-              jobImages.map((photo, index) => {
+            ) : Array.isArray(job_images) && job_images.length > 0 ? (
+              job_images.map((photo, index) => {
                 if (!photo?.url || typeof photo.url !== 'string') return null;
 
                 return (
@@ -369,8 +413,6 @@ const MyGallery = () => {
             )}
           </View>
 
-
-          {/* FOOTER - Botones de acción */}
           <View style={styles.footer}>
             <View style={styles.profileBottomsContainer}>
               <Pressable
@@ -411,7 +453,6 @@ const MyGallery = () => {
           </View>
         </ScrollView>
 
-        {/* MODAL DE VISTA PREVIA */}
         <Modal
           visible={previewVisible}
           transparent={true}
@@ -444,7 +485,6 @@ const MyGallery = () => {
           </View>
         </Modal>
 
-        {/* Configuro el custom alert */}
         <CustomAlert
           visible={alertVisible}
           type={alertConfig.type}
@@ -463,15 +503,8 @@ const MyGallery = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0E3549'
-  },
-
-  overlay: {
-    flex: 1,
-  },
-
+  container: { flex: 1, backgroundColor: '#0E3549' },
+  overlay: { flex: 1 },
   headerContainer: {
     position: 'absolute',
     zIndex: 10,
@@ -486,12 +519,10 @@ const styles = StyleSheet.create({
     minHeight: moderateScale(40),
     alignSelf: 'center',
   },
-
   backBottom: {
     padding: moderateScale(8),
     marginRight: moderateScale(6),
   },
-
   title: {
     flex: 1,
     textAlign: 'center',
@@ -500,23 +531,17 @@ const styles = StyleSheet.create({
     fontFamily: 'RobotoLight',
     color: '#000',
   },
-
   scrollContent: {
     paddingTop: moderateScale(70),
     paddingBottom: moderateScale(20),
   },
-
   imageContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     marginBottom: moderateScale(20),
   },
-
-  imageWrapper: {
-    position: 'relative',
-  },
-
+  imageWrapper: { position: 'relative' },
   image: {
     width: scale(150),
     height: scale(150),
@@ -525,11 +550,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
     borderWidth: 2
   },
-
-  imageSelected: {
-    opacity: 0.7,
-  },
-
+  imageSelected: { opacity: 0.7 },
   checkIcon: {
     position: 'absolute',
     top: moderateScale(20),
@@ -537,7 +558,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     borderRadius: moderateScale(12),
   },
-
   textNoImage: {
     color: '#FFFFFF',
     fontSize: moderateScale(16),
@@ -545,20 +565,13 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(20),
     fontFamily: 'RobotoLight',
   },
-
-  /* ----------------------------------- FOOTER -----------------------------------*/
-
-  footer: {
-    justifyContent: 'center',
-  },
-
+  footer: { justifyContent: 'center' },
   profileBottomsContainer: {
     flexDirection: 'column',
     alignItems: 'center',
     gap: moderateScale(10),
     padding: moderateScale(15)
   },
-
   workGalery: {
     padding: moderateScale(12),
     backgroundColor: '#1F4F66',
@@ -566,7 +579,6 @@ const styles = StyleSheet.create({
     minWidth: moderateScale(200),
     alignItems: 'center',
   },
-
   deleteButton: {
     backgroundColor: '#E06C75',
     paddingVertical: moderateScale(10),
@@ -578,7 +590,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-
   cancelButton: {
     backgroundColor: '#4A5A6A',
     paddingVertical: moderateScale(10),
@@ -586,7 +597,6 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(8),
     shadowColor: '#2F3A45',
   },
-
   textBottom: {
     color: '#F0F0F0',
     fontSize: moderateScale(14),
@@ -594,23 +604,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
-  /* ----------------------------------- MODAL VISTA PREVIA -----------------------------------*/
-
   modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   modalBackground: {
     flex: 1,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   modalContent: {
     flex: 1,
     width: '100%',
@@ -618,7 +623,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-
   closeButton: {
     position: 'absolute',
     top: moderateScale(50),
@@ -628,15 +632,11 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(20),
     padding: moderateScale(5),
   },
-
   previewImage: {
     width: screenWidth,
     height: screenHeight * 0.8,
     borderRadius: moderateScale(10),
   },
-
-  /* ----------------------------------- BANNER DE SELECCIÓN -----------------------------------*/
-
   selectionBanner: {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingVertical: moderateScale(12),
@@ -649,7 +649,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: moderateScale(8),
   },
-
   selectionBannerText: {
     color: '#FFFFFF',
     fontSize: moderateScale(14),

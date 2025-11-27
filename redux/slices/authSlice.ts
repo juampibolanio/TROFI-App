@@ -2,34 +2,40 @@ import { removeData } from '@/utils/storage';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
-    token: string | null;
+    token: string | null; 
+    uid: string | null;
     email: string | null;
     isLoggedIn: boolean;
 }
 
-//creo el estado inicial de mi slice
 const initialState: AuthState = {
     token: null,
+    uid: null,
     email: null,
     isLoggedIn: false,
 };
 
-//slice para login y logout de un usuario
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        setCredentials(state, action: PayloadAction<{token: string; email: string }>) {
-            state.token = action.payload.token;
+        setCredentials(state, action: PayloadAction<{ 
+            token: string; 
+            uid: string;
+            email: string;
+        }>) {
+            state.token = action.payload.token; 
+            state.uid = action.payload.uid;
             state.email = action.payload.email;
             state.isLoggedIn = true;
         },
         logout(state) {
             state.token = null;
+            state.uid = null;
             state.email = null;
             state.isLoggedIn = false;
 
-            //acá elimino los datos del async storage cuando el usuario cierra sesión.
+            // Eliminar datos del AsyncStorage cuando el usuario cierre sesión
             removeData('auth');
             removeData('user');
         },

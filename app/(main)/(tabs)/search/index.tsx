@@ -5,8 +5,7 @@ import { fetchJobCategories } from '@/services/jobService';
 import { searchWorkers } from '@/services/userService';
 import { useFonts } from '@expo-google-fonts/roboto';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useLocalSearchParams } from 'expo-router/build/hooks';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -24,11 +23,10 @@ import { moderateScale, scale } from 'react-native-size-matters';
 
 // Tipado de datos para el perfil
 type Perfil = {
-  id: number;
-  fullname: string;
-  score: number;
+  uid: string;
+  name: string;
   jobCategory: string;
-  imageProfile: any;
+  imageProfile: { uri: string };
 };
 
 // ProfileCard component
@@ -40,10 +38,10 @@ const ProfileCard: React.FC<{ item: Perfil; onPress: () => void }> = ({ item, on
     <Image source={item.imageProfile} style={styles.profileCardImg} />
     <View style={styles.nameAndStartConteiner}>
       <Text style={styles.profileCardName} numberOfLines={1}>
-        {item.fullname}
+        {item.name}
       </Text>
       <View style={styles.starPointsContainer}>
-        <Text style={styles.profileCardStar}>{item.score > 0 ? item.score : 'N/D'}</Text>
+        <Text style={styles.profileCardStar}>N/D</Text>
         <Ionicons name="star-outline" size={20} color="#0E3549" />
       </View>
     </View>
@@ -52,28 +50,26 @@ const ProfileCard: React.FC<{ item: Perfil; onPress: () => void }> = ({ item, on
 
 const Search = () => {
   const [fontsLoaded] = useFonts(fonts);
+
   const params = useLocalSearchParams();
-  const categoriaParam = Array.isArray(params.categoria) ? params.categoria[0] : params.categoria ?? 'Todos';
-  
+  const categoriaParam = Array.isArray(params.categoria)
+    ? params.categoria[0]
+    : params.categoria ?? 'Todos';
+
   const [searchText, setSearchText] = useState('');
   const [perfiles, setPerfiles] = useState<Perfil[]>([]);
   const [loading, setLoading] = useState(false);
-  const [jobCategories, setJobCategories] = useState<{ id: number; name: string }[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
-  // Función para encontrar el ID de la categoría por nombre
-  const findCategoryIdByName = (categoryName: string) => {
-    if (categoryName === 'Todos') return null;
-    const category = jobCategories.find(cat => cat.name === categoryName);
-    return category ? category.id : null;
-  };
+  // 🟦 CATEGORÍAS USAN ID STRING (Firebase RTDB keys)
+  const [jobCategories, setJobCategories] = useState<{ id: string; name: string }[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
-  // Cargar las categorías desde el backend 
+  // Cargar categorías desde backend
   useEffect(() => {
     const loadJobs = async () => {
       try {
         const jobs = await fetchJobCategories();
-        setJobCategories([{ id: 0, name: 'Todos' }, ...jobs]);
+        setJobCategories([{ id: "all", name: "Todos" }, ...jobs]);
       } catch (error) {
         console.error("Error al cargar categorías:", error);
       }
@@ -82,15 +78,20 @@ const Search = () => {
     loadJobs();
   }, []);
 
-  // Establecer la categoría seleccionada cuando llegue el parámetro y las categorías estén cargadas
+  // Establecer la categoría inicial basada en params.categoria
   useEffect(() => {
-    if (jobCategories.length > 0 && categoriaParam) {
-      const categoryId = findCategoryIdByName(categoriaParam);
-      setSelectedJobId(categoryId);
+  if (jobCategories.length > 0 && categoriaParam) {
+    const found = jobCategories.find(cat => cat.name === categoriaParam);
+    if (found) {
+      setSelectedJobId(found.id === "all" ? null : found.id);
     }
-  }, [categoriaParam, jobCategories]);
+  }
+  // 👇 SOLO correr una vez, cuando cargan las categorías
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  console.log("▶ FILTRO:", { searchText, selectedJobId });
+}, [jobCategories]);
 
-  // Cargar datos desde el backend
+  // Cargar los perfiles filtrados desde backend
   useEffect(() => {
     const fetchProfiles = async () => {
       setLoading(true);
@@ -101,13 +102,11 @@ const Search = () => {
           selectedJobId,
         });
 
-        // Mapear los perfiles para que tomen el formato que espera el front
-        const perfilesTransformados = data.map((item: any) => ({
-          id: item.id,
-          fullname: item.fullname,
-          score: item.score,
-          jobCategory: item.jobCategory || '',
-          imageProfile: item.imageProfile,
+        const perfilesTransformados: Perfil[] = data.map((item: any) => ({
+          uid: item.uid,
+          name: item.name,
+          jobCategory: item.job_description || "",
+          imageProfile: { uri: item.imageProfile },
         }));
 
         setPerfiles(perfilesTransformados);
@@ -122,12 +121,12 @@ const Search = () => {
     fetchProfiles();
   }, [searchText, selectedJobId]);
 
-  const handleCategoryPress = (categoryId: number) => {
-    setSelectedJobId(categoryId === 0 ? null : categoryId);
+  const handleCategoryPress = (categoryId: string) => {
+    setSelectedJobId(categoryId === "all" ? null : categoryId);
   };
 
-  const isCategorySelected = (categoryId: number) => {
-    return selectedJobId === categoryId || (categoryId === 0 && selectedJobId === null);
+  const isCategorySelected = (categoryId: string) => {
+    return selectedJobId === categoryId || (categoryId === "all" && selectedJobId === null);
   };
 
   return (
@@ -135,8 +134,9 @@ const Search = () => {
       <ImageBackground style={styles.overlay} source={imagePath.backgroundFDetails} resizeMode="cover">
         <View style={{ flex: 1, padding: 16 }}>
 
-          {/* HEADER: barra búsqueda y categorías */}
+          {/* HEADER */}
           <View style={styles.header}>
+            {/* SEARCH BAR */}
             <View style={styles.searchBar}>
               <TextInput
                 placeholder="Buscar perfiles..."
@@ -148,6 +148,7 @@ const Search = () => {
               <Ionicons name="search" size={25} color="#0E3549" />
             </View>
 
+            {/* CATEGORÍAS */}
             <View style={styles.categoryFeatured}>
               <Text style={styles.categoryFeaturedText}>Categorías destacadas</Text>
             </View>
@@ -165,7 +166,7 @@ const Search = () => {
                     marginRight: 8,
                   }}
                 >
-                  <Text style={{ 
+                  <Text style={{
                     color: isCategorySelected(cat.id) ? '#000' : '#fff',
                     fontWeight: isCategorySelected(cat.id) ? 'bold' : 'normal'
                   }}>
@@ -176,37 +177,27 @@ const Search = () => {
             </ScrollView>
           </View>
 
-          {/* LISTA DE PERFILES */}
+          {/* LISTADO */}
           {loading ? (
             <Loader />
           ) : perfiles.length === 0 ? (
             <View style={styles.noResultsContainer}>
-              <Text style={styles.noResultsText}>
-                No se encontraron perfiles con los filtros seleccionados.
-              </Text>
-              <Text style={styles.noResultsSubtext}>
-                Intenta cambiar la categoría o el término de búsqueda.
-              </Text>
+              <Text style={styles.noResultsText}>No se encontraron perfiles</Text>
+              <Text style={styles.noResultsSubtext}>Intenta cambiar los filtros</Text>
             </View>
           ) : (
             <FlatList
               data={perfiles}
-              keyExtractor={item => item.id.toString()}
+              keyExtractor={item => item.uid}
               contentContainerStyle={{ paddingBottom: 20 }}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => (
                 <ProfileCard
-                  item={{
-                    id: item.id,
-                    fullname: item.fullname,
-                    score: item.score,
-                    jobCategory: item.jobCategory,
-                    imageProfile: { uri: item.imageProfile },
-                  }}
+                  item={item}
                   onPress={() =>
                     router.push({
-                      pathname: "/(main)/(tabs)/search/[id]",
-                      params: { id: String(item.id) },
+                      pathname: "/(main)/(tabs)/search/[uid]",
+                      params: { uid: item.uid },
                     })
                   }
                 />
@@ -224,12 +215,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0E3549',
   },
-  overlay: {
-    flex: 1,
-  },
-  header: {
-    marginBottom: 10,
-  },
+  overlay: { flex: 1 },
+  header: { marginBottom: 10 },
+
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -237,11 +225,8 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(25),
     paddingHorizontal: moderateScale(10),
   },
-  searchBarInput: {
-    flex: 1,
-    padding: 13,
-    fontSize: moderateScale(14),
-  },
+  searchBarInput: { flex: 1, padding: 13, fontSize: moderateScale(14) },
+
   categoryFeatured: {
     marginTop: moderateScale(16),
     backgroundColor: '#D9D9D9',
@@ -250,15 +235,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     borderRadius: moderateScale(20),
   },
-  categoryFeaturedText: {
-    color: '#000000',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: moderateScale(15),
-  },
-  categoryTabs: {
-    marginTop: 16,
-  },
+  categoryFeaturedText: { color: '#000', fontWeight: 'bold', fontSize: moderateScale(15) },
+
+  categoryTabs: { marginTop: 16 },
+
   profileCard: {
     flexDirection: 'row',
     backgroundColor: '#86868686',
@@ -275,6 +255,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginRight: 12,
   },
+
   nameAndStartConteiner: {
     flex: 1,
     backgroundColor: '#D9D9D9',
@@ -285,40 +266,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(15),
     paddingVertical: moderateScale(20),
   },
-  profileCardName: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 14,
-    flex: 1,
-  },
-  starPointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  profileCardStar: {
-    color: '#000',
-    fontWeight: 'bold',
-    marginRight: moderateScale(5),
-    fontSize: moderateScale(14),
-  },
-  noResultsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  noResultsText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  noResultsSubtext: {
-    color: '#ccc',
-    textAlign: 'center',
-    fontSize: 14,
-  },
+
+  profileCardName: { color: '#000', fontWeight: 'bold', fontSize: 14, flex: 1 },
+
+  starPointsContainer: { flexDirection: 'row', alignItems: 'center' },
+  profileCardStar: { color: '#000', fontWeight: 'bold', marginRight: 5, fontSize: moderateScale(14) },
+
+  noResultsContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
+  noResultsText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  noResultsSubtext: { color: '#ccc', fontSize: 14 },
 });
 
 export default Search;

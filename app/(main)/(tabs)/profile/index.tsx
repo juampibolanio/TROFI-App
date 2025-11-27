@@ -51,7 +51,7 @@ const Perfil = () => {
                     <Text style={styles.ubication}>{user.location}</Text>
                   </View>
                 )}
-                <Text style={styles.jobDescription}>{user.jobDescripction || 'Sin descripción laboral'}</Text>
+                <Text style={styles.jobDescription}>{user.job_description || 'Sin descripción laboral'}</Text>
               </>
             ) : (
               <Text style={styles.incompleteText}>
@@ -83,9 +83,7 @@ const Perfil = () => {
             <View style={styles.score}>
               <Text style={styles.scoreTitle}>Puntuación</Text>
               <View style={styles.scoreContainer}>
-                <Text style={styles.scoreNumber}>
-                  {user.score && user.score > 0 ? user.score : 'N/D'}
-                </Text>
+                <Text style={styles.scoreNumber}>N/D</Text>
                 <Ionicons name="star-outline" size={30} color="#0E3549" />
               </View>
             </View>
@@ -112,7 +110,7 @@ const Perfil = () => {
         </View>
 
         {/* Condición para perfil laboral incompleto */}
-        {user.isProfileComplete && user.isWorkerProfileComplete == false && (
+        {user.isProfileComplete && !user.isWorkerProfileComplete && (
           <View style={styles.workerProfileSection}>
             <View style={styles.workerProfileCard}>
               <Text style={styles.workerProfileText}>
@@ -136,20 +134,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0E3549',
   },
-
   overlay: {
     flex: 1,
   },
-
-  /* ----------------------------------- HEADER -----------------------------------*/
-
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     padding: moderateScale(20),
   },
-
   imagen: {
     width: moderateScale(115),
     height: moderateScale(115),
@@ -157,38 +150,32 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
     borderWidth: moderateScale(2)
   },
-
   infoContainer: {
     flex: 1,
     justifyContent: 'center',
     gap: moderateScale(5),
     marginLeft: moderateScale(15),
   },
-
   username: {
     fontSize: moderateScale(22),
     color: '#FFFFFF',
     fontFamily: 'RobotoRegular'
   },
-
   ubication: {
     fontSize: moderateScale(14),
     color: '#FFFFFF',
     fontFamily: 'RobotoRegular'
   },
-
   jobDescription: {
     fontSize: moderateScale(12),
     color: '#FFFFFF',
     fontFamily: 'RobotoRegular'
   },
-
   incompleteText: {
     fontSize: moderateScale(12),
     color: '#FFCDD2',
     fontFamily: 'RobotoRegular'
   },
-
   sendMessageBottom: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -201,35 +188,29 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     gap: moderateScale(6)
   },
-
   sendText: {
     color: '#000000',
     fontSize: moderateScale(12),
     fontWeight: 'bold',
     fontFamily: 'RobotoRegular'
   },
-
-  /* ----------------------------------- BODY -----------------------------------*/
   body: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: moderateScale(10),
   },
-
   descriptionOverlay: {
     backgroundColor: '#696969',
     paddingVertical: moderateScale(4),
     paddingHorizontal: moderateScale(5),
     borderRadius: moderateScale(15)
   },
-
   scoreOverlay: {
     backgroundColor: '#696969',
     paddingVertical: moderateScale(4),
     paddingHorizontal: moderateScale(5),
     borderRadius: moderateScale(10)
   },
-
   description: {
     width: moderateScale(200),
     height: moderateScale(250),
@@ -237,21 +218,18 @@ const styles = StyleSheet.create({
     padding: moderateScale(10),
     borderRadius: moderateScale(10)
   },
-
   descriptionTitle: {
     borderRadius: moderateScale(10),
     padding: moderateScale(3),
     fontSize: moderateScale(20),
     fontWeight: 'bold'
   },
-
   descriptionText: {
     backgroundColor: 'transparent',
     fontFamily: 'RobotoLight',
     fontSize: moderateScale(14),
     textAlign: 'left'
   },
-
   score: {
     width: moderateScale(115),
     height: moderateScale(250),
@@ -259,7 +237,6 @@ const styles = StyleSheet.create({
     padding: moderateScale(10),
     borderRadius: moderateScale(10)
   },
-
   scoreTitle: {
     borderRadius: moderateScale(10),
     padding: moderateScale(3),
@@ -267,50 +244,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center'
   },
-
   scoreContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center'
   },
-
   scoreNumber: {
     fontSize: moderateScale(32),
     fontFamily: 'RobotoLight'
   },
-
-  /* ----------------------------------- FOOTER -----------------------------------*/
-
   footer: {
     justifyContent: 'center',
   },
-
   profileBottomsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: moderateScale(15)
   },
-
   workGalery: {
     padding: moderateScale(12),
     backgroundColor: '#D9D9D9',
     borderRadius: moderateScale(12)
   },
-
   textBottom: {
     color: '#000000',
     fontSize: moderateScale(12),
     fontFamily: 'RobotoRegular',
     fontWeight: 'bold'
   },
-
-  /* ----------------------------------- WORKER PROFILE SECTION -----------------------------------*/
-
   workerProfileSection: {
     marginHorizontal: moderateScale(20),
     marginBottom: moderateScale(15)
   },
-
   workerProfileCard: {
     backgroundColor: '#FFFFFF',
     paddingVertical: moderateScale(15),
@@ -327,22 +292,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0'
   },
-
-  workerProfileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: moderateScale(12),
-    gap: moderateScale(8)
-  },
-
-  workerProfileTitle: {
-    color: '#0E3549',
-    fontSize: moderateScale(16),
-    fontFamily: 'RobotoRegular',
-    fontWeight: 'bold'
-  },
-
   workerProfileText: {
     color: '#333333',
     fontSize: moderateScale(13),
@@ -351,7 +300,6 @@ const styles = StyleSheet.create({
     lineHeight: moderateScale(18),
     marginBottom: moderateScale(15)
   },
-
   workerProfileButton: {
     backgroundColor: '#0E3549',
     paddingHorizontal: moderateScale(10),
@@ -363,7 +311,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     shadowColor: '#0E3549',
   },
-
   workerProfileButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',

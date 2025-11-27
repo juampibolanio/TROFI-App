@@ -38,7 +38,6 @@ const EditImageProfile = () => {
         showCancel: false
     });
 
-    // Estados para manejar el loading
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isSavingImage, setIsSavingImage] = useState(false);
 
@@ -82,12 +81,23 @@ const EditImageProfile = () => {
                 return;
             }
 
+            // Obtener UID
+            const uid = user.uid;
+            
+            if (!uid) {
+                showAlert("Error de sesión", "No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.", 'error');
+                setTimeout(() => {
+                    closeAlert();
+                    router.replace('/(main)/(auth)');
+                }, 2000);
+                return;
+            }
+
             setIsSavingImage(true);
 
-            // actualizar el backend
-            await updateUserProfileImage(selectedImage);
+            // Pasar UID a la función
+            await updateUserProfileImage(uid, selectedImage);
 
-            // actualizar en Redux y AsyncStorage
             const updatedUser = { ...user, imageProfile: selectedImage };
             dispatch(setImageProfileAction(selectedImage));
             await storeData('user', updatedUser);
@@ -102,7 +112,7 @@ const EditImageProfile = () => {
             console.error('Error guardando imagen:', error);
             showAlert("Error", "No se pudo actualizar la imagen. Intenta nuevamente.", 'error');
         } finally {
-            setIsSavingImage(false); // Ocultar loader
+            setIsSavingImage(false);
         }
     };
 

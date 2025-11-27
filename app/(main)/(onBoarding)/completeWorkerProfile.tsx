@@ -13,9 +13,11 @@ import RNPickerSelect from "react-native-picker-select";
 import { setImageProfile as setImageProfileAction, setUserProfile } from '@/redux/slices/userSlice';
 import { router } from "expo-router";
 import { uploadProfileImage } from "@/services/imageService";
+import { updateUserProfile } from "@/services/userService";
 import CustomAlert from "@/components/atoms/CustomAlert";
+import { storeData } from "@/utils/storage";
 
-const completeWorkerProfile = () => {
+const CompleteWorkerProfile = () => {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
     const [fontsLoaded] = useFonts(fonts);
@@ -72,12 +74,12 @@ const completeWorkerProfile = () => {
         });
     };
 
-    //navegar a la siguiente pantalla
+    // Navegar a la siguiente pantalla
     const navigateToJobProfile = () => {
         router.push('/(main)/(onBoarding)/completeJobProfile');
     }
 
-    //handler para foto del usuario
+    // Handler para foto del usuario
     const handleSelectProfileImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -126,8 +128,19 @@ const completeWorkerProfile = () => {
         }
     };
 
-    //pasar a la siguiente pantalla
-    const handleNextStep = () => {
+    // Pasar a la siguiente pantalla
+    const handleNextStep = async () => {
+        // Validar que el usuario tenga UID
+        const uid = user.uid;
+        if (!uid) {
+            showAlert({
+                type: 'error',
+                title: 'Error de sesión',
+                message: 'No se pudo identificar al usuario. Por favor, inicia sesión nuevamente.'
+            });
+            return;
+        }
+
         // Validaciones específicas
         if (!imageProfile) {
             showAlert({
@@ -191,24 +204,55 @@ const completeWorkerProfile = () => {
             showCancel: true,
             confirmText: 'Sí, continuar',
             cancelText: 'Revisar',
-            onConfirm: () => {
-                dispatch(setUserProfile({
-                    dni,
-                    userDescription,
-                    imageProfile,
-                    location
-                }));
+            onConfirm: async () => {
+                try {
+                    // Enviar al backend
+                    await updateUserProfile(uid, {
+                        dni,
+                        userDescription,
+                        imageProfile,
+                        location
+                    });
 
-                // Alert de éxito antes de navegar
-                showAlert({
-                    type: 'success',
-                    title: '¡Perfil guardado!',
-                    message: 'Su información ha sido guardada correctamente.',
-                    onConfirm: () => {
-                        setAlertConfig(prev => ({ ...prev, visible: false }));
-                        navigateToJobProfile();
-                    }
-                });
+                    // Actualizar Redux
+                    dispatch(setUserProfile({
+                        dni,
+                        userDescription,
+                        imageProfile,
+                        location
+                    }));
+
+                    // Guardar en AsyncStorage
+                    const updatedUser = {
+                        ...user,
+                        dni,
+                        userDescription,
+                        imageProfile,
+                        location
+                    };
+                    await storeData('user', updatedUser);
+
+                    // Alert de éxito antes de navegar
+                    showAlert({
+                        type: 'success',
+                        title: '¡Perfil guardado!',
+                        message: 'Su información ha sido guardada correctamente.',
+                        onConfirm: () => {
+                            setAlertConfig(prev => ({ ...prev, visible: false }));
+                            navigateToJobProfile();
+                        }
+                    });
+                } catch (error: any) {
+                    console.error('Error guardando perfil:', error);
+                    const errorMessage = error?.response?.data?.message || 
+                        'No se pudo guardar el perfil. Verifica tu conexión e intenta nuevamente.';
+                    
+                    showAlert({
+                        type: 'error',
+                        title: 'Error al guardar',
+                        message: errorMessage
+                    });
+                }
             },
             onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
         });
@@ -524,4 +568,4 @@ const pickerSelectStyles = StyleSheet.create({
     },
 });
 
-export default completeWorkerProfile;
+export default CompleteWorkerProfile;

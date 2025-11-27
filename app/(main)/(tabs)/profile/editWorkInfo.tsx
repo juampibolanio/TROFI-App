@@ -21,7 +21,7 @@ import { RootState } from '@/redux/store';
 import { fetchJobCategories } from '@/services/jobService';
 
 const editWorkInfo = () => {
-    const { jobId, jobDescripction } = useSelector((state: RootState) => state.user);
+    const { id_job, job_description } = useSelector((state: RootState) => state.user);
     const [jobName, setJobName] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showErrorAlert, setShowErrorAlert] = useState(false);
@@ -31,7 +31,7 @@ const editWorkInfo = () => {
         const loadJobName = async () => {
             try {
                 const jobs = await fetchJobCategories();
-                const currentJob = jobs.find((job: any) => job.id === jobId);
+                const currentJob = jobs.find((job: any) => job.id === id_job);
                 setJobName(currentJob?.name || null);
             } catch (error) {
                 console.error('Error al obtener los oficios', error);
@@ -42,12 +42,12 @@ const editWorkInfo = () => {
             }
         };
 
-        if (jobId) {
+        if (id_job) {
             loadJobName();
         } else {
             setIsLoading(false);
         }
-    }, [jobId]);
+    }, [id_job]);
 
     const handleRetry = () => {
         setShowErrorAlert(false);
@@ -57,7 +57,7 @@ const editWorkInfo = () => {
         const loadJobName = async () => {
             try {
                 const jobs = await fetchJobCategories();
-                const currentJob = jobs.find((job: any) => job.id === jobId);
+                const currentJob = jobs.find((job: any) => job.id === id_job);
                 setJobName(currentJob?.name || null);
             } catch (error) {
                 console.error('Error al obtener los oficios', error);
@@ -68,7 +68,7 @@ const editWorkInfo = () => {
             }
         };
 
-        if (jobId) loadJobName();
+        if (id_job) loadJobName();
         else setIsLoading(false);
     };
 
@@ -126,7 +126,7 @@ const editWorkInfo = () => {
                                         <Text style={styles.label}>Descripción:</Text>
                                     </View>
                                     <Text style={styles.text}>
-                                        {jobDescripction || 'Sin descripción aún'}
+                                        {job_description || 'Sin descripción aún'}
                                     </Text>
                                 </View>
                             </View>

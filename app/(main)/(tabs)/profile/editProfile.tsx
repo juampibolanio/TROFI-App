@@ -23,7 +23,7 @@ import { logoutRequest } from '@/services/authService';
 import { logout } from '@/redux/slices/authSlice';
 import { clearUserProfile } from '@/redux/slices/userSlice';
 
-const editProfile = () => {
+const EditProfile = () => {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
     const [fontsLoaded] = useFonts(fonts);
@@ -47,17 +47,27 @@ const editProfile = () => {
         router.push('/(main)/(tabs)/profile/editWorkInfo');
     };
 
+    // ------------------------------
+    // 🔐 LOGOUT - FIX IMPORTANTE
+    // ------------------------------
     const handleLogoutPress = () => {
+        // Este solo muestra el modal, NO ejecuta logout
         setLogoutAlert(true);
     };
 
     const handleLogoutConfirm = async () => {
         setLogoutAlert(false);
+
         try {
-            await logoutRequest();
-            dispatch(logout());
+            await logoutRequest(); // Llama a tu backend
+            dispatch(logout());    // Limpia Redux
             dispatch(clearUserProfile());
-            router.replace('/(main)/(auth)');
+
+            // Esperamos un tick para evitar el error "navigate before mounting"
+            setTimeout(() => {
+                router.replace('/(main)/(auth)');
+            }, 150);
+
         } catch (e) {
             console.error('Error al cerrar sesión:', e);
             setLogoutErrorAlert(true);
@@ -72,7 +82,6 @@ const editProfile = () => {
         setLogoutErrorAlert(false);
     };
 
-    // Función para volver hacia atrás
     const goBack = () => {
         router.back();
     };
@@ -134,7 +143,7 @@ const editProfile = () => {
                         </Text>
                     </View>
 
-                    {/* BODY */}
+                    {/* MAIN BUTTONS */}
                     <View style={styles.mainButtonsContainer}>
                         <ButtonComponent
                             title="Editar información personal"
@@ -147,21 +156,20 @@ const editProfile = () => {
                             iconName="briefcase-outline"
                             onPress={() => setLaboralAlert(true)}
                         />
-
                     </View>
 
-                    {/* FOOTER */}
+                    {/* LOGOUT BUTTON */}
                     <View style={styles.logoutContainer}>
                         <ButtonComponent
                             title="Cerrar sesión"
                             iconName="log-out-outline"
-                            onPress={handleLogoutPress}
+                            onPress={handleLogoutPress}  // SOLO ABRE EL MODAL
                         />
                     </View>
                 </ScrollView>
             </ImageBackground>
 
-            {/* ALERTS */}
+            {/* ALERTAS */}
             <CustomAlert
                 visible={personalAlert}
                 title="Editar información personal"
@@ -238,21 +246,17 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingBottom: moderateScale(20),
     },
-
-    /* ----------------------------------- BACK ARROW -----------------------------------*/
     backArrowContainer: {
         position: 'absolute',
         top: moderateScale(10),
         left: moderateScale(15),
         zIndex: 1,
     },
-
     backArrow: {
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
         borderRadius: moderateScale(20),
         padding: moderateScale(8),
     },
-
     header: {
         alignItems: 'center',
         paddingTop: moderateScale(50), 
@@ -312,4 +316,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default editProfile;
+export default EditProfile;
