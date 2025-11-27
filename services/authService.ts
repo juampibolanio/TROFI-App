@@ -45,8 +45,7 @@ export const registerRequest = async (formData: {
     password: string;
     phoneNumber: string;
 }) => {
-    const response = await api.post<RegisterResponse>('/auth/register', formData);
-
+    const response = await api.post<RegisterResponse>('/auth/register', formData)
 
     const { user } = response.data.data;
 
