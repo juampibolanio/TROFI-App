@@ -1,5 +1,6 @@
 import api from "./api";
 
+
 interface LoginResponseData {
     message: string;
     idToken: string;
@@ -48,6 +49,7 @@ export const registerRequest = async (formData: {
     const response = await api.post<RegisterResponse>('/auth/register', formData)
 
     const { user } = response.data.data;
+
 
     return {
         user,
